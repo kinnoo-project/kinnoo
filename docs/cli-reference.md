@@ -216,4 +216,4 @@ This reference documents the current Kinnoo command-line interfaces.
 
 ## Server CLI Reference
 
-Server-side CLI documentation has been moved to `notes/server-cli-reference.md`.
+Server-side CLI documentation is maintained separately from this public client-focused CLI reference.
