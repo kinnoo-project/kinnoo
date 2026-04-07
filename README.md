@@ -1,4 +1,4 @@
-# Kinnoo
+# Kinnoo 🍊
 
 ![Status: Beta](https://img.shields.io/badge/status-beta-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)
