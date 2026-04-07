@@ -2,7 +2,8 @@
 
 ![Status: Beta](https://img.shields.io/badge/status-beta-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+
 
 Kinnoo is a CLI-first platform for packaging, sharing, and installing AI agents with explicit manifest and trust controls.
 
@@ -33,6 +34,11 @@ kinnoo pack ./my-agent
 kinnoo login
 kinnoo publish ./my-agent --pack --remote
 ```
+
+
+## License
+
+Kinnoo is licensed under the [Apache License 2.0](LICENSE).
 
 ## Documentation
 
