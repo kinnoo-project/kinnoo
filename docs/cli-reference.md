@@ -3,7 +3,6 @@
 This reference documents the current Kinnoo command-line interfaces.
 
 - Client CLI: `kinnoo`
-- Server CLI: `kinnoo-server`
 
 ## Conventions
 
@@ -18,9 +17,6 @@ This reference documents the current Kinnoo command-line interfaces.
 | `KINNOO_REGISTRY_URL` | `login`, `publish`, `install`, `list`, `search`, `fetch` | Remote registry base URL override |
 | `KINNOO_REGISTRY_TOKEN` | `publish`, `install`, `list`, `search`, `fetch` | Remote auth token override |
 | `KINNOO_TENANT_SLUG` | `publish`, `install`, `list`, `search`, `fetch` | Tenant context override |
-| `KINNOO_ARCHIVE_ROOT` | `pack`, `publish`, `install`, `list`, `search`, `fetch`, `uninstall` | Local archive storage root override |
-| `KINNOO_REGISTRY_ROOT` | `publish`, `install`, `list`, `search`, `fetch` | Local/mock registry root override |
-| `KINNOO_HTTP_USER_AGENT` | `login`, auth/publish calls | HTTP User-Agent override |
 
 ## Client Commands (`kinnoo`)
 
