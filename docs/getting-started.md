@@ -2,9 +2,11 @@
 
 This guide walks through installing Kinnoo, creating an agent, running it locally, and packaging it.
 
+Kinnoo acts as a lifecycle and trust harness around your agent code: you define a standard manifest, run locally with consistent command surfaces, package reproducible artifacts, and then publish/install through the same workflow.
+
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - `pip`
 
 ## 1) Install Kinnoo
@@ -19,7 +21,7 @@ pip install kinnoo
 ## 2) Create Your First Agent
 
 ```bash
-kinnoo init --framework chatgpt my-agent
+kinnoo init chatgpt my-agent
 ```
 
 This creates a scaffolded project in `./my-agent`.
@@ -77,7 +79,13 @@ Optional signed package:
 
 ```bash
 kinnoo keygen
-kinnoo pack ./my-agent --sign --signing-key ./kinnoo-ed25519-private.pem
+kinnoo pack ./my-agent --sign ./kinnoo-ed25519-private.pem
+```
+
+Strict publish flow (recommended for shared registries):
+
+```bash
+kinnoo publish ./my-agent --pack --strict --remote
 ```
 
 ## 6) Next Step: Registry Workflows

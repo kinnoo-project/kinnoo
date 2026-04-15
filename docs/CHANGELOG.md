@@ -17,9 +17,116 @@ All notable changes to this project will be documented in this file.
   - `tests/test_cli_import.py::test_feature36_infers_runtime_skills_state_dirs`
   - `tests/test_cli_import.py::test_feature36_manifest_valid_or_todo_guidance`
   - `tests/test_cli_import.py::test_feature62_import_openclaw_manifest_migration_guidance`
-- Bumped project version from `0.29.0` to `0.30.0` after Phase 7 final review closure.
+ - Bumped project version from `0.5.5` to `0.6.0` after Phase 7 final review closure.
 
-## [v0.30.0] - 2026-03-30
+## [v0.7.6] - 2026-04-11
+### Added
+- Added CLI JSON output modes for command workflows that are commonly automated (`list`, `search`, `inspect`, `run`, `pack`, `publish`, and non-interactive `install`).
+- Added new lifecycle-oriented CLI commands for archive retrieval and cleanup (`kinnoo fetch`, `kinnoo uninstall`) to improve offline and operator workflows.
+
+### Changed
+- Refined `kinnoo init` UX to require explicit framework selection for non-interactive use while supporting interactive wizard-based selection when no args are provided.
+- Updated `kinnoo init` scaffold defaults/minimal behavior and template outputs to align generated files and entrypoints with framework/language expectations.
+- Clarified and hardened `kinnoo pack` options (`--include`/`--exclude`, preflight behavior, bump semantics, signing argument shape).
+- Updated `kinnoo publish` option semantics so local and remote targets are mutually exclusive and reflected consistently in help/JSON output.
+- Simplified and hardened `kinnoo install` OpenClaw-related behavior and option surface; removed deprecated flags and aligned defaults with workspace-based installs.
+- Renamed `run` policy flag semantics from sandbox wording to explicit policy-enforcement wording for clearer operator intent.
+- Updated `inspect --update` behavior to use key/value updates with confirmation prompts (unless warnings are explicitly skipped).
+
+### Notes
+- This patch release focuses on CLI behavior parity with current UAT expectations and automation-friendly output contracts.
+
+## [v0.7.5] - 2026-04-11
+### Added
+- Added dedicated Lambda security-check ECR repository management in Terraform, including lifecycle policy and root/module outputs for image publishing workflows.
+- Added automation script at scripts/ops/build_and_push_lambda_security_check_image.sh to build and push Lambda-compatible container images to the Terraform-managed ECR repository.
+
+### Changed
+- Completed task487 CLI UX hardening updates: removed legacy init --framework option, removed run --thinking option, and added orange-prefixed subcommand help description lines.
+- Hardened Terraform lambda_security_check_image_uri input by removing invalid public base-image default and requiring explicit private ECR image URI + tag.
+- Updated dev Terraform environment configuration to reference a valid private ECR Lambda image URI.
+- Added Lambda invoke retry/fallback semantics in server security-check dispatch flow with deterministic retry count and fallback marker reporting.
+
+### Notes
+- Task487 implementation includes infrastructure preparation and successful Lambda function creation using a pushed private ECR image.
+- Lambda execution path has not yet been fully validated end-to-end via publish-triggered invocation and full security-report writeback verification in the live environment.
+
+## [v0.7.4] - 2026-04-10
+### Added
+- Completed Feature115 UAT Part 1 CLI hardening delivery (tasks 453-486), including the new `kinnoo fetch` command and expanded uninstall target modes.
+- Added registry UI security signal surfaces for list/search/details views, including concise security status indicators and a selected-agent Security tab.
+- Added server-side post-publish security checks with persisted report metadata and containerized async execution wiring.
+
+### Changed
+- Hardened CLI command UX across init/pack/publish/install/run/inspect/list/search to align with UAT Part 1 behaviors and structured output expectations.
+- Updated CLI remote-registry error handling to avoid uncaught Python tracebacks for list/search/fetch/publish failures; commands now emit concise `[kinnoo]` error lines with response payload when available (task486).
+
+### Notes
+- Feature115 coverage now includes 34 tasks (task453-task486) and 46 mapped tests (test628-test673).
+
+## [v0.7.3] - 2026-04-10
+### Changed
+- Minor kinnoo init usage changes
+- Minor kinnoo help usage menu edits
+
+## [v0.7.2] - 2026-04-10
+### Added
+- Added runtime language normalization helper to treat `nodejs`, `javascript`, and `typescript` as Node-compatible runtime aliases across CLI execution and validation flows.
+- Added regression coverage for publish manifest acceptance without top-level `framework`, plus JS/TS init manifest runtime-language correctness.
+- Added task452 rollout notes documenting ECS rebuild/redeploy verification and digest match evidence.
+
+### Changed
+- Fixed remote publish validation so manifests are accepted with required `name` and `version` fields without enforcing a top-level `framework` field.
+- Updated JS/TS scaffold generation so generated manifests emit `runtime.language` as `javascript` or `typescript` (instead of `nodejs`).
+- Updated CLI help/list/search text to clarify remote-registry default behavior when configured, and aligned local/remote option descriptions.
+- Updated Phase 13 UAT planning notes with explicit task mapping annotations for task453 through task483.
+
+### Notes
+- Task452 implementation and verification commit: `9f74fba`.
+- CLI help + UAT documentation update commit: `c131381`.
+
+## [v0.7.1] - 2026-04-09
+### Added
+- Added remote install hardening for registry latest resolution so `kinnoo install --remote <agent>` resolves explicit `latest_version` before download resolution.
+- Added authenticated archive byte retrieval route for local-backend download responses (`/api/agents/{tenant}/{agent}/{version}/archive`) and route-level rewrite of non-client-reachable `file://` payloads.
+- Added S3 missing-key normalization in server and mock-server storage backends so missing objects map to `FileNotFoundError` instead of unhandled provider exceptions.
+- Added regression coverage for:
+  - remote latest resolution and authenticated same-host download fetch,
+  - local-backend download URL rewrite + archive endpoint behavior,
+  - S3 missing-key normalization for server/mock-server backends.
+
+### Changed
+- Updated ECS runtime registry configuration to explicit S3 backend env vars (`REGISTRY_STORAGE_BACKEND`, `REGISTRY_S3_BUCKET`, `REGISTRY_S3_REGION`) for archive/metadata persistence in object storage.
+- Switched deployment image build/push workflow to explicit `linux/amd64` manifests to satisfy ECS/Fargate pull requirements and avoid architecture mismatch rollout failures.
+- Seeded remote S3-backed registry with first published agent and validated end-to-end `kinnoo list` + `kinnoo install --remote` behavior.
+
+### Notes
+- Pre-cutover local/EFS-only registry artifacts are not automatically present in S3 and must be republished or migrated to restore installability.
+
+## [v0.7.0] - 2026-04-06
+### Added
+- Consolidated Phase 7+ delivery into a dev-ready platform release spanning CLI, backend API, and frontend operator flows.
+- Added first-class registry auth operator workflows (`kinnoo login`, `kinnoo logout`) with persisted auth state and hardened precedence behavior.
+- Added fail-closed remote registry behavior for `kinnoo list --remote` and `kinnoo search --remote` with explicit remediation messaging instead of local fallback.
+- Added tenant-resolution hardening so login/publish flows rely on server-resolved tenant context and persisted token claims.
+- Added OpenClaw wrapper/runtime and skill-search integration improvements from feature76 onward.
+- Added framework-adapter import enhancements and guidance-oriented fallback behavior for `kinnoo import --from ...`.
+- Added trust and supply-chain hardening features across packaging/install:
+  - embedded integrity manifests,
+  - detached and embedded signature workflows,
+  - strict trust/verification gates for install and publish,
+  - explicit trust diagnostics and policy controls.
+- Added uninstall lifecycle command coverage and metadata cleanup behavior.
+- Added backend hardening and registry server readiness improvements for auth, policy, and remote publish/list/search paths.
+- Added dev environment readiness work across frontend/backend deployment paths (Cloudflare + ECS) and operational validation scripts.
+
+### Changed
+- Re-versioned historical release numbering to align with patch/minor cadence and reduce artificial minor bumps.
+- Promoted the CLI+backend+frontend stack to a cohesive dev-ready release baseline suitable for PyPI publication workflows.
+- Hardened publish authentication precedence so logged-in token/tenant state is preferred and admin-env fallback is used only when auth state is missing.
+- Improved edge compatibility for auth token requests by using explicit HTTP user-agent handling and clearer diagnostics for edge-denied responses.
+
+## [v0.6.0] - 2026-03-30
 ### Added
 - Implemented Feature66 OpenClaw run adapter v1 for `type: openclaw-skill` manifests behind explicit compatibility gating.
 - Added backend selection diagnostics for OpenClaw adapter routing:
@@ -38,7 +145,7 @@ All notable changes to this project will be documented in this file.
 - Adapter compatibility is intentionally explicit: kinnoo does not silently switch incompatible execution strategies.
 - `kinnoo run --preflight` remains a readiness path and does not require adapter enablement.
 
-## [v0.29.0] - 2026-03-26
+## [v0.5.5] - 2026-03-26
 ### Added
 - Added CLI auth commands:
   - `kinnoo login` for interactive and non-interactive registry token issuance and local auth-state persistence.
@@ -54,7 +161,7 @@ All notable changes to this project will be documented in this file.
 - Bumped project version from v0.28.0 to v0.29.0.
 - Documented auth-state precedence and post-logout behavior for publish/registry flows in README.
 
-## [v0.28.0] - 2026-03-24
+## [v0.5.4] - 2026-03-24
 ### Added
 - Better support for openclaw agents
 - Improved kinnoo import
@@ -64,7 +171,7 @@ All notable changes to this project will be documented in this file.
 - Added --full, --update, --raw flags to kinnoo inspect
 
 
-## [v0.27.0] - 2026-03-20
+## [v0.5.3] - 2026-03-20
 ### Added
 - Completed Feature30 "Registry Web UI" Tech Lead review and merge-readiness approval cycle.
 - Added authenticated web UI routes and templates for login, listing, search, and per-agent profile/download flows aligned with session-first policy.
@@ -86,7 +193,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase3/main`).
 
 
-## [v0.26.0] - 2026-03-20
+## [v0.5.2] - 2026-03-20
 ### Added
 - Completed Feature29 "Remote Registry Server" remediation cycle and approval readiness review for merge.
 - Added FastAPI auth token route wiring (`POST /api/auth/token`) so auth issuance is part of the live API surface and covered by route-level controls.
@@ -110,7 +217,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase3/main`).
 
 
-## [v0.25.0] - 2026-03-20
+## [v0.5.1] - 2026-03-20
 ### Added
 - Completed Feature28 "Registry Backend Abstraction & Remote Client" implementation review and merge readiness approval.
 - Added formal Tech Lead review evidence for feature28 covering backend abstraction, remote client behavior, config/env precedence, and remote error UX contracts.
@@ -128,7 +235,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.24.0] - 2026-03-19
+## [v0.5.0] - 2026-03-19
 ### Added
 - Completed Feature43 "Auth, User & Tenant Management" endpoint requirements for AC4 and AC5.
 - Added explicit API handlers in server endpoint layer for:
@@ -151,7 +258,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.23.0] - 2026-03-20
+## [v0.4.10] - 2026-03-20
 ### Added
 - Implemented Feature41 "Runtime Defense-in-Depth (Behavioral Monitoring + Dynamic Enforcement)" with baseline runtime telemetry event capture for process, network, and filesystem activity.
 - Added deterministic policy-violation handling with structured reason codes, warning mode, and hard kill-switch termination for high-risk violations.
@@ -169,7 +276,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.22.0] - 2026-03-19
+## [v0.4.9] - 2026-03-19
 ### Added
 - Implemented Feature40 "Archive Signing & Publisher Verification" with Ed25519 key generation (`kinnoo keygen`) and signed archive packaging support (`kinnoo pack --sign`).
 - Added install-time detached-signature verification for signed archives, including explicit block behavior and remediation guidance for invalid signatures.
@@ -187,7 +294,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.21.0] - 2026-03-19
+## [v0.4.8] - 2026-03-19
 ### Changed
 - Applied SWE regression remediation for permission-model compatibility paths referenced in feature review notes, including validator compatibility and regression-gate stabilization.
 - Hardened sandbox backend deterministic failure-shape behavior for feature39 run enforcement paths.
@@ -199,7 +306,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.20.0] - 2026-03-19
+## [v0.4.7] - 2026-03-19
 ### Added
 - Implemented Feature38 "JS/TS Static Security Sweep" with cross-language static scanning support for `.js`, `.mjs`, `.ts`, and `.json` artifacts.
 - Added risky JS/TS execution primitive detection (`eval`, `Function` constructor, and child-process execution patterns) with deterministic file/line finding evidence.
@@ -215,7 +322,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.19.0] - 2026-03-19
+## [v0.4.6] - 2026-03-19
 ### Added
 - Implemented Feature37 "Node.js Dependency Audit & Lifecycle Script Controls" with install-time Node audit visibility and deterministic severity summary reporting (`critical/high/moderate/low`).
 - Added machine-readable Node install trace output capturing lifecycle-script detection, severity counts, and policy decisions.
@@ -233,7 +340,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.18.0] - 2026-03-19
+## [v0.4.5] - 2026-03-19
 ### Added
 - Implemented Feature36 "OpenClaw Import Detection & Manifest Inference" with weighted strong/medium OpenClaw evidence detection surfaced through analyzer confidence metadata.
 - Added OpenClaw import inference for runtime hints (`language: nodejs`, `type: daemon`, package manager), detected `skills` paths, and candidate mutable `state_dirs`.
@@ -249,7 +356,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.17.0] - 2026-03-19
+## [v0.4.4] - 2026-03-19
 ### Added
 - Implemented Feature35 "Mutable State Directories in Pack/Install" with first-class `state_dirs` snapshot semantics for mutable runtime state.
 - Added structured `state_dirs` entry support (`path`, optional `exclude`) with validator checks for safe relative paths and traversal-resistant exclude patterns.
@@ -267,7 +374,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.16.0] - 2026-03-18
+## [v0.4.3] - 2026-03-18
 ### Added
 - Implemented Feature33 "Manifest Schema Extensions for OpenClaw/JS Agents" with optional schema fields: `runtime.package_manager`, `channels`, `skills`, and `state_dirs`.
 - Added framework-targeted validation path for `framework: openclaw` with explicit diagnostics and required-field guidance.
@@ -283,7 +390,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.15.0] - 2026-03-18
+## [v0.4.2] - 2026-03-18
 ### Added
 - Implemented Feature32 "Daemon Runtime Type + Process Controls" with first-class `runtime.type: daemon` manifest support.
 - Added daemon lifecycle operator commands in CLI: `kinnoo stop`, `kinnoo attach`, and `kinnoo logs`.
@@ -299,7 +406,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.14.0] - 2026-03-17
+## [v0.4.1] - 2026-03-17
 ### Added
 - Implemented Feature42 "JSON Input/Output Types for Agent Interop" with first-class manifest contract support for `inputs.type: json` and `outputs.type: json`.
 - Added structured run input modes for JSON payload delivery:
@@ -318,7 +425,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.13.0] - 2026-03-17
+## [v0.4.0] - 2026-03-17
 ### Added
 - Implemented Feature31 "Node.js Runtime Support (Foundation)" for first-class `runtime.language: nodejs` execution and install workflows.
 - Added node runtime execution path in `kinnoo run` with parity for input forwarding, stdout/stderr streaming, and exit-code propagation.
@@ -341,7 +448,7 @@ All notable changes to this project will be documented in this file.
 - Merge commit: TBD (populate after merge to `phase4/main`).
 
 
-## [v0.12.1] - 2026-03-16
+## [v0.3.5] - 2026-03-16
 ### Added
 - Implemented Feature19 "kinnoo import - Analyzer-backed onboarding wizard" for in-place project onboarding.
 - Added `kinnoo import [path]` flow (default `.`) that analyzes existing projects and generates `kinnoo.yaml` without scaffold-copy behavior.
@@ -358,7 +465,7 @@ All notable changes to this project will be documented in this file.
 - Full regression suite passes after remediation: `259 passed, 1 skipped`.
 
 
-## [v0.12.0] - 2026-03-16
+## [v0.3.4] - 2026-03-16
 ### Added
 - Implemented Feature25 "Service Health Checks - Runtime Preflight" with HTTP, TCP, and process probes integrated into `kinnoo run` and `--preflight` flows.
 - Added interactive/non-interactive health-check decision behavior so failed checks can warn-and-proceed in interactive mode and fail-fast in non-interactive mode.
@@ -373,7 +480,7 @@ All notable changes to this project will be documented in this file.
 - Feature25 and Feature26 follow-up validation completed with full regression pass: `238 passed, 1 skipped`.
 
 
-## [v0.11.0] - 2026-03-16
+## [v0.3.3] - 2026-03-16
 ### Added
 - Implemented Feature24 "Service Declarations - Manifest Schema" with optional `services` manifest support.
 - Added canonical service type taxonomy support: `mcp-server`, `vector-db`, `database`, `api`, `local-process`.
@@ -394,7 +501,7 @@ All notable changes to this project will be documented in this file.
 - Full regression suite passed after feature24 updates: `222 passed, 1 skipped`.
 
 
-## [v0.10.0] - 2026-03-16
+## [v0.3.2] - 2026-03-16
 ### Added
 - Implemented Feature23 "MCP Server Runtime Type - Schema & Lifecycle".
 - Added `mcp-server` as a supported `runtime.type` value alongside `one-shot`.
@@ -411,7 +518,7 @@ All notable changes to this project will be documented in this file.
 - Executed full regression suite after feature23 integration: `215 passed, 1 skipped`.
 
 
-## [v0.9.0] - 2026-03-16
+## [v0.3.1] - 2026-03-16
 ### Added
 - Implemented Feature22 "Asset Bundling" with manifest-level `assets` support (`paths`, `bundle`, `max_bundle_size_mb`).
 - Added recursive asset inclusion during `kinnoo pack` for declared files/directories when bundling is enabled.
@@ -431,7 +538,7 @@ All notable changes to this project will be documented in this file.
 - Feature22-focused validation and regression suites passed across validator, pack, install extract, inspect, and regression gate coverage.
 
 
-## [v0.8.0] - 2026-03-15
+## [v0.3.0] - 2026-03-15
 ### Added
 - Implemented Feature20 "Flexible Runtime Inputs" for `kinnoo run`.
 - Added support for no-input execution when manifests declare `inputs.required: false`.
@@ -446,7 +553,7 @@ All notable changes to this project will be documented in this file.
 - Feature20 follow-up regression checks passed, including required-input/pass-through compatibility paths.
 
 
-## [v0.7.0] - 2026-03-13
+## [v0.2.5] - 2026-03-13
 ### Added
 - Completed Phase 2 feature delivery and validation across runtime safety, trust, archive integrity, and packaging UX.
 - Finalized input safety guard coverage in `kinnoo run`, including type-aware detection, interactive warn-and-confirm flow, and CI-friendly bypass controls.
@@ -462,7 +569,7 @@ All notable changes to this project will be documented in this file.
   - Full test suite: `158 passed, 1 skipped`
 
 
-## [v0.6.0] - 2026-03-13
+## [v0.2.4] - 2026-03-13
 ### Added
 - Implemented Feature18 "Input Safety Guard" with pre-entrypoint input threat detection in `kinnoo run`.
 - Added pluggable guard architecture via `InputGuard` protocol and `get_default_guard()` factory for future ML-based guard replacement.
@@ -481,7 +588,7 @@ All notable changes to this project will be documented in this file.
   - Full repository suite: `156 passed, 1 skipped`
 
 
-## [v0.5.0] - 2026-03-12
+## [v0.2.3] - 2026-03-12
 ### Added
 - Implemented Feature17 "Pack Size Reporting & Warnings" across pack/inspect/list workflows.
 - Added pack-time archive size output: `[kinnoo pack] Archive size: <human-readable>`.
@@ -497,7 +604,7 @@ All notable changes to this project will be documented in this file.
 - Full repository validation now passes after stabilization: `140 passed, 1 skipped`.
 
 
-## [v0.4.0] - 2026-03-11
+## [v0.2.2] - 2026-03-11
 ### Added
 - Implemented Feature16 "Archive Integrity (Checksums)" across pack/install/inspect/publish workflows.
 - Added checksum sidecar generation during pack using sibling `.kno.sha256` files with stable `<sha256>  <archive-filename>` format.
@@ -509,7 +616,7 @@ All notable changes to this project will be documented in this file.
 - Strengthened artifact provenance and tamper detection by validating archive digests before extraction side effects.
 
 
-## [v0.3.0] - 2026-03-11
+## [v0.2.1] - 2026-03-11
 ### Added
 - Implemented Feature15 "Trust Baseline" across install, run, inspect, and pack flows.
 - Added install-time trust summary with confirmation prompt and `--yes`/`-y` automation bypass.

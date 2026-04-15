@@ -8,212 +8,506 @@ This reference documents the current Kinnoo command-line interfaces.
 ## Conventions
 
 - Exit code `0`: command completed successfully.
-- Exit code non-zero: command failed validation or runtime execution.
-- Most command examples assume you run from repository root or a workspace where agent paths are valid.
+- Exit code non-zero: command failed validation, trust checks, network/auth checks, or runtime execution.
+- Most examples assume you run from repository root or a workspace where agent paths are valid.
 
 ## Common Environment Variables
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `KINNOO_REGISTRY_URL` | login/publish/install/list/search/sync | Remote registry base URL override |
-| `KINNOO_REGISTRY_TOKEN` | publish/install/list/search | Remote auth token override |
-| `KINNOO_TENANT_SLUG` | publish/install/list/search | Tenant context override |
-| `KINNOO_ARCHIVE_ROOT` | pack/publish/install/list/search | Local archive root override |
-| `KINNOO_REGISTRY_ROOT` | publish/list/search/sync | Local mock registry root override |
-| `KINNOO_HTTP_USER_AGENT` | login/publish auth calls | HTTP User-Agent override |
+| `KINNOO_REGISTRY_URL` | `login`, `publish`, `install`, `list`, `search`, `fetch` | Remote registry base URL override |
+| `KINNOO_REGISTRY_TOKEN` | `publish`, `install`, `list`, `search`, `fetch` | Remote auth token override |
+| `KINNOO_TENANT_SLUG` | `publish`, `install`, `list`, `search`, `fetch` | Tenant context override |
+| `KINNOO_ARCHIVE_ROOT` | `pack`, `publish`, `install`, `list`, `search`, `fetch`, `uninstall` | Local archive storage root override |
+| `KINNOO_REGISTRY_ROOT` | `publish`, `install`, `list`, `search`, `fetch` | Local/mock registry root override |
+| `KINNOO_HTTP_USER_AGENT` | `login`, auth/publish calls | HTTP User-Agent override |
 
 ## Client Commands (`kinnoo`)
 
 ### init
 
-- Usage: `kinnoo init [--framework <framework>] [--language <language>] <agent_name>`
+- Usage: `kinnoo init [framework] [--language {python,javascript,typescript}] [--minimal] [agent_name]`
 - Description: Scaffold a new agent directory.
-- Arguments: `agent_name`.
+- Arguments:
+  - `framework` (optional): framework template.
+  - `agent_name` (optional): destination folder name.
 - Options:
-  - `--framework {gemini,chatgpt,claude-chat,pydantic-ai,langgraph,openai-agents,mcp-client,mcp-server,openclaw}`
-  - `--language {python,js,javascript,ts,typescript}`
-- Env vars: none required.
-- Exit codes: non-zero on invalid name or existing target directory.
-- Examples:
-  - `kinnoo init my-agent`
-  - `kinnoo init --framework chatgpt my-chat-agent`
+  - `--language`: choose scaffold language when framework supports multiple runtimes.
+  - `--minimal`: generate minimal scaffold only (skip extra `tools/`, `prompts/`, `evals/`, `tests/`, `data/` extras).
+- Practical notes:
+  - If both `framework` and `agent_name` are omitted in an interactive terminal, Kinnoo opens an interactive wizard.
+  - Legacy `kinnoo init <agent_name>` remains backward-compatible.
+- Exit codes: non-zero on invalid names, unsupported framework/language combinations, or existing target directory.
+
+Examples:
+
+If you want to quickly scaffold a chat agent with explicit framework choice:
+
+```bash
+kinnoo init chatgpt my-agent
+```
+
+If you want a barebones template and control language explicitly:
+
+```bash
+kinnoo init no-framework --language python my-bare-agent
+```
+
+If you want only minimal files for a fast prototype:
+
+```bash
+kinnoo init chatgpt --minimal my-prototype
+```
+
+Follow-up command you usually run next:
+
+```bash
+kinnoo run ./my-agent --preflight
+```
 
 ### run
 
 - Usage: `kinnoo run [options] <agent_dir> [input]`
 - Description: Execute an agent locally.
-- Arguments: `agent_dir`, optional `input`.
-- Options: `--preflight`, `--no-guard`, `--json-input`, `--json-file`, `--sandbox`, `--dry-run`, `--thinking`, `--json`, `--max-seconds`, `--max-cpu-seconds`, `--max-memory-mb`.
-- Env vars: command-specific runtime env vars declared in `kinnoo.yaml` may be required.
-- Exit codes: propagates runtime or validation failures.
-- Examples:
-  - `kinnoo run ./my-agent "hello"`
-  - `kinnoo run ./my-agent --preflight`
+- Arguments:
+  - `agent_dir`: path to agent directory.
+  - `input` (optional): input string.
+- Options:
+  - `--preflight`: validate readiness only; do not execute entrypoint.
+  - `--no-guard`: disable input guard checks for CI/automation.
+  - `--json-input`: provide inline JSON payload.
+  - `--json-file`: provide JSON payload from file.
+  - `--enforce-policy`: enforce manifest-declared runtime permission policy checks.
+  - `--dry-run`: preview runtime behavior without full side effects.
+  - `--json`: machine-readable output envelope (or passthrough for OpenClaw mode).
+  - `--max-seconds`, `--max-cpu-seconds`, `--max-memory-mb`: runtime resource/time limits.
+- Exit codes: non-zero on manifest/runtime validation failures or runtime process failures.
+
+Examples:
+
+If you want a normal local run with string input:
+
+```bash
+kinnoo run ./my-agent "hello"
+```
+
+If you want to validate runtime readiness in CI without executing business logic:
+
+```bash
+kinnoo run ./my-agent --preflight
+```
+
+If you want structured input and structured output for automation pipelines:
+
+```bash
+kinnoo run ./my-agent --json-input '{"task":"ping"}' --json
+```
+
+If you want policy enforcement plus hard execution limits:
+
+```bash
+kinnoo run ./my-agent "summarize this" --enforce-policy --max-seconds 30 --max-memory-mb 512
+```
 
 ### test
 
-- Usage: `kinnoo test [--tests-file <path>] [--validate-only] [--json] <agent_dir>`
-- Description: Run declarative tests for an agent.
-- Arguments: `agent_dir`.
-- Options: `--tests-file`, `--validate-only`, `--json`.
-- Env vars: none required.
+- Usage: `kinnoo test [--tests-file <path>] [--validate-only] [--json] [--verbose] [--create [file]] [--append] [agent_dir]`
+- Description: Run declarative tests for an agent, or create/update a tests file interactively.
+- Options:
+  - `--tests-file`: path to `kinnoo.tests.yaml` (relative to agent dir or absolute).
+  - `--validate-only`: parse and validate test declarations without execution.
+  - `--json`: machine-readable results.
+  - `--verbose`: include per-test diagnostics.
+  - `--create [file]`: interactively create tests file (default `kinnoo.tests.yaml`).
+  - `--append`: append new cases during interactive create flow.
 - Exit codes: non-zero when declarations are invalid or tests fail.
-- Examples:
-  - `kinnoo test ./my-agent --validate-only`
+
+Examples:
+
+If you want to fail fast on schema/test file problems before runtime execution:
+
+```bash
+kinnoo test ./my-agent --validate-only
+```
+
+If you want rich diagnostics while iterating locally:
+
+```bash
+kinnoo test ./my-agent --verbose
+```
+
+If you want CI-friendly machine-readable results:
+
+```bash
+kinnoo test ./my-agent --json
+```
+
+If you want to bootstrap a new test suite interactively:
+
+```bash
+kinnoo test ./my-agent --create
+```
 
 ### check
 
-- Usage: `kinnoo check <target>`
-- Description: Run import + inspect + preflight checks for a local target or GitHub URL.
-- Arguments: `target` (path or URL).
-- Options: none.
-- Env vars: none required.
-- Exit codes: non-zero when compatibility checks fail.
-- Examples:
-  - `kinnoo check ./my-agent`
+- Usage: `kinnoo check [target]`
+- Description: Run import + inspect + preflight compatibility checks for a local path or GitHub URL.
+- Exit codes: non-zero on compatibility or validation failures.
+
+Examples:
+
+If you want a single-command compatibility check before onboarding a project:
+
+```bash
+kinnoo check ./my-agent
+```
+
+If you want to evaluate a repository before importing or packaging:
+
+```bash
+kinnoo check https://github.com/org/repo
+```
 
 ### import
 
-- Usage: `kinnoo import [options] [target] [import_path]`
-- Description: Import an existing project and prepare Kinnoo metadata.
-- Arguments: `target`, optional `import_path` for URL imports.
-- Options: `--force`, `--source`, `--live-fallback`, `--from`.
-- Env vars: depends on source workflow.
-- Exit codes: non-zero on import/validation failure.
-- Examples:
-  - `kinnoo import ./existing-project --force`
-  - `kinnoo import --source clawhub weather/weather-skill`
+- Usage: `kinnoo import [target] [import_path] [--force] [--source clawhub] [--live-fallback] [--from {langchain,langgraph,openai}]`
+- Description: Import an existing project in-place and prepare Kinnoo metadata.
+- Options:
+  - `--force`: overwrite existing `kinnoo.yaml`.
+  - `--source`: import from a supported source namespace.
+  - `--live-fallback`: allow remote fallback when mirror record is missing.
+  - `--from`: apply framework-aware adapter hints.
+- Exit codes: non-zero on import/validation failures.
+
+Examples:
+
+If you want to convert an existing local project to a Kinnoo-compatible structure:
+
+```bash
+kinnoo import ./existing-project --force
+```
+
+If you want to import a GitHub repo into a local folder:
+
+```bash
+kinnoo import https://github.com/org/repo ./imported-agent
+```
 
 ### pack
 
-- Usage: `kinnoo pack [--bump {patch,minor,major}] [--sign] [--signing-key <path>] [--preflight] <agent_dir>`
+- Usage: `kinnoo pack [options] <agent_dir>`
 - Description: Package an agent directory into a `.kno` archive.
-- Arguments: `agent_dir`.
-- Options: `--bump`, `--sign`, `--signing-key`, `--preflight`, `--public`.
+- Options:
+  - `--public`: ensure `visibility: public` before packaging.
+  - `--bump [patch|minor|major]`: bump version before packaging. `--bump` with no value defaults to `patch`.
+  - `--sign SIGNING_KEY`: sign archive with Ed25519 private key PEM.
+  - `--preflight`: show files/estimated size/destination without creating archive.
+  - `--include`: include additional paths relative to agent root (repeatable).
+  - `--exclude`: exclude paths relative to agent root (repeatable).
+  - `--json`: machine-readable output and suppressed progress logs.
 - Env vars: `KINNOO_ARCHIVE_ROOT`.
 - Exit codes: non-zero on manifest/file validation or packaging failure.
-- Examples:
-  - `kinnoo pack ./my-agent`
-  - `kinnoo pack ./my-agent --sign --signing-key ./keys/private.pem`
+
+Examples:
+
+If you want the default private package artifact:
+
+```bash
+kinnoo pack ./my-agent
+```
+
+If you want to bump patch version and sign before publishing:
+
+```bash
+kinnoo keygen
+kinnoo pack ./my-agent --bump --sign ./kinnoo-ed25519-private.pem
+```
+
+If you want to validate what will be packaged before committing to archive output:
+
+```bash
+kinnoo pack ./my-agent --preflight --include data --exclude tests
+```
+
+Follow-up command commonly used for signed artifacts:
+
+```bash
+kinnoo publish ./my-agent --pack --strict --remote
+```
+
+### diff
+
+- Usage: `kinnoo diff <archive_a> <archive_b> [--json]`
+- Description: Compare two `.kno` archives and report manifest/file differences.
+- Options:
+  - `--json`: machine-readable diff payload.
+
+Example:
+
+If you want to review exactly what changed between two packaged versions:
+
+```bash
+kinnoo diff ./dist/agent-1.0.0.kno ./dist/agent-1.1.0.kno
+```
+
+### publish
+
+- Usage: `kinnoo publish [--local | --remote] [--pack] [--public] [--bump {major,minor,patch}] [--strict] [--json] <target>`
+- Description: Publish an archive, an archive source by agent name, or pack-then-publish from an agent directory.
+- Target behavior:
+  - Without `--pack`: target is agent name or `.kno` path.
+  - With `--pack`: target must be an agent directory path.
+- Options:
+  - `--local` / `--remote`: choose registry backend (mutually exclusive).
+  - `--pack`: package first, then publish.
+  - `--public`: with `--pack`, enforce `visibility: public` before packaging.
+  - `--bump`: with `--pack`, apply version bump before publish.
+  - `--strict`: require strict trust/signature gates before upload.
+  - `--json`: machine-readable publish result.
+- Exit codes: non-zero for auth/config/publish/trust failures.
+
+Examples:
+
+If you already packaged and just want to publish by agent name:
+
+```bash
+kinnoo publish my-agent --remote
+```
+
+If you want a single command to package, bump, and publish remotely:
+
+```bash
+kinnoo publish ./my-agent --pack --bump patch --remote
+```
+
+If you want strict trust gating and machine-readable output in CI:
+
+```bash
+kinnoo publish ./my-agent --pack --strict --remote --json
+```
+
+### list
+
+- Usage: `kinnoo list [--local | --remote] [--json]`
+- Description: List local archive entries or remote registry summaries.
+- Options:
+  - `--local` / `--remote`: backend selection.
+  - `--json`: machine-readable list payload.
+
+Examples:
+
+If you want to inspect what is available in your remote registry tenant:
+
+```bash
+kinnoo list --remote
+```
+
+If you want local archive inventory for cleanup/automation scripts:
+
+```bash
+kinnoo list --local --json
+```
+
+### search
+
+- Usage: `kinnoo search [--local | --remote] [--json] <query>`
+- Description: Search agent names/descriptions in local archive or remote registry.
+- Options:
+  - `--local` / `--remote`: backend selection.
+  - `--json`: machine-readable search payload.
+
+Examples:
+
+If you want to discover candidate agents in remote registry by keyword:
+
+```bash
+kinnoo search mcp --remote
+```
+
+If you want automation-friendly local search results:
+
+```bash
+kinnoo search writer --local --json
+```
+
+### fetch
+
+- Usage: `kinnoo fetch [--local | --remote] [--strict] [--json] <name|name==version>`
+- Description: Download an agent archive from registry into local archive storage without unpacking.
+- Options:
+  - `--local` / `--remote`: backend selection.
+  - `--strict`: require signature verification in addition to integrity checks.
+  - `--json`: machine-readable fetch result.
+- Exit codes: non-zero on selector, auth, download, or trust validation failures.
+
+Examples:
+
+If you want to mirror an archive locally for offline inspection:
+
+```bash
+kinnoo fetch my-agent --remote
+```
+
+If you want to enforce strict trust checks while fetching:
+
+```bash
+kinnoo fetch my-agent==1.2.3 --remote --strict
+```
+
+Follow-up command typically used after fetch:
+
+```bash
+kinnoo install my-agent==1.2.3 --local --strict
+```
 
 ### install
 
 - Usage: `kinnoo install [options] <agent[==version]|archive.kno> [target_dir]`
 - Description: Install from archive path or registry selector.
-- Arguments: install target and optional output directory.
-- Options: includes `--yes`, `--strict`, `--skip-verify`, `--frozen`, `--local`, `--remote`, and OpenClaw/Node-focused options.
-- Env vars: `KINNOO_REGISTRY_URL`, `KINNOO_REGISTRY_TOKEN`, `KINNOO_TENANT_SLUG`, `KINNOO_ARCHIVE_ROOT`, `KINNOO_REGISTRY_ROOT`.
-- Exit codes: non-zero on trust/validation/install failure.
-- Examples:
-  - `kinnoo install ./dist/my-agent-1.0.0.kno`
-  - `kinnoo install my-agent==1.2.0 --remote`
+- Options:
+  - `-y`, `--yes`: skip confirmation prompt.
+  - `--accept-permissions`: acknowledge manifest permissions in non-interactive mode.
+  - `--allow-unverified-publisher`: allow non-interactive install when signature metadata is absent.
+  - `--strict`: require strict signature + integrity verification.
+  - `--skip-verify`: skip verification checks (development-only).
+  - `--frozen`: require lockfile-only reproducible install.
+  - `--local` / `--remote`: backend selection for registry selectors.
+  - `--json`: machine-readable install result (requires `-y`).
+- Exit codes: non-zero on trust, validation, or install failures.
 
-### publish
+Examples:
 
-- Usage: `kinnoo publish [--local|--remote] [--pack] [--bump {major,minor,patch}] [--strict] [--public] <target>`
-- Description: Publish an archive or latest local archive source to registry backend.
-- Arguments: agent name, archive path, or with `--pack` an agent directory path.
-- Options: `--local`, `--remote`, `--pack`, `--bump`, `--strict`, `--public`.
-- Env vars: `KINNOO_REGISTRY_URL`, `KINNOO_REGISTRY_TOKEN`, `KINNOO_TENANT_SLUG`, `KINNOO_REGISTRY_ROOT`.
-- Exit codes: non-zero for config/auth/publish failures.
-- Examples:
-  - `kinnoo publish my-agent --remote`
-  - `kinnoo publish ./my-agent --pack --bump patch --public --remote`
+If you want to install from a local archive file into default location:
 
-### list
+```bash
+kinnoo install ./dist/my-agent-1.0.0.kno
+```
 
-- Usage: `kinnoo list [--local|--remote]`
-- Description: List local archive entries or remote registry summaries.
-- Arguments: none.
-- Options: `--local`, `--remote`.
-- Env vars: remote mode uses registry env vars.
-- Exit codes: non-zero when remote configuration/auth is missing.
-- Examples:
-  - `kinnoo list --remote`
+If you want to install from remote registry with strict trust checks:
 
-### search
+```bash
+kinnoo install my-agent==1.2.0 --remote --strict
+```
 
-- Usage: `kinnoo search [--local|--remote] [--openclaw-skill] [--json] <query>`
-- Description: Search local archive, remote registry, or OpenClaw skills.
-- Arguments: `query`.
-- Options: `--local`, `--remote`, `--openclaw-skill`, `--json`.
-- Env vars: remote mode uses registry env vars.
-- Exit codes: non-zero on invalid query or remote config/auth errors.
-- Examples:
-  - `kinnoo search writer --remote`
+If you want non-interactive CI install output as JSON:
 
-### sync
+```bash
+kinnoo install my-agent --remote -y --json
+```
 
-- Usage: `kinnoo sync [--full] [--since <iso8601>] [--local|--remote] clawhub`
-- Description: Sync source metadata into local mirror.
-- Arguments: source (currently `clawhub`).
-- Options: `--full`, `--since`, `--local`, `--remote`.
-- Env vars: remote sync uses registry env vars.
-- Exit codes: non-zero on sync failures.
-- Examples:
-  - `kinnoo sync clawhub --full`
+### inspect
 
-### login
+- Usage: `kinnoo inspect [--full] [--raw] [--json] [--update KEY NEW_VALUE] [--skip-warnings] <target>`
+- Description: Inspect or update manifest metadata in an agent directory or `.kno` archive.
+- Options:
+  - `--full`: include all known metadata fields, including N/A values.
+  - `--raw`: print dotted-path key/value fields.
+  - `--json`: machine-readable inspect output.
+  - `--update KEY NEW_VALUE`: update a manifest field.
+  - `--skip-warnings`: bypass interactive warnings for update operations.
+- Exit codes: non-zero on invalid target or failed validation/update.
 
-- Usage: `kinnoo login [--email <email>] [--password <password>]`
-- Description: Authenticate to registry and persist auth state.
-- Arguments: none.
-- Options: `--email`, `--password`.
-- Env vars: `KINNOO_REGISTRY_URL`, `KINNOO_HTTP_USER_AGENT`.
-- Exit codes: non-zero on auth/network failures.
-- Examples:
-  - `kinnoo login`
+Examples:
 
-### logout
+If you want a fast human-readable metadata check before packaging:
 
-- Usage: `kinnoo logout`
-- Description: Clear persisted local registry auth state.
-- Arguments: none.
-- Options: none.
-- Env vars: none required.
-- Exit codes: zero even when no stored auth exists.
-- Examples:
-  - `kinnoo logout`
+```bash
+kinnoo inspect ./my-agent
+```
+
+If you want automation-friendly metadata extraction:
+
+```bash
+kinnoo inspect ./my-agent --json
+```
+
+If you want to patch manifest metadata in place:
+
+```bash
+kinnoo inspect ./my-agent --update runtime.language javascript
+```
+
+### uninstall
+
+- Usage: `kinnoo uninstall [-y|--yes] <name|name==version|archive.kno==version>`
+- Description: Remove installed agent and/or archived versions.
+- Options:
+  - `-y`, `--yes`: skip confirmation prompt.
+- Exit codes: non-zero on invalid target, not-found, or aborted operation.
+
+Examples:
+
+If you want to remove all versions for one installed/archive target:
+
+```bash
+kinnoo uninstall my-agent -y
+```
+
+If you want to remove only one version:
+
+```bash
+kinnoo uninstall my-agent==1.2.3 -y
+```
+
+If you want to remove the latest archived version selector:
+
+```bash
+kinnoo uninstall my-agent==latest -y
+```
 
 ### keygen
 
 - Usage: `kinnoo keygen [--private-key <path>] [--public-key <path>]`
 - Description: Generate Ed25519 keypair for signing workflows.
-- Arguments: none.
-- Options: `--private-key`, `--public-key`.
-- Env vars: none required.
+- Options:
+  - `--private-key`: private key output path (default `kinnoo-ed25519-private.pem`).
+  - `--public-key`: public key output path (default `kinnoo-ed25519-public.pem`).
 - Exit codes: non-zero when key generation/write fails.
-- Examples:
-  - `kinnoo keygen`
 
-### inspect
+Example:
 
-- Usage: `kinnoo inspect [--full] [--raw] [--update TARGET KEY VALUE] [--skip-warnings] <target>`
-- Description: Inspect or update manifest metadata in an agent dir or `.kno` archive.
-- Arguments: `target`.
-- Options: `--full`, `--raw`, `--update`, `--skip-warnings`.
-- Env vars: none required.
-- Exit codes: non-zero on invalid targets or validation/update failures.
-- Examples:
-  - `kinnoo inspect ./my-agent`
+If you want signing keys for strict package/publish workflows:
 
-### uninstall
+```bash
+kinnoo keygen
+```
 
-- Usage: `kinnoo uninstall <agent_name>`
-- Description: Remove installed agent with confirmation.
-- Arguments: `agent_name`.
-- Options: none.
-- Env vars: install-root-related env vars may affect location resolution.
-- Exit codes: non-zero on not-found or aborted confirmation.
-- Examples:
-  - `kinnoo uninstall my-agent`
+### login
 
-### trust [planned]
+- Usage: `kinnoo login [--email <email>] [--password <password>]`
+- Description: Authenticate to registry and persist auth state locally.
+- Options:
+  - `--email`, `--password`: provide non-interactive credentials.
+- Exit codes: non-zero on auth/network failures.
 
-- Status: Planned command surface in phase plans.
-- Current state: not exposed as a top-level `kinnoo trust` subcommand in current CLI help.
-- Use current trust controls via existing command flags (for example `install --strict`, `pack --sign`, `publish --strict`).
+Examples:
 
-## Server CLI Reference
+If you want interactive login for local development:
 
-Server-side CLI documentation is maintained separately from this public client-focused CLI reference.
+```bash
+kinnoo login
+```
+
+If you want non-interactive login in scripted environments:
+
+```bash
+kinnoo login --email user@example.com --password 'your-password'
+```
+
+### logout
+
+- Usage: `kinnoo logout`
+- Description: Clear persisted local registry auth state.
+- Exit codes: zero even when no stored auth exists.
+
+Example:
+
+If you want to clear local auth state before switching accounts/tenants:
+
+```bash
+kinnoo logout
+```
+
+## Other Notes
+
+- Use trust controls through current command flags (`install --strict`, `fetch --strict`, `pack --sign`, `publish --strict`).

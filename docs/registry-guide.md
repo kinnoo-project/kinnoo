@@ -55,6 +55,12 @@ Pack and publish from directory:
 kinnoo publish ./my-agent --pack --bump patch --remote
 ```
 
+Pack and publish with strict trust gates (recommended for team/shared registries):
+
+```bash
+kinnoo publish ./my-agent --pack --strict --remote
+```
+
 Make visibility public during pack/publish:
 
 ```bash
@@ -102,15 +108,29 @@ Strict trust install:
 kinnoo install my-agent --remote --strict
 ```
 
-## 7) Sign and Verify (Recommended)
+## 7) Fetch Without Installing (Optional)
+
+Use fetch when you want local archive mirroring, offline review, or deferred install:
+
+```bash
+kinnoo fetch my-agent==1.2.3 --remote --strict
+```
+
+Install that fetched version later from local archive resolution:
+
+```bash
+kinnoo install my-agent==1.2.3 --local --strict
+```
+
+## 8) Sign and Verify (Recommended)
 
 ```bash
 kinnoo keygen
-kinnoo pack ./my-agent --sign --signing-key ./kinnoo-ed25519-private.pem
+kinnoo pack ./my-agent --sign ./kinnoo-ed25519-private.pem
 kinnoo publish ./my-agent --pack --strict --remote
 ```
 
-## 8) Log Out
+## 9) Log Out
 
 ```bash
 kinnoo logout
