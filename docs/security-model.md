@@ -33,7 +33,7 @@ This document describes the current security architecture implemented in Kinnoo.
 Signing helpers live in `src/kinnoo/signing.py`.
 
 - Key generation: `kinnoo keygen` writes Ed25519 private/public key files.
-- Signing: `kinnoo pack --sign --signing-key <private.pem>` creates detached signature artifacts.
+- Signing: `kinnoo pack --sign <private.pem>` creates detached signature artifacts.
 - Verification:
   - client-side strict workflows validate signature artifacts,
   - signature metadata includes public key and fingerprint for trust decisions.
@@ -54,7 +54,15 @@ Integrity helpers live in `src/kinnoo/integrity.py`.
 - `kinnoo pack` writes `META-INF/integrity.json`.
 - Integrity manifest records per-file checksums.
 - `kinnoo install` verifies integrity manifest content before trusting archive content.
+- `kinnoo fetch` verifies downloaded archive integrity before local archive registration.
 - Strict mode (`install --strict`) and strict publish checks require stronger trust gates.
+
+Current trust-control examples:
+
+- `kinnoo pack ./my-agent --sign ./kinnoo-ed25519-private.pem`
+- `kinnoo publish ./my-agent --pack --strict --remote`
+- `kinnoo fetch my-agent==1.2.3 --remote --strict`
+- `kinnoo install my-agent==1.2.3 --remote --strict`
 
 ## Authentication and Session Security
 

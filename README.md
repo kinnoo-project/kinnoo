@@ -1,20 +1,29 @@
-# Kinnoo 🍊
+# Kinnoo
 
 ![Status: Beta](https://img.shields.io/badge/status-beta-blue)
-![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue)
-
+![Python](https://img.shields.io/badge/python-3.11%2B-3776AB)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 Kinnoo is a CLI-first platform for packaging, sharing, and installing AI agents with explicit manifest and trust controls.
 
-It is designed for AI agent developers who need reproducible archive workflows (`.kno`), local execution, and registry-based distribution.
+Kinnoo is the lifecycle, security, and distribution harness for AI agents: define a standard manifest, package reproducible artifacts, enforce trust checks, and distribute through a registry so agents can be installed and run consistently across environments.
 
-## Why Kinnoo
+It is designed for AI agent developers building CLI-runnable agents who need one reliable control plane across local development and registry distribution. Kinnoo provides a standard manifest contract (`kinnoo.yaml`), reproducible archive workflows (`.kno`), trust gates for publish/install, and consistent install/run paths for end users.
 
-- Agent manifest contract (`kinnoo.yaml`) with validation.
-- Local scaffold, run, test, inspect, pack, and install workflows.
-- Registry login/publish/search/install workflows.
-- Integrity and signature-aware trust flags for install and publish paths.
+## What Kinnoo Is
+
+- Strong lifecycle harness: scaffold, run, test, inspect, pack, fetch, publish, install, and uninstall with one CLI.
+- Strong contract harness: `kinnoo.yaml` provides a framework-agnostic manifest with validation and predictable runtime expectations.
+- Strong trust harness: integrity verification, optional signing, strict trust gates, and inspection-first workflows before install/run.
+- Strong distribution harness: registry auth, publish/search/list/install flows, and versioned artifact distribution for teams.
+- Framework portability: build and ship agents across common framework families with consistent packaging and operator UX.
+
+## What Kinnoo Is Not
+
+- Not a foundation model or model-hosting service.
+- Not a replacement for framework-level orchestration (planner logic, tool routing, memory/retrieval strategy).
+- Not a UI-only chatbot builder; Kinnoo focuses on CLI-runnable agent lifecycle workflows.
+- Not a guarantee of agent quality by itself; it gives reproducibility and trust controls and provides a framework for running tests on your agents, but evaluation quality still depends on your tests and runtime design.
 
 ## Installation
 
@@ -28,17 +37,12 @@ pip install kinnoo
 ## Quick Start
 
 ```bash
-kinnoo init --framework chatgpt my-agent
+kinnoo init chatgpt my-agent
 kinnoo run ./my-agent "hello"
 kinnoo pack ./my-agent
 kinnoo login
-kinnoo publish ./my-agent --pack --remote
+kinnoo publish ./my-agent --pack --strict --remote
 ```
-
-
-## License
-
-Kinnoo is licensed under the [Apache License 2.0](LICENSE).
 
 ## Documentation
 
@@ -72,4 +76,4 @@ Contributions are welcome. See `CONTRIBUTING.md` for development and contributio
 
 ## License
 
-Apache 2.0 (`LICENSE`).
+MIT (`LICENSE`).
