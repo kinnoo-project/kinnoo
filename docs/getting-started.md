@@ -2,7 +2,7 @@
 
 This guide walks through installing Kinnoo, creating an agent, running it locally, and packaging it.
 
-Kinnoo acts as a lifecycle and trust harness around your agent code: you define a standard manifest, run locally with consistent command surfaces, package reproducible artifacts, and then publish/install through the same workflow.
+Kinnoo acts as a lifecycle and trust harness around your agent code: you define a standard manifest, run locally with consistent command surfaces, package reproducible artifacts into an agent archive, and then publish that archive to the remote registry. Other developers and end-users can then search for your agent archive, unpack / install, and run your agent - using the same command-line interface.
 
 ## Prerequisites
 
