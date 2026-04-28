@@ -5,9 +5,6 @@ This document defines the `kinnoo.yaml` manifest format used by Kinnoo agents.
 ## Scope and Version
 
 - Manifest schema version: current CLI schema (no explicit `schema_version` field in `kinnoo.yaml`)
-- Primary implementation source:
-  - `src/kinnoo/schema.py`
-  - `src/kinnoo/validator.py`
 - Backward compatibility:
   - Existing manifests that satisfy required fields continue to work when optional fields are omitted.
   - Some historical metadata keys are intentionally not supported and are rejected by validation.
@@ -185,7 +182,6 @@ outputs:
 
 ## Manifest Format History
 
-- Current format source: `src/kinnoo/schema.py` + `src/kinnoo/validator.py` in this repository state.
 - No in-file manifest version key is required at this time.
 - Backward-compatibility posture:
   - Older manifests that satisfy required fields remain valid.
