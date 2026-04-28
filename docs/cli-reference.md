@@ -1,9 +1,6 @@
 # CLI Reference
 
-This reference documents the current Kinnoo command-line interfaces.
-
-- Client CLI: `kinnoo`
-- Server CLI: `kinnoo-server`
+This reference documents the current Kinnoo command-line client interfaces.
 
 ## Conventions
 
@@ -15,9 +12,7 @@ This reference documents the current Kinnoo command-line interfaces.
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `KINNOO_REGISTRY_URL` | `login`, `publish`, `install`, `list`, `search`, `fetch` | Remote registry base URL override |
-| `KINNOO_REGISTRY_TOKEN` | `publish`, `install`, `list`, `search`, `fetch` | Remote auth token override |
-| `KINNOO_TENANT_SLUG` | `publish`, `install`, `list`, `search`, `fetch` | Tenant context override |
+| `KINNOO_REGISTRY_URL` | `login`, `publish`, `install`, `list`, `search`, `fetch` | Base URL for calling the remote registry |
 
 ## Client Commands (`kinnoo`)
 
