@@ -1,12 +1,12 @@
 # Registry Guide
 
-The Kinnoo registry is where you share agents with teammates and where consumers discover/install versioned agent artifacts.
+The Kinnoo registry is where you share agents with others, and where end-user consumers discover/install versioned agent archives.
 
 This guide covers the core workflows most developers need: authenticate, publish, search, install, and verify trust.
 
 ## 1) Account Access
 
-Kinnoo registry usage is currently invite-based. If login fails because your account is unknown, ask a registry operator to add your user.
+You can create an account easily by signing up either via the web interface (https://kinnoo.ai) or by installing the Kinnoo CLI and typing `kinnoo login`.
 
 ## 2) Set Registry Endpoint
 
@@ -18,15 +18,15 @@ export KINNOO_REGISTRY_URL=https://api.kinnoo.ai
 
 ## 3) Authenticate
 
+Login to the agent registry:
+
 ```bash
 kinnoo login
 ```
 
-Successful login stores auth state locally and prints your active registry + tenant.
-
 ## 4) Publish an Agent
 
-If your agent is already packaged and indexed locally by name:
+If your agent is already packaged and indexed locally by name (--remote is default, but showing here explicitly for clarity):
 
 ```bash
 kinnoo publish my-agent --remote
@@ -35,20 +35,22 @@ kinnoo publish my-agent --remote
 Pack and publish directly from an agent directory:
 
 ```bash
-kinnoo publish ./my-agent --pack --bump patch --remote
+kinnoo publish my-agent --pack --bump patch --remote
 ```
 
 Recommended for shared/team registries (enforces signature and integrity verification gates):
 
 ```bash
-kinnoo publish ./my-agent --pack --strict --remote
+kinnoo publish my-agent --pack --strict --remote
 ```
 
 If you need private visibility at publish time:
 
 ```bash
-kinnoo publish ./my-agent --pack --private --remote
+kinnoo publish my-agent --pack --private --remote
 ```
+
+Note that CLI flags can be specified before or after the agent directory name.
 
 ## 5) Discover Agents
 
