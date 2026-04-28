@@ -195,7 +195,9 @@ outputs:
 ## Command Cross-Reference
 
 - `kinnoo inspect` is the fastest way to validate and review manifest metadata in a directory or `.kno` archive.
-- `kinnoo pack --public` and `kinnoo publish --public --pack` can enforce `visibility: public` before packaging.
+- Default packaging behavior is public visibility when `visibility` is unset.
+- `kinnoo pack --private` and `kinnoo publish --private --pack` can enforce `visibility: private` before packaging.
+- `kinnoo pack --public` normalizes to default-public behavior by removing a `visibility: private` override.
 
 ## Related Documentation
 

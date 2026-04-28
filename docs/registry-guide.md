@@ -1,108 +1,79 @@
 # Registry Guide
 
-This guide covers invite-only registry usage for publishing and consuming agents.
+The Kinnoo registry is where you share agents with teammates and where consumers discover/install versioned agent artifacts.
 
-## 1) Invite-Only Account Setup
+This guide covers the core workflows most developers need: authenticate, publish, search, install, and verify trust.
 
-The registry is invite-only. An operator must create your account/invite before you can log in.
+## 1) Account Access
 
-## 2) Configure Registry Endpoint
+Kinnoo registry usage is currently invite-based. If login fails because your account is unknown, ask a registry operator to add your user.
+
+## 2) Set Registry Endpoint
+
+Point the CLI to the hosted Kinnoo API:
 
 ```bash
-export KINNOO_REGISTRY_URL=https://dev-api.kinnoo.ai
+export KINNOO_REGISTRY_URL=https://api.kinnoo.ai
 ```
 
-## 3) Log In
-
-Interactive login:
+## 3) Authenticate
 
 ```bash
 kinnoo login
 ```
 
-Expected output (example):
-
-```text
-Login successful.
-Registry: https://dev-api.kinnoo.ai
-Tenant: <your-tenant>
-```
-
-Non-interactive login:
-
-```bash
-kinnoo login --email user@example.com --password 'your-password'
-```
+Successful login stores auth state locally and prints your active registry + tenant.
 
 ## 4) Publish an Agent
 
-Publish latest archive source by name:
+If your agent is already packaged and indexed locally by name:
 
 ```bash
 kinnoo publish my-agent --remote
 ```
 
-Expected output (example):
-
-```text
-Published my-agent==<version> (remote)
-Remote publish result: ...
-```
-
-Pack and publish from directory:
+Pack and publish directly from an agent directory:
 
 ```bash
 kinnoo publish ./my-agent --pack --bump patch --remote
 ```
 
-Pack and publish with strict trust gates (recommended for team/shared registries):
+Recommended for shared/team registries (enforces signature and integrity verification gates):
 
 ```bash
 kinnoo publish ./my-agent --pack --strict --remote
 ```
 
-Make visibility public during pack/publish:
+If you need private visibility at publish time:
 
 ```bash
-kinnoo publish ./my-agent --pack --public --remote
+kinnoo publish ./my-agent --pack --private --remote
 ```
 
-## 5) Search and List
+## 5) Discover Agents
 
 ```bash
 kinnoo list --remote
 kinnoo search my-agent --remote
 ```
 
-Expected output (example):
-
-```text
-Remote registry agents:
-- my-agent  <latest-version>
-```
+Use `list` for tenant inventory and `search` when you already know a keyword or agent name.
 
 ## 6) Install from Registry
 
-Latest version:
+Install latest:
 
 ```bash
 kinnoo install my-agent --remote
 ```
 
-Expected output (example):
-
-```text
-[kinnoo install] Installing my-agent...
-[kinnoo install] Completed.
-```
-
-Exact version:
+Install an exact version:
 
 ```bash
 kinnoo install my-agent==1.2.3 --remote
 ```
 
-Strict trust install:
+Install with strict verification:
 
 ```bash
 kinnoo install my-agent --remote --strict
@@ -110,19 +81,14 @@ kinnoo install my-agent --remote --strict
 
 ## 7) Fetch Without Installing (Optional)
 
-Use fetch when you want local archive mirroring, offline review, or deferred install:
+If you want to mirror an artifact first and install later:
 
 ```bash
 kinnoo fetch my-agent==1.2.3 --remote --strict
-```
-
-Install that fetched version later from local archive resolution:
-
-```bash
 kinnoo install my-agent==1.2.3 --local --strict
 ```
 
-## 8) Sign and Verify (Recommended)
+## 8) Recommended Signing Flow
 
 ```bash
 kinnoo keygen
@@ -130,8 +96,15 @@ kinnoo pack ./my-agent --sign ./kinnoo-ed25519-private.pem
 kinnoo publish ./my-agent --pack --strict --remote
 ```
 
-## 9) Log Out
+## 9) Logout
 
 ```bash
 kinnoo logout
 ```
+
+## Troubleshooting
+
+- **Unauthorized / forbidden while publishing or installing**: rerun `kinnoo login`.
+- **Wrong environment**: verify `KINNOO_REGISTRY_URL` is set to `https://api.kinnoo.ai`.
+- **Version conflict on publish**: bump version (`--bump patch` or update `kinnoo.yaml`).
+- **Strict install/publish failure**: check signing artifacts and rerun pack with `--sign`.

@@ -2,11 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [v0.10.0] - 2026-04-28
 ### Added
-- Added Feature68 reference GitHub Actions workflow at `.github/workflows/kinnoo-publish.yml` covering install, preflight, pack, and remote publish stages.
-- Added Feature69 standardized test contract documentation for `kinnoo.tests.yaml` and `kinnoo test` execution modes.
-- Added Feature70 landing-page and README messaging updates for OpenClaw bridge, ClawHub mirror attribution, and Phase 6 command matrix coverage.
+- Added tenant usage quota setup and enforcement for registry usage controls.
+- Production environment is now deployed and operational for frontend/backend traffic.
+
+### Changed
+- Bumped project version from `0.9.0` to `0.10.0`.
+
+## [v0.9.0] - 2026-04-23
+### Fixed
+- Fixed remote registry search result rendering in CLI so agent names no longer appear as `(unknown)` when the API payload provides `agent_slug` instead of `name`.
+
+### Added
+- Added regression coverage for remote search summary-shape compatibility to ensure CLI search output correctly falls back to `agent_slug` for display.
+
+### Changed
+- Bumped project version from `0.8.2` to `0.9.0`.
+
+## [v0.8.2] - 2026-04-23
+### Added
+- Added hosted auth discovery flow for CLI login so end-users can bootstrap hosted OIDC config from `GET /api/auth/config` using only `KINNOO_REGISTRY_URL` when local AUTH/KINDE env vars are not set.
+- Added server-side public non-secret auth config endpoint (`/api/auth/config`) in OIDC mode, exposing CLI-required values (issuer/audience/endpoints/CLI client ID) without secrets.
+- Added centralized CLI stdout/stderr line-prefix colorization with TTY detection and `NO_COLOR` support, including compatibility fallback from truecolor to ANSI 256-color terminals.
+
+### Changed
+- Updated non-strict install trust UX to distinguish signed metadata presence from truly unsigned archives: when signature metadata exists but strict verification is not enabled, CLI now warns accordingly and asks for explicit confirmation to continue without signature verification.
+- Updated the non-strict signature confirmation prompt to emit `[kinnoo install] Continue without signature verification? [y/N]:` for consistent CLI prefix formatting.
+- Bumped project version from `0.8.1` to `0.8.2`.
+
+## [v0.8.1] - 2026-04-22
+### Changed
+- Hardened strict install trust flow when detached signature sidecars are absent: fallback now performs embedded signature verification pre-install and emits explicit `[kinnoo install] Embedded signature verified.` status messaging.
+- Updated signing metadata so newly packed signed archives embed `public_key_pem` in `META-INF/signature.json`, enabling strict embedded verification even when detached sidecars are unavailable.
+- Clarified security documentation for embedded-vs-detached signature roles and strict fallback behavior, and added regression coverage for strict install with embedded signature verification in no-sidecar paths.
+- Bumped project version from `0.8.0` to `0.8.1`.
+
+## [v0.8.0] - 2026-04-22
+### Added
+- Added Feature117 import hardening regression coverage (`test696`-`test705`) for edge-case stability, framework adapter behavior, OpenClaw source import, and coverage-floor guards.
+- Added Feature118 task500-task503 implementation coverage for internal identity mapping ownership linkage, provider-neutral auth config contract checks, legacy-auth compatibility gating, and auth portability matrix validation (`test712`-`test715`).
+- Added Feature119 Postgres database implementation foundations (`task506`-`task512`): Terraform RDS module + ECS wiring, server `database/` package and Alembic migrations, metadata backend cutover flag, backfill/parity scripts, db/admin CLI surface, CI/local Postgres harness, and ops runbook/contracts (`test721`-`test731`).
+- Added Phase 14 auth consistency hardening so OIDC tenant resolution remains stable when access tokens omit `email` claims, including server-side userinfo fallback during token validation.
 
 ### Changed
 - Added CI environment/secrets contract documentation for `KINNOO_REGISTRY_URL`, `KINNOO_REGISTRY_TOKEN`, `KINNOO_TENANT_SLUG`, and strict-mode compatibility control.
@@ -17,7 +54,28 @@ All notable changes to this project will be documented in this file.
   - `tests/test_cli_import.py::test_feature36_infers_runtime_skills_state_dirs`
   - `tests/test_cli_import.py::test_feature36_manifest_valid_or_todo_guidance`
   - `tests/test_cli_import.py::test_feature62_import_openclaw_manifest_migration_guidance`
- - Bumped project version from `0.5.5` to `0.6.0` after Phase 7 final review closure.
+- Bumped project version from `0.5.5` to `0.6.0` after Phase 7 final review closure.
+- Hardened `kinnoo import` with pre-write manifest validation gate and deterministic `Error`/`Remediation` messaging on core failure paths.
+- Expanded framework inference hardening across LangChain/LangGraph/OpenAI adapters and analyzer Node+Poetry dependency/env-var detection paths.
+- Added explicit OpenClaw workspace source flow: `kinnoo import --from openclaw <target> <workspace-path>` with include/exclude copy contract and manifest validation.
+- Canonicalized runtime auth contract to provider-neutral `AUTH_*` env keys (with Kinde-prefixed alias fallback), and aligned ECS/Secrets IaC wiring with canonical key injection.
+- Default-disabled legacy local password/register/reset auth API paths under OIDC cutover, with explicit temporary compatibility override via `AUTH_ENABLE_LEGACY_PATHS=true`.
+- Bumped project version from `0.7.8` to `0.7.9`.
+- Bumped project version from `0.7.9` to `0.7.10`.
+- Updated hosted auth tenant derivation parity across CLI login, web session expectations, and remote publish ownership.
+- Updated auth env bootstrap workflow to export `AUTH_USERINFO_ENDPOINT` (and alias `USERINFO_ENDPOINT`) so hosted tenant/email resolution does not silently fall back to org claims.
+- Removed legacy `kinnoo login` password flags from CLI help and docs to keep hosted-only auth UX consistent.
+- Fixed Node/JavaScript/TypeScript pack + publish --pack behavior to avoid requiring `requirements.txt`; Node-compatible runtimes now rely on package metadata/lockfiles.
+- Expanded focused regression coverage for hosted auth tenant behavior, node-runtime packaging behavior, and publish --pack node path safety.
+- Bumped project version from `0.7.10` to `0.8.0`.
+
+### Notes
+- High-level summary window for this update: commits since `6880a48`, including Postgres deployment completion, hosted auth flow stabilization, tenant slug parity fixes, and JS/TS packaging/publish compatibility hardening.
+
+## [v0.7.7] - 2026-04-19
+### Added
+- Minor CLI help menu updates
+- Test hardening - pytest markers and moved tests/ into subfolders based on test sets
 
 ## [v0.7.6] - 2026-04-11
 ### Added
@@ -119,6 +177,10 @@ All notable changes to this project will be documented in this file.
 - Added uninstall lifecycle command coverage and metadata cleanup behavior.
 - Added backend hardening and registry server readiness improvements for auth, policy, and remote publish/list/search paths.
 - Added dev environment readiness work across frontend/backend deployment paths (Cloudflare + ECS) and operational validation scripts.
+- Added Feature68 reference GitHub Actions workflow at `.github/workflows/kinnoo-publish.yml` covering install, preflight, pack, and remote publish stages.
+- Added Feature69 standardized test contract documentation for `kinnoo.tests.yaml` and `kinnoo test` execution modes.
+- Added Feature70 landing-page and README messaging updates for OpenClaw bridge, ClawHub mirror attribution, and Phase 6 command matrix coverage.
+
 
 ### Changed
 - Re-versioned historical release numbering to align with patch/minor cadence and reduce artificial minor bumps.
@@ -187,7 +249,7 @@ All notable changes to this project will be documented in this file.
   - `/Users/jerry/.pyenv/versions/3.11.12/bin/python -m pytest tests/test_cli.py::test_feature23_mcp_server_streams_stdout_stderr -q`
   - Result: `1 passed`
 - Manifest validation gate passed:
-  - `python3 src/validate_project_manifests.py`
+  - `python3 scripts/validate_project_manifests.py`
   - Result: `Validation passed: manifests are consistent`
 - Security and repository hygiene checks reported no hardcoded real secrets and no git-tracked files over 10 MB.
 - Merge commit: TBD (populate after merge to `phase3/main`).
@@ -211,7 +273,7 @@ All notable changes to this project will be documented in this file.
   - `python3 -m pytest --testmon`
   - Result: `348 passed, 1 skipped`
 - Manifest validation gate passed:
-  - `python3 src/validate_project_manifests.py`
+  - `python3 scripts/validate_project_manifests.py`
   - Result: `Validation passed: manifests are consistent`
 - Security and repository hygiene checks reported no hardcoded real secrets and no git-tracked files over 10 MB.
 - Merge commit: TBD (populate after merge to `phase3/main`).
@@ -565,7 +627,7 @@ All notable changes to this project will be documented in this file.
 
 ### Quality
 - Phase 2 closeout validation completed:
-  - Manifest validation: `python3 src/validate_project_manifests.py` passed
+  - Manifest validation: `python3 scripts/validate_project_manifests.py` passed
   - Full test suite: `158 passed, 1 skipped`
 
 
