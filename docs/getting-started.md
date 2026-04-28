@@ -76,7 +76,7 @@ kinnoo run --preflight ./my-chat-agent
 
 ## 6) Package and Publish Your Agent
 
-Typically, you will want to document and run some test cases to verify that your agent behaves as expected (more on testing your agent <LINK>here</LINK>). Once you have finished your local development and testing, and your agent is ready to publish to the registry, simply type
+Typically, you will want to document and run some test cases to verify that your agent behaves as expected (more on testing your agent in the CLI reference under `kinnoo test`). Once you have finished your local development and testing, and your agent is ready to publish to the registry, simply type
  
 
 ```bash
