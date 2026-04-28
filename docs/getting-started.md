@@ -64,7 +64,7 @@ kinnoo run ./my-chat-agent "what is 2+2?"
 
 If this is your first time running the agent, Kinnoo will first install any libraries or packages that are required for the agent to run. A successful run of the ChatGPT agent described above should output something like
 
-```bash
+```text
 In base-10, 2 + 2 = 4. If you want, I can show how it looks in other bases.
 ```
 
