@@ -30,7 +30,7 @@ export KINNOO_REGISTRY_URL=https://api.kinnoo.ai
 
 ## 3) Log into Kinnoo / Create an account with Kinnoo
 
-To create an account or login, you can navigate to the website (```https://kinnoo.ai```) and follow the steps for signing up (or logging in) with your e-mail, Google, or Github account. Alternatively, once the Kinnoo CLI is installed and setup, you can open a terminal and type:
+To create an account or login, you can navigate to the website (```https://kinnoo.ai```) and follow the steps for signing up (or logging in) with your e-mail, Google, or GitHub account. Alternatively, once the Kinnoo CLI is installed and setup, you can open a terminal and type:
 
 ```bash
 kinnoo login
