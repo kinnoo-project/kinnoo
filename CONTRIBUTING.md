@@ -10,7 +10,6 @@ Thank you for your interest in contributing to Kinnoo! We welcome contributions 
 - [Development Setup](#development-setup)
 - [Coding Guidelines](#coding-guidelines)
 - [Style Guide and Commits](#style-guide-and-commits)
-- [Commit Messages](#commit-messages)
 - [License](#license)
 
 ## Code of Conduct
