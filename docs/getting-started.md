@@ -50,7 +50,7 @@ After installing the Kinnoo CLI, we recommend initializing an agent with the CLI
 kinnoo init chatgpt my-chat-agent
 ```
 
-This creates a new directory `./my-chat-agent` and initializes a scaffold file and folder structure in that directory. Importantly, this directory creates a template `kinnoo.yaml`, which is a manifest file used to describe that agent's metadata - author, description, framework, services, etc. You can find full documentation on the `kinnoo.yaml` agent manifest <LINK>here</LINK>.
+This creates a new directory `./my-chat-agent` and initializes a scaffold file and folder structure in that directory. Importantly, this directory creates a template `kinnoo.yaml`, which is a manifest file used to describe that agent's metadata - author, description, framework, services, etc. You can find full documentation on the `kinnoo.yaml` agent manifest [here](https://github.com/kinnoo-project/kinnoo/blob/main/docs/kinnoo-yaml-spec.md).
 
 For the ChatGPT agent, you will need an ```OPENAI_API_KEY``` in your environment. If you don't have one, navigate to ```https://platform.openai.com```, create an account, then create an API key.
 
@@ -91,7 +91,7 @@ kinnoo publish ./my-chat-agent
 
 You should see an output message stating that your agent has been accepted into the remote registry.
 
-There are lots of options for adding security, privacy, identity, package verification, versioning, publishing to an on-premise (local) registry, etc... These options are all covered <LINK>here</LINK>.
+There are lots of options for adding security, privacy, identity, package verification, versioning, publishing to an on-premise (local) registry, etc... These options are all covered in the [CLI reference](https://github.com/kinnoo-project/kinnoo/blob/main/docs/cli-reference.md).
 
 
 ## 7) Install from Registry
@@ -108,7 +108,7 @@ If instead an end-user wants to just fetch the packaged agent archive and not fu
 kinnoo fetch my-chat-agent
 ```
 
-This covers the complete lifecycle path of a agent using the Kinnoo CLI. For a complete CLI reference, see <LINK>here</LINK>. We hope that Kinnoo makes the agent developer and runtime experience simpler, more secure, and more robust. As you start using Kinnoo to develop, publish, and run agents, we would love your <LINK>feedback</LINK>!
+This covers the complete lifecycle path of a agent using the Kinnoo CLI. The complete CLI reference can be found [here](https://github.com/kinnoo-project/kinnoo/blob/main/docs/cli-reference.md). We hope that Kinnoo makes the agent developer and runtime experience simpler, more secure, and more robust. As you start using Kinnoo to develop, publish, and run agents, we would love your feedback!
 
 
 ## Quick Troubleshooting
