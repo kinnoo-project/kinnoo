@@ -1,8 +1,6 @@
 # CLI Reference
 
-This reference documents the current Kinnoo command-line interfaces.
-
-- Client CLI: `kinnoo`
+This reference documents the current Kinnoo command-line client interfaces.
 
 ## Conventions
 
@@ -14,9 +12,7 @@ This reference documents the current Kinnoo command-line interfaces.
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `KINNOO_REGISTRY_URL` | `login`, `publish`, `install`, `list`, `search`, `fetch` | Remote registry base URL override |
-| `KINNOO_REGISTRY_TOKEN` | `publish`, `install`, `list`, `search`, `fetch` | Remote auth token override |
-| `KINNOO_TENANT_SLUG` | `publish`, `install`, `list`, `search`, `fetch` | Tenant context override |
+| `KINNOO_REGISTRY_URL` | `login`, `publish`, `install`, `list`, `search`, `fetch` | Base URL for calling the remote registry |
 
 ## Client Commands (`kinnoo`)
 
@@ -69,6 +65,7 @@ kinnoo run ./my-agent --preflight
   - `agent_dir`: path to agent directory.
   - `input` (optional): input string.
 - Options:
+  - `--entrypoint`: select a specific declared script when manifest uses `entrypoints`; for legacy `entrypoint` manifests, value must match declared script.
   - `--preflight`: validate readiness only; do not execute entrypoint.
   - `--no-guard`: disable input guard checks for CI/automation.
   - `--json-input`: provide inline JSON payload.
@@ -86,6 +83,19 @@ If you want a normal local run with string input:
 ```bash
 kinnoo run ./my-agent "hello"
 ```
+
+If your manifest declares multiple scripts and you need a non-default script:
+
+```bash
+kinnoo run ./my-agent --entrypoint scripts/alt.py "hello"
+```
+
+Entrypoint selection contract:
+
+- Legacy mode: `entrypoint: run.py`
+- Multi-entrypoint mode: `entrypoints: [scripts/main.py, scripts/alt.py]`
+- `entrypoint` and `entrypoints` are mutually exclusive.
+- In `entrypoints` mode, default selection is the first list item when `--entrypoint` is omitted.
 
 If you want to validate runtime readiness in CI without executing business logic:
 
@@ -166,12 +176,10 @@ kinnoo check https://github.com/org/repo
 
 ### import
 
-- Usage: `kinnoo import [target] [import_path] [--force] [--source clawhub] [--live-fallback] [--from {langchain,langgraph,openai}]`
+- Usage: `kinnoo import [target] [import_path] [--force] [--from {langchain,langgraph,openai,openclaw}]`
 - Description: Import an existing project in-place and prepare Kinnoo metadata.
 - Options:
   - `--force`: overwrite existing `kinnoo.yaml`.
-  - `--source`: import from a supported source namespace.
-  - `--live-fallback`: allow remote fallback when mirror record is missing.
   - `--from`: apply framework-aware adapter hints.
 - Exit codes: non-zero on import/validation failures.
 
@@ -189,12 +197,19 @@ If you want to import a GitHub repo into a local folder:
 kinnoo import https://github.com/org/repo ./imported-agent
 ```
 
+If you want to import an OpenClaw workspace into a target directory:
+
+```bash
+kinnoo import --from openclaw ./my-openclaw-target ~/.openclaw/workspace-my-agent
+```
+
 ### pack
 
 - Usage: `kinnoo pack [options] <agent_dir>`
 - Description: Package an agent directory into a `.kno` archive.
 - Options:
-  - `--public`: ensure `visibility: public` before packaging.
+  - `--public`: normalize to default-public semantics by removing `visibility: private` override when present.
+  - `--private`: force `visibility: private` before packaging.
   - `--bump [patch|minor|major]`: bump version before packaging. `--bump` with no value defaults to `patch`.
   - `--sign SIGNING_KEY`: sign archive with Ed25519 private key PEM.
   - `--preflight`: show files/estimated size/destination without creating archive.
@@ -206,10 +221,16 @@ kinnoo import https://github.com/org/repo ./imported-agent
 
 Examples:
 
-If you want the default private package artifact:
+If you want the default public package artifact:
 
 ```bash
 kinnoo pack ./my-agent
+```
+
+If you want to force private visibility for this packaged artifact:
+
+```bash
+kinnoo pack ./my-agent --private
 ```
 
 If you want to bump patch version and sign before publishing:
@@ -248,7 +269,7 @@ kinnoo diff ./dist/agent-1.0.0.kno ./dist/agent-1.1.0.kno
 
 ### publish
 
-- Usage: `kinnoo publish [--local | --remote] [--pack] [--public] [--bump {major,minor,patch}] [--strict] [--json] <target>`
+- Usage: `kinnoo publish [--local | --remote] [--pack] [--private] [--bump {major,minor,patch}] [--strict] [--json] <target>`
 - Description: Publish an archive, an archive source by agent name, or pack-then-publish from an agent directory.
 - Target behavior:
   - Without `--pack`: target is agent name or `.kno` path.
@@ -256,7 +277,7 @@ kinnoo diff ./dist/agent-1.0.0.kno ./dist/agent-1.1.0.kno
 - Options:
   - `--local` / `--remote`: choose registry backend (mutually exclusive).
   - `--pack`: package first, then publish.
-  - `--public`: with `--pack`, enforce `visibility: public` before packaging.
+  - `--private`: with `--pack`, enforce `visibility: private` before packaging.
   - `--bump`: with `--pack`, apply version bump before publish.
   - `--strict`: require strict trust/signature gates before upload.
   - `--json`: machine-readable publish result.
@@ -470,10 +491,8 @@ kinnoo keygen
 
 ### login
 
-- Usage: `kinnoo login [--email <email>] [--password <password>]`
+- Usage: `kinnoo login`
 - Description: Authenticate to registry and persist auth state locally.
-- Options:
-  - `--email`, `--password`: provide non-interactive credentials.
 - Exit codes: non-zero on auth/network failures.
 
 Examples:
@@ -484,11 +503,7 @@ If you want interactive login for local development:
 kinnoo login
 ```
 
-If you want non-interactive login in scripted environments:
-
-```bash
-kinnoo login --email user@example.com --password 'your-password'
-```
+If you want non-interactive automation, preconfigure hosted auth env and run `kinnoo login` to complete browser-based auth.
 
 ### logout
 

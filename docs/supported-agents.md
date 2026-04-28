@@ -1,12 +1,8 @@
 # Supported Agents
 
-This document summarizes currently supported framework templates and core lifecycle capabilities.
+Kinnoo supports multiple framework templates so you can keep your preferred agent stack and still get one consistent lifecycle (`init`, `run`, `pack`, `publish`, `install`).
 
-## Scope
-
-- Matrix reflects current CLI behavior.
-- "Yes" means available in normal workflows.
-- "Partial" means available with caveats documented below.
+Use this page to pick the right scaffold quickly and understand where behavior differs.
 
 ## Capability Matrix
 
@@ -23,15 +19,24 @@ This document summarizes currently supported framework templates and core lifecy
 | mcp-server | Yes | Yes | Yes | Yes | Yes |
 | openclaw | Yes | Yes | Partial | Yes | Yes |
 
-## Notes
+## Choosing a Framework Template
 
-- Naming alignment for common labels:
-	- ChatGPT -> `chatgpt`
-	- OpenAI -> `openai-agents`
-	- Gemini -> `gemini`
-	- Claude -> `claude-chat`
-	- Generic -> `generic`
+- Want full control or custom runtime logic? Start with `generic`.
+- Building with OpenAI APIs? Use `chatgpt` or `openai-agents` depending on your architecture.
+- Building with Anthropic or Gemini providers? Use `claude-chat` or `gemini`.
+- Building graph-based orchestrations? Use `langgraph`.
+- Building MCP ecosystem integrations? Use `mcp-client` or `mcp-server`.
 
-- `openclaw` run/log flows use delegated wrapper behavior and may require external OpenClaw runtime tooling.
-- Registry operations (`publish`, `install`, `list`, `search`) can run in local/mock mode or configured remote mode.
-- Trust-sensitive operations are available through existing flags such as `--strict` and archive signing workflows.
+## Naming Reference
+
+- ChatGPT -> `chatgpt`
+- OpenAI Agents -> `openai-agents`
+- Gemini -> `gemini`
+- Claude -> `claude-chat`
+- Generic -> `generic`
+
+## Caveats and Notes
+
+- `openclaw` run/log behavior is partial and can depend on external OpenClaw runtime tooling.
+- Registry workflows (`publish`, `install`, `list`, `search`) work with local or remote backends.
+- For trust-sensitive flows, use signing plus strict flags (for example `pack --sign`, `publish --strict`, `install --strict`).
