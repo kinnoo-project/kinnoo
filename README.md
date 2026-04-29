@@ -75,4 +75,4 @@ Contributions are welcome. See `CONTRIBUTING.md` for development and contributio
 
 ## License
 
-MIT (`LICENSE`).
+Apache 2.0 (`LICENSE`).
