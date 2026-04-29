@@ -4,7 +4,7 @@
 ![Status: Beta](https://img.shields.io/badge/status-beta-blue)
 ![Release](https://img.shields.io/badge/release-v0.10.0-yellow)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-Apache%202.0-green)
 
 Kinnoo is a unified platform that allows **AI agent developers** to create, package and share AI agents, which **agent end-users** can install and run on a local machine.
  
