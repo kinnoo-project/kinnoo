@@ -29,7 +29,7 @@ All fields below are required by the current validator contract.
 | --- | --- | --- | --- | --- |
 | [name](#field-name) | string | yes | none | must match `^[a-z0-9][a-z0-9-_]*$` |
 | [version](#field-version) | string | yes | none | must be valid semantic version |
-| [entrypoint or entrypoints](#field-entrypoint-contract) | string or list[string] | yes (one of the two) | none | `entrypoint` and `entrypoints` are mutually exclusive |
+| [entrypoint | entrypoints](#field-entrypoint-contract) | string or list[string] | yes (one of the two) | none | `entrypoint` and `entrypoints` are mutually exclusive |
 | [runtime.language](#field-runtime-language) | string | yes | none | enum-constrained |
 | [runtime.version](#field-runtime-version) | string | yes | none | non-empty string expected |
 | [runtime.type](#field-runtime-type) | string | yes | none | enum-constrained |
