@@ -12,9 +12,9 @@ Kinnoo is a unified platform that allows **AI agent developers** to create, pack
 
 ## What Kinnoo Is
 
-- Strong **lifecycle** harness: `init`, `test`, `pack`, `publish`, `fetch`, `install`, `inspect`, `run` - all within the same CLI.
-- Strong **contract** harness: `kinnoo.yaml` provides a framework-agnostic manifest with validation and predictable runtime expectations.
-- Strong **trust** harness: integrity verification, optional signing, strict trust gates, and inspection-first workflows before install/run.
+- Strong **lifecycle** harness: control the entire lifecycle of an AI agent (`init`, `test`, `pack`, `publish`, `fetch`, `install`, `inspect`, `run`, `uninstall`) with the Kinnoo CLI.
+- Strong **contract** harness: `kinnoo.yaml` provides a framework-agnostic manifest designed to enforce consistent agent runtime behavior.
+- Strong **trust** harness: agent archive and per-file code integrity verification, publisher identity verification, strict trust gates, and inspect-before-run functionality.
 - Strong **distribution** harness: registry auth, publish/search/list/install flows, and versioned artifact distribution for teams.
 - Framework **portability**: build and ship agents across common agent frameworks with consistent packaging and operator UX.
 
@@ -22,7 +22,7 @@ Kinnoo is a unified platform that allows **AI agent developers** to create, pack
 
 - Not a foundation model or model-hosting service.
 - Not a replacement for framework-level design and orchestration (planner logic, tool routing, memory/retrieval strategy).
-- Not a UI-only chatbot builder; Kinnoo focuses on CLI-runnable agent lifecycle workflows.
+- Not a UI-only chatbot or no-code agent builder; Kinnoo focuses on CLI-runnable agent lifecycle workflows.
 - Not a guarantee of agent quality by itself; it gives reproducibility and trust controls and provides a framework for running tests on your agents, but evaluation quality still depends on your tests and runtime design.
 
 ## Installation and Quick Start

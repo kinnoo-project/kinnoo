@@ -1,8 +1,10 @@
 # Getting Started
 
-Kinnoo gives a developer building AI agents a reliable way to package, publish and share your agents for others to install and run them. As an AI agent developer, Kinnoo also gives you a feature-rich CLI for consistently managing the agent lifecycle from local development to a stable, tested, secure package that can be run in production.
+Kinnoo gives an AI agent developer a reliable way to package, publish and share agents for others to install and run. 
 
-Setting up Kinnoo is easy! This hands-on guide provides step-by-step instructions that will guide you through installing the Kinnoo CLI, initializing an agent, running it locally, then packaging and publishing it to your agent registry. Instructions for fetching or installing an agent from the registry are also provided below.
+Kinnoo offers a feature-rich CLI for consistently managing the agent lifecycle from local development and testing to a stable, secure, published agent package that can be run in production.
+
+Working with Kinnoo is easy! This hands-on guide provides step-by-step instructions for getting started.
 
 ## Prerequisites
 
@@ -22,7 +24,7 @@ pip install kinnoo
 
 ## 2) Set Up Your Kinnoo Environment
 
-For interfacing with the hosted Kinnoo agent registry, the only required environment variable is the registry endpoint:
+For interfacing with the hosted Kinnoo agent registry, the only required environment variable is the registry API endpoint:
 
 ```bash
 export KINNOO_REGISTRY_URL=https://api.kinnoo.ai
@@ -71,7 +73,7 @@ In base-10, 2 + 2 = 4. If you want, I can show how it looks in other bases.
 If you only want a quick run pre-flight readiness check (for example, if you want to check if your runtime environment is setup properly):
 
 ```bash
-kinnoo run --preflight ./my-chat-agent
+kinnoo run --preflight my-chat-agent
 ```
 
 ## 6) Package and Publish Your Agent
@@ -80,23 +82,25 @@ Typically, you will want to document and run some test cases to verify that your
  
 
 ```bash
-kinnoo pack ./my-chat-agent
+kinnoo pack my-chat-agent
 ```
 
 followed by
 
 ```bash
-kinnoo publish ./my-chat-agent
+kinnoo publish my-chat-agent
 ```
 
 You should see an output message stating that your agent has been accepted into the remote registry.
+
+Note that by default, published agents are public and can be installed by other end users.
 
 There are lots of options for adding security, privacy, identity, package verification, versioning, publishing to an on-premise (local) registry, etc... These options are all covered in the [CLI reference](https://github.com/kinnoo-project/kinnoo/blob/main/docs/cli-reference.md).
 
 
 ## 7) Install from Registry
 
-Once your agent is in the remote registry and your agent has public visibility (default), then others can install your published agent from the remote registry by typing
+Once your public agent is in the remote registry, then others can install your published agent from the remote registry by typing
 
 ```bash
 kinnoo install my-chat-agent
@@ -108,7 +112,9 @@ If instead an end-user wants to just fetch the packaged agent archive and not fu
 kinnoo fetch my-chat-agent
 ```
 
-This covers the complete lifecycle path of a agent using the Kinnoo CLI. The complete CLI reference can be found [here](https://github.com/kinnoo-project/kinnoo/blob/main/docs/cli-reference.md). We hope that Kinnoo makes the agent developer and runtime experience simpler, more secure, and more robust. As you start using Kinnoo to develop, publish, and run agents, we would love your feedback!
+This covers the basics of using the Kinnoo CLI. The complete CLI reference can be found [here](https://github.com/kinnoo-project/kinnoo/blob/main/docs/cli-reference.md). 
+
+We hope that Kinnoo makes the agent developer and runtime experience simpler, more secure, and more robust. As you start using Kinnoo to develop, publish, and run agents, we would love your feedback!
 
 
 ## Quick Troubleshooting

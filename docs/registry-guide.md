@@ -2,6 +2,8 @@
 
 The Kinnoo registry is where you share agents with others, and where end-user consumers discover/install versioned agent archives.
 
+Every Kinnoo user has an isolated agent repository where a user can publish agents. The user has full control over the visibility of these agents (public or private). Public agents can be searched for and installed by others. Private agents are only visibility to the user who published the agent.
+
 This guide covers the core workflows most developers need: authenticate, publish, search, install, and verify trust.
 
 ## 1) Account Access
@@ -94,8 +96,8 @@ kinnoo install my-agent==1.2.3 --local --strict
 
 ```bash
 kinnoo keygen
-kinnoo pack ./my-agent --sign ./kinnoo-ed25519-private.pem
-kinnoo publish ./my-agent --pack --strict --remote
+kinnoo pack my-agent --sign ~/.kinnoo/keys/kinnoo-ed25519-private.pem
+kinnoo publish my-agent --strict --remote
 ```
 
 ## 9) Logout
