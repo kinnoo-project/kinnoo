@@ -8,7 +8,7 @@
 
 Kinnoo is a unified platform that allows **AI agent developers** to create, package and share AI agents, which **agent end-users** can install and run on a local machine.
  
-[Website](https://kinnoo.ai) · [Docs](https://github.com/kinnoo-project/kinnoo/tree/main/docs/README.md) · [Getting Started](https://github.com/kinnoo-project/kinnoo/blob/main/docs/getting-started.md)
+[Website](https://kinnoo.ai) · [Docs](docs/README.md) · [Getting Started](docs/getting-started.md)
 
 ## What Kinnoo Is
 
@@ -50,7 +50,7 @@ kinnoo install kinnootest/test-chat-agent
 kinnoo run test-chat-agent 'what is 2+2?'
 ```
 
-See [Getting Started](https://github.com/kinnoo-project/kinnoo/blob/main/docs/getting-started.md) for more details.
+See [Getting Started](docs/getting-started.md) for more details.
 
 ## Supported Frameworks
 
@@ -67,7 +67,7 @@ Kinnoo currently supports initializing and running agents for these frameworks:
 - mcp-client
 - openclaw
 
-See [Supported Agents](https://github.com/kinnoo-project/kinnoo/blob/main/docs/supported-agents.md) for more details.
+See [Supported Agents](docs/supported-agents.md) for more details.
 
 ## Contributing
 
