@@ -1,3 +1,46 @@
+# This file contains a list of the test cases written by SWE agents - numbered test0, test1, etc.
+# Each new test case should just increment the test number.
+#
+# Template (YAML):
+# tests:
+#   - id: testX
+#     title: One-line title
+#     type: unit|integration|e2e|manual
+#     preconditions: e.g., iPhone 12, iOS 15, camera permission granted
+#     steps:
+#       - Step 1
+#       - Step 2
+#     expected: Short expected result
+#     pass_criteria: Measurable pass criteria
+#     automated: true|false
+#     automation_path: path/to/test (if automated)
+#
+# Example:
+# tests:
+#   - id: test0
+#     title: Capture action stores image in buffer
+#     type: integration
+#     preconditions: App running on iPhone 12 (iOS 15), camera permission granted
+#     steps:
+#       - step1: Open the camera view
+#       - step2: Tap the white capture button
+#     expected: An image is captured and stored in the temporary buffer
+#     pass_criteria: buffer non-empty and capture recorded within 200ms of tap
+#     automated: false
+#     automation_path: null
+#
+#   - id: test1
+#     title: Capture button visible bottom-center
+#     type: e2e
+#     preconditions: App running on iPhone 12 (iOS 15)
+#     steps:
+#       - step1: Open camera view in portrait
+#       - step2: Observe UI layout
+#     expected: White capture button is visible bottom-center across supported devices
+#     pass_criteria: visible on iPhone12/13/14 portrait
+#     automated: false
+#     automation_path: null
+
 tests:
 - id: test1
   title: Valid manifest passes validation
@@ -41,8 +84,7 @@ tests:
   - step1: Create a kinnoo.yaml with 'dependencies' set to a string instead of a list
   - step2: Call validate(path)
   expected: Returns (False, [...]) with error describing type mismatch
-  pass_criteria: is_valid is False; errors list contains a string mentioning 'dependencies'
-    and 'list'
+  pass_criteria: is_valid is False; errors list contains a string mentioning 'dependencies' and 'list'
   covers:
   - feature: feature1
     ac: AC3
@@ -59,8 +101,7 @@ tests:
   - step1: Create a kinnoo.yaml with version set to "1.0" (missing patch segment)
   - step2: Call validate(path)
   expected: Returns (False, [...]) with error describing invalid semver
-  pass_criteria: is_valid is False; errors list contains a string mentioning 'version'
-    and 'semver'
+  pass_criteria: is_valid is False; errors list contains a string mentioning 'version' and 'semver'
   covers:
   - feature: feature1
     ac: AC4
@@ -77,8 +118,7 @@ tests:
   - step1: Call validate(path) on any manifest file
   - step2: Inspect the return value
   expected: Returns a tuple of (bool, list[str])
-  pass_criteria: Return type is tuple; first element is bool; second element is a
-    list
+  pass_criteria: Return type is tuple; first element is bool; second element is a list
   covers:
   - feature: feature1
     ac: AC5
@@ -111,10 +151,8 @@ tests:
   steps:
   - step1: Create a kinnoo.yaml with runtime.type set to "server"
   - step2: Call validate(path)
-  expected: Returns (False, [...]) with error stating "one-shot" is the only supported
-    value
-  pass_criteria: is_valid is False; errors list contains a string mentioning 'runtime.type'
-    and 'one-shot'
+  expected: Returns (False, [...]) with error stating "one-shot" is the only supported value
+  pass_criteria: is_valid is False; errors list contains a string mentioning 'runtime.type' and 'one-shot'
   covers:
   - feature: feature1
     ac: AC7
@@ -129,8 +167,7 @@ tests:
   preconditions: kinnoo CLI installed
   steps:
   - step1: Run `kinnoo init` without any arguments
-  expected: 'Prints usage error: ''Usage: kinnoo init <agent-name>'' and exits with
-    non-zero code'
+  expected: 'Prints usage error: ''Usage: kinnoo init <agent-name>'' and exits with non-zero code'
   pass_criteria: Exit code is non-zero; output contains 'Usage' and '<agent-name>'
   covers:
   - feature: feature2
@@ -166,10 +203,8 @@ tests:
   - step1: Run `kinnoo init test-agent` in a temp directory
   - step2: List contents of test-agent/
   - step3: Verify tools/ and prompts/ are directories (not files)
-  expected: Directory contains kinnoo.yaml, run.py, requirements.txt, README.md, tools/,
-    prompts/
-  pass_criteria: All 6 items exist; tools/ and prompts/ are directories; README.md
-    is non-empty
+  expected: Directory contains kinnoo.yaml, run.py, requirements.txt, README.md, tools/, prompts/
+  pass_criteria: All 6 items exist; tools/ and prompts/ are directories; README.md is non-empty
   covers:
   - feature: feature2
     ac: AC1
@@ -237,8 +272,7 @@ tests:
   - step1: Create a directory named "test-agent"
   - step2: Run `kinnoo init test-agent`
   expected: Prints error about directory already existing; does not modify contents
-  pass_criteria: Exit code non-zero; output mentions "already exists"; original directory
-    unchanged
+  pass_criteria: Exit code non-zero; output mentions "already exists"; original directory unchanged
   covers:
   - feature: feature2
     ac: AC6
@@ -277,8 +311,7 @@ tests:
   steps:
   - step1: Run `pip install -e .` in the project root
   - step2: Run `kinnoo --help`
-  expected: pip install succeeds; kinnoo --help prints usage information and exits
-    0
+  expected: pip install succeeds; kinnoo --help prints usage information and exits 0
   pass_criteria: Exit code 0 for both commands; kinnoo --help output contains 'init'
   automated: true
   automation_path: tests/test_cli.py::test_cli_installable_and_runnable
@@ -327,8 +360,7 @@ tests:
   - step3: Parse sidecar content using checksum parser helper
   - step4: Verify parsed expected digest matches computed digest
   expected: Shared checksum helpers return deterministic and parseable integrity values
-  pass_criteria: Compute/parse helpers produce matching digest outputs for fixture
-    archive
+  pass_criteria: Compute/parse helpers produce matching digest outputs for fixture archive
   automated: true
   automation_path: tests/test_archive_integrity.py::test_checksum_helpers_compute_and_parse
   notes:
@@ -337,16 +369,14 @@ tests:
 - id: test20
   title: DEPRECATED — Analyzer detects Jupyter notebook entrypoint
   status: deprecated
-  deprecation_note: Skipped per human review (2025-03-23) — notebook conversion removed
-    (AC2 dropped); developer burden.
+  deprecation_note: Skipped per human review (2025-03-23) — notebook conversion removed (AC2 dropped); developer burden.
   type: unit
   preconditions: Directory with .ipynb file containing agent code and no .py entrypoint
   steps:
   - step1: Create fixture with a .ipynb file containing LangGraph code cells
   - step2: Run analyzer._detect_entrypoint() on fixture
   expected: Returns entrypoint_type "notebook" with notebook_path
-  pass_criteria: entrypoint_type is "notebook" and notebook_path points to the .ipynb
-    file
+  pass_criteria: entrypoint_type is "notebook" and notebook_path points to the .ipynb file
   automated: false
   automation_path: tests/test_validator.py::test_analyzer_notebook_detection
   notes:
@@ -355,16 +385,14 @@ tests:
 - id: test21
   title: DEPRECATED — Notebook conversion produces valid Python script
   status: deprecated
-  deprecation_note: Skipped per human review (2025-03-23) — notebook conversion removed
-    (AC2 dropped); developer burden.
+  deprecation_note: Skipped per human review (2025-03-23) — notebook conversion removed (AC2 dropped); developer burden.
   type: integration
   preconditions: Agent directory with detected .ipynb notebook
   steps:
   - step1: Run kinnoo import on notebook agent fixture
   - step2: Accept conversion prompt
   expected: Converted .py file has code cells extracted and __main__ guard
-  pass_criteria: Generated .py file compiles without SyntaxError and has if __name__
-    guard
+  pass_criteria: Generated .py file compiles without SyntaxError and has if __name__ guard
   automated: false
   automation_path: tests/test_cli_install.py::test_import_notebook_conversion
   notes:
@@ -373,8 +401,7 @@ tests:
 - id: test22
   title: DEPRECATED — Verify analyzer detects CrewAI framework from imports
   status: deprecated
-  deprecation_note: Deferred per human review (2025-03-23) — all extended framework
-    detection moved to future feature.
+  deprecation_note: Deferred per human review (2025-03-23) — all extended framework detection moved to future feature.
   type: unit
   preconditions: Python agent with 'from crewai import' in code
   steps:
@@ -391,8 +418,7 @@ tests:
 - id: test23
   title: DEPRECATED — Verify analyzer detects OpenAI Swarm framework from imports
   status: deprecated
-  deprecation_note: Deferred per human review (2025-03-23) — all extended framework
-    detection moved to future feature.
+  deprecation_note: Deferred per human review (2025-03-23) — all extended framework detection moved to future feature.
   type: unit
   preconditions: Python agent with 'from swarm import' in code
   steps:
@@ -409,8 +435,7 @@ tests:
 - id: test24
   title: DEPRECATED — Verify analyzer detects Agno/Phi framework from imports
   status: deprecated
-  deprecation_note: Deferred per human review (2025-03-23) — Agno detection moved
-    to FUTURE; will be implemented in a follow-up feature.
+  deprecation_note: Deferred per human review (2025-03-23) — Agno detection moved to FUTURE; will be implemented in a follow-up feature.
   type: unit
   preconditions: Python agent with 'from agno import' or 'from phi import' in code
   steps:
@@ -427,8 +452,7 @@ tests:
 - id: test25
   title: DEPRECATED — Verify IMPORT_TO_PYPI mapping includes extended frameworks
   status: deprecated
-  deprecation_note: Deferred per human review (2025-03-23) — all extended framework
-    detection moved to future feature.
+  deprecation_note: Deferred per human review (2025-03-23) — all extended framework detection moved to future feature.
   type: unit
   preconditions: Updated IMPORT_TO_PYPI dict in analyzer.py
   steps:
@@ -451,8 +475,7 @@ tests:
   - step3: Verify web/tailwind.config.ts exists
   - step4: Verify web/.nvmrc contains "20"
   expected: All required scaffold files exist with correct content
-  pass_criteria: web/package.json has next>=15, typescript, react>=19, tailwindcss;
-    tsconfig.json and tailwind.config.ts exist; .nvmrc specifies Node 20
+  pass_criteria: web/package.json has next>=15, typescript, react>=19, tailwindcss; tsconfig.json and tailwind.config.ts exist; .nvmrc specifies Node 20
   automated: true
   automation_path: tests/test_web_frontend_setup.py::test_feature49_task282_scaffolded_nextjs_project
   covers:
@@ -470,8 +493,7 @@ tests:
   - step2: Run `cd web && npm run dev` and verify dev server starts on localhost:3000
   - step3: Terminate dev server
   expected: Build completes cleanly and dev server starts without errors
-  pass_criteria: npm run build exits 0 with no TypeScript or compilation errors; dev
-    server binds to port 3000
+  pass_criteria: npm run build exits 0 with no TypeScript or compilation errors; dev server binds to port 3000
   automated: true
   automation_path: tests/test_web_frontend_setup.py::test_feature49_task282_build_and_dev_start
   covers:
@@ -487,15 +509,11 @@ tests:
   type: unit
   preconditions: web/ project with Tailwind configured
   steps:
-  - step1: Read web/tailwind.config.ts and verify custom colors (bg-kinnoo=#000000,
-      text-kinnoo=#F9FAFB, accent-kinnoo=#3B82F6, surface-kinnoo=#111111)
+  - step1: Read web/tailwind.config.ts and verify custom colors (bg-kinnoo=#000000, text-kinnoo=#F9FAFB, accent-kinnoo=#3B82F6, surface-kinnoo=#111111)
   - step2: Verify fontFamily includes Avenir Next, Segoe UI, sans-serif
-  - step3: 'Read web/app/globals.css and verify body has background #000000 and text
-      #F9FAFB'
-  expected: All design tokens are defined in Tailwind config and global CSS applies
-    dark theme
-  pass_criteria: Custom colors, font family, and border-radius tokens are present
-    in tailwind.config.ts; globals.css sets base dark styles
+  - step3: 'Read web/app/globals.css and verify body has background #000000 and text #F9FAFB'
+  expected: All design tokens are defined in Tailwind config and global CSS applies dark theme
+  pass_criteria: Custom colors, font family, and border-radius tokens are present in tailwind.config.ts; globals.css sets base dark styles
   automated: true
   automation_path: tests/test_web_frontend_setup.py::test_feature49_task283_tailwind_tokens_and_dark_globals
   covers:
@@ -516,8 +534,7 @@ tests:
   - step3: Verify app/(public)/signup/page.tsx exists
   - step4: Verify app/(auth)/layout.tsx exists
   - step5: Verify app/(auth)/registry/page.tsx exists
-  - step6: Verify components/ui/, components/blocks/, lib/, and __tests__/ directories
-      exist
+  - step6: Verify components/ui/, components/blocks/, lib/, and __tests__/ directories exist
   expected: All specified directories and placeholder files exist
   pass_criteria: Every file and directory listed in AC3 is present
   automated: true
@@ -538,8 +555,7 @@ tests:
   - step3: Navigate to http://localhost:3000/signup and verify a page renders
   - step4: Navigate to http://localhost:3000/registry and verify a page renders
   expected: All four routes return 200 and render their placeholder content
-  pass_criteria: No 404 errors; each route returns an HTML page with identifiable
-    content
+  pass_criteria: No 404 errors; each route returns an HTML page with identifiable content
   automated: true
   automation_path: tests/test_web_frontend_setup.py::test_feature49_task284_placeholder_routes_are_navigable
   covers:
@@ -559,8 +575,7 @@ tests:
   - step4: Verify lucide-react is in dependencies
   - step5: Verify framer-motion is in dependencies
   expected: All five packages are listed in package.json dependencies
-  pass_criteria: All five dependency names are present as keys in the "dependencies"
-    object
+  pass_criteria: All five dependency names are present as keys in the "dependencies" object
   automated: true
   automation_path: tests/test_web_frontend_setup.py::test_feature49_task285_core_ui_dependencies_installed
   covers:
@@ -596,10 +611,8 @@ tests:
   preconditions: web/lib/theme.ts exists
   steps:
   - step1: Import themeConfig from lib/theme.ts
-  - step2: Assert themeConfig.radii.card equals 8px and themeConfig.radii.button equals
-      4px
-  - step3: Assert themeConfig.typography.h1 equals 48px, h2 equals 32px, h3 equals
-      24px, body equals 16px
+  - step2: Assert themeConfig.radii.card equals 8px and themeConfig.radii.button equals 4px
+  - step3: Assert themeConfig.typography.h1 equals 48px, h2 equals 32px, h3 equals 24px, body equals 16px
   - step4: Assert themeConfig.spacing.unit equals 4
   - step5: Assert themeConfig.fonts.primary includes Avenir Next
   expected: All design tokens match specification
@@ -618,8 +631,7 @@ tests:
   preconditions: web/ project built, MainLayout component exists
   steps:
   - step1: Render the root layout with React Testing Library
-  - step2: Assert a button with accessible name or aria-label for hamburger/menu is
-      present
+  - step2: Assert a button with accessible name or aria-label for hamburger/menu is present
   - step3: Assert a link or button with text "Login" is present
   - step4: Assert a link or button with text "Sign Up" is present
   expected: Hamburger menu icon and both auth buttons render in the header
@@ -639,11 +651,9 @@ tests:
   steps:
   - step1: Render MainLayout with React Testing Library
   - step2: Click the hamburger menu button
-  - step3: Assert a dialog/sheet opens containing links with text "GitHub", "Docs",
-      "Report an Issue"
+  - step3: Assert a dialog/sheet opens containing links with text "GitHub", "Docs", "Report an Issue"
   expected: Sheet drawer opens with all three navigation links
-  pass_criteria: After clicking hamburger, all three link texts are visible in the
-    DOM
+  pass_criteria: After clicking hamburger, all three link texts are visible in the DOM
   automated: true
   automation_path: web/__tests__/layout.test.tsx
   covers:
@@ -801,8 +811,7 @@ tests:
   - step2: Submit form with invalid email format
   - step3: Assert inline validation errors appear and request is not dispatched
   expected: Invalid inputs are blocked with actionable messages
-  pass_criteria: Validation errors are displayed and mocked fetch call count remains
-    zero
+  pass_criteria: Validation errors are displayed and mocked fetch call count remains zero
   automated: true
   automation_path: web/__tests__/login-page.test.tsx
   covers:
@@ -839,8 +848,7 @@ tests:
   - step2: Assert fetch call targets /login and includes credentials option
   - step3: Spy on localStorage/sessionStorage writes and assert none occur
   expected: Auth request follows session-cookie model and avoids client token persistence
-  pass_criteria: fetch is called with credentials include and no storage setItem calls
-    are made
+  pass_criteria: fetch is called with credentials include and no storage setItem calls are made
   automated: true
   automation_path: web/__tests__/login-page.test.tsx
   covers:
@@ -965,8 +973,7 @@ tests:
   - step2: Assert loading and empty/error states render appropriately
   - step3: Assert fetch targets use /api/agents and /api/search proxy paths
   expected: Data layer and view states behave correctly for success/empty/error
-  pass_criteria: Proxy paths are used and loading/empty/error states are visible as
-    expected
+  pass_criteria: Proxy paths are used and loading/empty/error states are visible as expected
   automated: true
   automation_path: web/__tests__/registry-dashboard.test.tsx
   covers:
@@ -983,8 +990,7 @@ tests:
   preconditions: AgentCard component implemented
   steps:
   - step1: Render AgentCard with fixture agent metadata
-  - step2: Assert Tenant, Name, Version, Author, Framework, Size, Description are
-      shown
+  - step2: Assert Tenant, Name, Version, Author, Framework, Size, Description are shown
   - step3: Assert Name element is interactive/clickable
   expected: Card renders full required metadata and click affordance
   pass_criteria: All required fields appear and Name can be clicked
@@ -1005,8 +1011,7 @@ tests:
   - step2: Assert manifest modal/dialog opens
   - step3: Click X close control and assert modal closes
   expected: Modal open/close interaction works reliably
-  pass_criteria: Modal visibility toggles correctly and dashboard context remains
-    intact
+  pass_criteria: Modal visibility toggles correctly and dashboard context remains intact
   automated: true
   automation_path: web/__tests__/agent-card-modal.test.tsx
   covers:
@@ -1044,8 +1049,7 @@ tests:
   - step2: Assert terminal-style install command text is visible
   - step3: Click copy button and assert copied feedback appears
   expected: Install command copy workflow is available and functional
-  pass_criteria: Command text is deterministic, copy action executes, and feedback
-    is shown
+  pass_criteria: Command text is deterministic, copy action executes, and feedback is shown
   automated: true
   automation_path: web/__tests__/agent-card-modal.test.tsx
   covers:
@@ -1062,8 +1066,7 @@ tests:
   preconditions: agent-card-modal test file exists
   steps:
   - step1: Run agent-card-modal automated tests
-  - step2: Verify field rendering, modal open/close, manifest view, and copy assertions
-      pass
+  - step2: Verify field rendering, modal open/close, manifest view, and copy assertions pass
   expected: Component suite passes for complete card and modal behavior
   pass_criteria: Test run exits zero with coverage across AC1-AC6 workflows
   automated: true
@@ -1077,21 +1080,14 @@ tests:
 - id: test58
   title: feature86 verify AC1, AC2, AC3
   type: integration
-  preconditions: Repo checked out with dependencies installed; server test fixtures
-    available
+  preconditions: Repo checked out with dependencies installed; server test fixtures available
   steps:
-  - 'step1: Execute workflow for feature86 (Embedded integrity manifest (META-INF/integrity.json))
-    covering AC1, AC2, AC3'
+  - 'step1: Execute workflow for feature86 (Embedded integrity manifest (META-INF/integrity.json)) covering AC1, AC2, AC3'
   - 'step2: Verify `kinnoo pack` produces a .kno containing META-INF/integrity.json.'
-  - 'step3: Verify META-INF/integrity.json contains SHA-256 hash and size for every
-    file in the archive (excluding META-INF/ itself).'
-  - 'step4: Verify Integrity module provides `compute_integrity_manifest(directory)
-    -> dict` and `verify_integrity_manifest(directory, manifest) -> list[str]`.'
+  - 'step3: Verify META-INF/integrity.json contains SHA-256 hash and size for every file in the archive (excluding META-INF/ itself).'
+  - 'step4: Verify Integrity module provides `compute_integrity_manifest(directory) -> dict` and `verify_integrity_manifest(directory, manifest) -> list[str]`.'
   expected: feature86 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: `kinnoo pack` produces a .kno containing META-INF/integrity.json.;
-    AC2: META-INF/integrity.json contains SHA-256 hash and size for every file in
-    the ...; AC3: Integrity module provides `compute_integrity_manifest(directory)
-    -> dict` and...'
+  pass_criteria: 'AC1: `kinnoo pack` produces a .kno containing META-INF/integrity.json.; AC2: META-INF/integrity.json contains SHA-256 hash and size for every file in the ...; AC3: Integrity module provides `compute_integrity_manifest(directory) -> dict` and...'
   covers:
   - feature: feature9
     ac: AC1
@@ -1107,19 +1103,13 @@ tests:
 - id: test59
   title: feature86 verify AC4, AC5
   type: integration
-  preconditions: Repo checked out with dependencies installed; server test fixtures
-    available
+  preconditions: Repo checked out with dependencies installed; server test fixtures available
   steps:
-  - 'step1: Execute workflow for feature86 (Embedded integrity manifest (META-INF/integrity.json))
-    covering AC4, AC5'
-  - 'step2: Verify Manifest format is documented with a JSON schema or example in
-    the module docstring.'
-  - 'step3: Verify Existing tests for pack continue to pass; new tests cover manifest
-    generation.'
+  - 'step1: Execute workflow for feature86 (Embedded integrity manifest (META-INF/integrity.json)) covering AC4, AC5'
+  - 'step2: Verify Manifest format is documented with a JSON schema or example in the module docstring.'
+  - 'step3: Verify Existing tests for pack continue to pass; new tests cover manifest generation.'
   expected: feature86 acceptance criteria AC4, AC5 are satisfied
-  pass_criteria: 'AC4: Manifest format is documented with a JSON schema or example
-    in the module doc...; AC5: Existing tests for pack continue to pass; new tests
-    cover manifest generation.'
+  pass_criteria: 'AC4: Manifest format is documented with a JSON schema or example in the module doc...; AC5: Existing tests for pack continue to pass; new tests cover manifest generation.'
   covers:
   - feature: feature9
     ac: AC4
@@ -1133,21 +1123,14 @@ tests:
 - id: test60
   title: feature87 verify AC1, AC2, AC3
   type: integration
-  preconditions: Repo checked out with dependencies installed; server test fixtures
-    available
+  preconditions: Repo checked out with dependencies installed; server test fixtures available
   steps:
-  - 'step1: Execute workflow for feature87 (Embedded signature (META-INF/signature.json))
-    covering AC1, AC2, AC3'
-  - 'step2: Verify `kinnoo pack --sign` produces META-INF/signature.json alongside
-    META-INF/integrity.json.'
+  - 'step1: Execute workflow for feature87 (Embedded signature (META-INF/signature.json)) covering AC1, AC2, AC3'
+  - 'step2: Verify `kinnoo pack --sign` produces META-INF/signature.json alongside META-INF/integrity.json.'
   - 'step3: Verify Signature covers the raw bytes of META-INF/integrity.json.'
-  - 'step4: Verify signature.json contains: signature (base64), public_key_fingerprint
-    (hex), signed_at (ISO 8601).'
+  - 'step4: Verify signature.json contains: signature (base64), public_key_fingerprint (hex), signed_at (ISO 8601).'
   expected: feature87 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: `kinnoo pack --sign` produces META-INF/signature.json alongside
-    META-INF/inte...; AC2: Signature covers the raw bytes of META-INF/integrity.json.;
-    AC3: signature.json contains: signature (base64), public_key_fingerprint (hex),
-    si...'
+  pass_criteria: 'AC1: `kinnoo pack --sign` produces META-INF/signature.json alongside META-INF/inte...; AC2: Signature covers the raw bytes of META-INF/integrity.json.; AC3: signature.json contains: signature (base64), public_key_fingerprint (hex), si...'
   covers:
   - feature: feature10
     ac: AC1
@@ -1163,19 +1146,14 @@ tests:
 - id: test61
   title: feature87 verify AC4, AC5, AC6
   type: integration
-  preconditions: Repo checked out with dependencies installed; server test fixtures
-    available
+  preconditions: Repo checked out with dependencies installed; server test fixtures available
   steps:
-  - 'step1: Execute workflow for feature87 (Embedded signature (META-INF/signature.json))
-    covering AC4, AC5, AC6'
-  - 'step2: Verify `kinnoo pack` without `--sign` does NOT produce signature.json
-    (integrity.json is still generated).'
+  - 'step1: Execute workflow for feature87 (Embedded signature (META-INF/signature.json)) covering AC4, AC5, AC6'
+  - 'step2: Verify `kinnoo pack` without `--sign` does NOT produce signature.json (integrity.json is still generated).'
   - 'step3: Verify Existing signing.py functions are reused; no new crypto dependencies.'
   - 'step4: Verify Tests verify signed archives have valid signatures.'
   expected: feature87 acceptance criteria AC4, AC5, AC6 are satisfied
-  pass_criteria: 'AC4: `kinnoo pack` without `--sign` does NOT produce signature.json
-    (integrity.jso...; AC5: Existing signing.py functions are reused; no new crypto
-    dependencies.; AC6: Tests verify signed archives have valid signatures.'
+  pass_criteria: 'AC4: `kinnoo pack` without `--sign` does NOT produce signature.json (integrity.jso...; AC5: Existing signing.py functions are reused; no new crypto dependencies.; AC6: Tests verify signed archives have valid signatures.'
   covers:
   - feature: feature10
     ac: AC4
@@ -1191,22 +1169,15 @@ tests:
 - id: test62
   title: feature88 verify AC1, AC2, AC3, AC4
   type: integration
-  preconditions: Repo checked out with dependencies installed; server test fixtures
-    available
+  preconditions: Repo checked out with dependencies installed; server test fixtures available
   steps:
-  - 'step1: Execute workflow for feature88 (Install-time integrity verification) covering
-    AC1, AC2, AC3, AC4'
-  - 'step2: Verify `kinnoo install` verifies META-INF/integrity.json hashes against
-    actual file contents.'
+  - 'step1: Execute workflow for feature88 (Install-time integrity verification) covering AC1, AC2, AC3, AC4'
+  - 'step2: Verify `kinnoo install` verifies META-INF/integrity.json hashes against actual file contents.'
   - 'step3: Verify Installation aborts with clear error message if any file hash mismatches.'
-  - 'step4: Verify `kinnoo install --strict` additionally verifies META-INF/signature.json
-    and fails if missing or invalid.'
+  - 'step4: Verify `kinnoo install --strict` additionally verifies META-INF/signature.json and fails if missing or invalid.'
   - 'step5: Verify `kinnoo install --skip-verify` bypasses all verification.'
   expected: feature88 acceptance criteria AC1, AC2, AC3, AC4 are satisfied
-  pass_criteria: 'AC1: `kinnoo install` verifies META-INF/integrity.json hashes against
-    actual file ...; AC2: Installation aborts with clear error message if any file
-    hash mismatches.; AC3: `kinnoo install --strict` additionally verifies META-INF/signature.json
-    and f...; AC4: `kinnoo install --skip-verify` bypasses all verification.'
+  pass_criteria: 'AC1: `kinnoo install` verifies META-INF/integrity.json hashes against actual file ...; AC2: Installation aborts with clear error message if any file hash mismatches.; AC3: `kinnoo install --strict` additionally verifies META-INF/signature.json and f...; AC4: `kinnoo install --skip-verify` bypasses all verification.'
   covers:
   - feature: feature11
     ac: AC1
@@ -1224,22 +1195,14 @@ tests:
 - id: test63
   title: feature88 verify AC5, AC6, AC7
   type: integration
-  preconditions: Repo checked out with dependencies installed; server test fixtures
-    available
+  preconditions: Repo checked out with dependencies installed; server test fixtures available
   steps:
-  - 'step1: Execute workflow for feature88 (Install-time integrity verification) covering
-    AC5, AC6, AC7'
-  - 'step2: Verify Archives without META-INF/integrity.json install with a warning
-    (backward compatibility with pre-feature86 archives).'
-  - 'step3: Verify Verification results are logged: number of files checked, pass/fail
-    status.'
-  - 'step4: Verify Tests cover: valid archive, tampered file, missing integrity manifest,
-    unsigned + strict mode, skip-verify.'
+  - 'step1: Execute workflow for feature88 (Install-time integrity verification) covering AC5, AC6, AC7'
+  - 'step2: Verify Archives without META-INF/integrity.json install with a warning (backward compatibility with pre-feature86 archives).'
+  - 'step3: Verify Verification results are logged: number of files checked, pass/fail status.'
+  - 'step4: Verify Tests cover: valid archive, tampered file, missing integrity manifest, unsigned + strict mode, skip-verify.'
   expected: feature88 acceptance criteria AC5, AC6, AC7 are satisfied
-  pass_criteria: 'AC5: Archives without META-INF/integrity.json install with a warning
-    (backward com...; AC6: Verification results are logged: number of files checked,
-    pass/fail status.; AC7: Tests cover: valid archive, tampered file, missing integrity
-    manifest, unsign...'
+  pass_criteria: 'AC5: Archives without META-INF/integrity.json install with a warning (backward com...; AC6: Verification results are logged: number of files checked, pass/fail status.; AC7: Tests cover: valid archive, tampered file, missing integrity manifest, unsign...'
   covers:
   - feature: feature11
     ac: AC5
@@ -1257,18 +1220,12 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature92 (kinnoo.yaml specification document) covering
-    AC1, AC2, AC3'
+  - 'step1: Execute workflow for feature92 (kinnoo.yaml specification document) covering AC1, AC2, AC3'
   - 'step2: Verify docs/kinnoo-yaml-spec.md exists and documents every manifest field.'
-  - 'step3: Verify Each field has: name, type, required/optional, default, description,
-    validation rules.'
-  - 'step4: Verify Examples provided for chatgpt, gemini, openai, claude, and generic
-    frameworks.'
+  - 'step3: Verify Each field has: name, type, required/optional, default, description, validation rules.'
+  - 'step4: Verify Examples provided for chatgpt, gemini, openai, claude, and generic frameworks.'
   expected: feature92 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: docs/kinnoo-yaml-spec.md exists and documents every manifest
-    field.; AC2: Each field has: name, type, required/optional, default, description,
-    validati...; AC3: Examples provided for chatgpt, gemini, openai, claude, and generic
-    frameworks.'
+  pass_criteria: 'AC1: docs/kinnoo-yaml-spec.md exists and documents every manifest field.; AC2: Each field has: name, type, required/optional, default, description, validati...; AC3: Examples provided for chatgpt, gemini, openai, claude, and generic frameworks.'
   covers:
   - feature: feature12
     ac: AC1
@@ -1286,14 +1243,11 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature92 (kinnoo.yaml specification document) covering
-    AC4, AC5'
-  - 'step2: Verify Document specifies the manifest version and any backward compatibility
-    notes.'
+  - 'step1: Execute workflow for feature92 (kinnoo.yaml specification document) covering AC4, AC5'
+  - 'step2: Verify Document specifies the manifest version and any backward compatibility notes.'
   - 'step3: Verify Cross-referenced from README.md and CLI help text.'
   expected: feature92 acceptance criteria AC4, AC5 are satisfied
-  pass_criteria: 'AC4: Document specifies the manifest version and any backward compatibility
-    notes.; AC5: Cross-referenced from README.md and CLI help text.'
+  pass_criteria: 'AC4: Document specifies the manifest version and any backward compatibility notes.; AC5: Cross-referenced from README.md and CLI help text.'
   covers:
   - feature: feature12
     ac: AC4
@@ -1309,16 +1263,12 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature94 (Security model document) covering AC1,
-    AC2, AC3'
-  - 'step2: Verify docs/security-model.md exists and covers the complete security
-    architecture.'
+  - 'step1: Execute workflow for feature94 (Security model document) covering AC1, AC2, AC3'
+  - 'step2: Verify docs/security-model.md exists and covers the complete security architecture.'
   - 'step3: Verify Threat model identifies key threats and mitigations.'
   - 'step4: Verify Signing model explains Ed25519 key generation, signing, and verification.'
   expected: feature94 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: docs/security-model.md exists and covers the complete security
-    architecture.; AC2: Threat model identifies key threats and mitigations.; AC3:
-    Signing model explains Ed25519 key generation, signing, and verification.'
+  pass_criteria: 'AC1: docs/security-model.md exists and covers the complete security architecture.; AC2: Threat model identifies key threats and mitigations.; AC3: Signing model explains Ed25519 key generation, signing, and verification.'
   covers:
   - feature: feature13
     ac: AC1
@@ -1336,14 +1286,11 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature94 (Security model document) covering AC4,
-    AC5'
-  - 'step2: Verify Auth flow documented: registration, login, JWT issuance, token
-    refresh, logout.'
+  - 'step1: Execute workflow for feature94 (Security model document) covering AC4, AC5'
+  - 'step2: Verify Auth flow documented: registration, login, JWT issuance, token refresh, logout.'
   - 'step3: Verify Cross-referenced from README.md.'
   expected: feature94 acceptance criteria AC4, AC5 are satisfied
-  pass_criteria: 'AC4: Auth flow documented: registration, login, JWT issuance, token
-    refresh, logout.; AC5: Cross-referenced from README.md.'
+  pass_criteria: 'AC4: Auth flow documented: registration, login, JWT issuance, token refresh, logout.; AC5: Cross-referenced from README.md.'
   covers:
   - feature: feature13
     ac: AC4
@@ -1359,17 +1306,12 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature95 (Getting started guide and registry guide)
-    covering AC1, AC2, AC3'
-  - 'step2: Verify docs/getting-started.md exists with a complete walkthrough from
-    install to running an agent.'
-  - 'step3: Verify docs/registry-guide.md exists with publish, search, and install
-    workflows.'
+  - 'step1: Execute workflow for feature95 (Getting started guide and registry guide) covering AC1, AC2, AC3'
+  - 'step2: Verify docs/getting-started.md exists with a complete walkthrough from install to running an agent.'
+  - 'step3: Verify docs/registry-guide.md exists with publish, search, and install workflows.'
   - 'step4: Verify Both guides include copy-paste terminal commands.'
   expected: feature95 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: docs/getting-started.md exists with a complete walkthrough
-    from install to ru...; AC2: docs/registry-guide.md exists with publish, search,
-    and install workflows.; AC3: Both guides include copy-paste terminal commands.'
+  pass_criteria: 'AC1: docs/getting-started.md exists with a complete walkthrough from install to ru...; AC2: docs/registry-guide.md exists with publish, search, and install workflows.; AC3: Both guides include copy-paste terminal commands.'
   covers:
   - feature: feature14
     ac: AC1
@@ -1387,13 +1329,11 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature95 (Getting started guide and registry guide)
-    covering AC4, AC5'
+  - 'step1: Execute workflow for feature95 (Getting started guide and registry guide) covering AC4, AC5'
   - 'step2: Verify Both guides include expected output snippets.'
   - 'step3: Verify Cross-referenced from README.md.'
   expected: feature95 acceptance criteria AC4, AC5 are satisfied
-  pass_criteria: 'AC4: Both guides include expected output snippets.; AC5: Cross-referenced
-    from README.md.'
+  pass_criteria: 'AC4: Both guides include expected output snippets.; AC5: Cross-referenced from README.md.'
   covers:
   - feature: feature14
     ac: AC4
@@ -1409,18 +1349,12 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature96 (README rewrite and supported agents document)
-    covering AC1, AC2, AC3'
+  - 'step1: Execute workflow for feature96 (README rewrite and supported agents document) covering AC1, AC2, AC3'
   - 'step2: Verify README.md is rewritten for beta: concise, professional, with badges.'
-  - 'step3: Verify README includes: overview, pip install, quick-start (5-command
-    workflow), links to docs.'
-  - 'step4: Verify docs/supported-agents.md lists all supported frameworks with feature
-    matrix.'
+  - 'step3: Verify README includes: overview, pip install, quick-start (5-command workflow), links to docs.'
+  - 'step4: Verify docs/supported-agents.md lists all supported frameworks with feature matrix.'
   expected: feature96 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: README.md is rewritten for beta: concise, professional, with
-    badges.; AC2: README includes: overview, pip install, quick-start (5-command workflow),
-    lin...; AC3: docs/supported-agents.md lists all supported frameworks with feature
-    matrix.'
+  pass_criteria: 'AC1: README.md is rewritten for beta: concise, professional, with badges.; AC2: README includes: overview, pip install, quick-start (5-command workflow), lin...; AC3: docs/supported-agents.md lists all supported frameworks with feature matrix.'
   covers:
   - feature: feature15
     ac: AC1
@@ -1438,14 +1372,11 @@ tests:
   type: unit
   preconditions: Repo checked out with docs/ directory accessible
   steps:
-  - 'step1: Execute workflow for feature96 (README rewrite and supported agents document)
-    covering AC4, AC5'
-  - 'step2: Verify Framework matrix covers: init scaffold, pack, run, publish, install
-    for each framework.'
+  - 'step1: Execute workflow for feature96 (README rewrite and supported agents document) covering AC4, AC5'
+  - 'step2: Verify Framework matrix covers: init scaffold, pack, run, publish, install for each framework.'
   - 'step3: Verify README does not reference internal development details.'
   expected: feature96 acceptance criteria AC4, AC5 are satisfied
-  pass_criteria: 'AC4: Framework matrix covers: init scaffold, pack, run, publish,
-    install for each ...; AC5: README does not reference internal development details.'
+  pass_criteria: 'AC4: Framework matrix covers: init scaffold, pack, run, publish, install for each ...; AC5: README does not reference internal development details.'
   covers:
   - feature: feature15
     ac: AC4
@@ -1461,17 +1392,12 @@ tests:
   type: integration
   preconditions: Repository checked out; .github/workflows/ directory exists
   steps:
-  - 'step1: Execute workflow for feature99 (PyPI package publishing configuration)
-    covering AC1, AC2, AC3'
-  - 'step2: Verify pyproject.toml has complete PyPI metadata (name, version, description,
-    author, license, classifiers, project-urls).'
+  - 'step1: Execute workflow for feature99 (PyPI package publishing configuration) covering AC1, AC2, AC3'
+  - 'step2: Verify pyproject.toml has complete PyPI metadata (name, version, description, author, license, classifiers, project-urls).'
   - 'step3: Verify `pip install kinnoo` works from a built wheel.'
-  - 'step4: Verify .github/workflows/pypi-publish.yml publishes to PyPI on push to
-    master.'
+  - 'step4: Verify .github/workflows/pypi-publish.yml publishes to PyPI on push to master.'
   expected: feature99 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: pyproject.toml has complete PyPI metadata (name, version, description,
-    author...; AC2: `pip install kinnoo` works from a built wheel.; AC3: .github/workflows/pypi-publish.yml
-    publishes to PyPI on push to master.'
+  pass_criteria: 'AC1: pyproject.toml has complete PyPI metadata (name, version, description, author...; AC2: `pip install kinnoo` works from a built wheel.; AC3: .github/workflows/pypi-publish.yml publishes to PyPI on push to master.'
   covers:
   - feature: feature16
     ac: AC1
@@ -1489,13 +1415,11 @@ tests:
   type: integration
   preconditions: Repository checked out; .github/workflows/ directory exists
   steps:
-  - 'step1: Execute workflow for feature99 (PyPI package publishing configuration)
-    covering AC4, AC5'
+  - 'step1: Execute workflow for feature99 (PyPI package publishing configuration) covering AC4, AC5'
   - 'step2: Verify Workflow uses trusted publisher (OIDC) — no API tokens.'
   - 'step3: Verify Version is sourced from a single location (pyproject.toml or __version__).'
   expected: feature99 acceptance criteria AC4, AC5 are satisfied
-  pass_criteria: 'AC4: Workflow uses trusted publisher (OIDC) — no API tokens.; AC5:
-    Version is sourced from a single location (pyproject.toml or __version__).'
+  pass_criteria: 'AC4: Workflow uses trusted publisher (OIDC) — no API tokens.; AC5: Version is sourced from a single location (pyproject.toml or __version__).'
   covers:
   - feature: feature16
     ac: AC4
@@ -1512,18 +1436,12 @@ tests:
   type: integration
   preconditions: Node.js and npm installed; web/ frontend dependencies installed
   steps:
-  - 'step1: Execute workflow for feature110 (Landing page update for invite-only beta)
-    covering AC1, AC2, AC3'
+  - 'step1: Execute workflow for feature110 (Landing page update for invite-only beta) covering AC1, AC2, AC3'
   - 'step2: Verify Landing page remains unchanged from the current baseline.'
   - 'step3: Verify clicking Sign Up routes to the simplified invite-only message page.'
-  - 'step4: Verify invite-only page includes one ''Contact Me'' action that opens
-    Twitter/X DM compose URL.'
+  - 'step4: Verify invite-only page includes one ''Contact Me'' action that opens Twitter/X DM compose URL.'
   expected: feature110 acceptance criteria AC1, AC2, AC3 are satisfied
-  pass_criteria: 'AC1: Landing page remains unchanged from the current version (no
-    copy/layout changes).; AC2: Clicking Sign Up routes to a simple invite-only page
-    with the exact provided message text.; AC3: Invite-only page has a single ''Contact
-    Me'' button that opens https://twitter.com/messages/compose?recipient_id=4118511499
-    in a new tab/modal flow.'
+  pass_criteria: 'AC1: Landing page remains unchanged from the current version (no copy/layout changes).; AC2: Clicking Sign Up routes to a simple invite-only page with the exact provided message text.; AC3: Invite-only page has a single ''Contact Me'' button that opens https://twitter.com/messages/compose?recipient_id=4118511499 in a new tab/modal flow.'
   covers:
   - feature: feature17
     ac: AC1
@@ -1542,21 +1460,13 @@ tests:
   type: integration
   preconditions: Node.js and npm installed; web/ frontend dependencies installed
   steps:
-  - 'step1: Execute workflow for feature110 (Landing page update for invite-only beta)
-    covering AC4, AC5, AC6, AC7'
+  - 'step1: Execute workflow for feature110 (Landing page update for invite-only beta) covering AC4, AC5, AC6, AC7'
   - 'step2: Verify no ''Email us'' or mailto contact flow is shown in web experience.'
-  - 'step3: Verify valid login leads to registry-dev.kinnoo.ai behavior-equivalent
-    registry route.'
-  - 'step4: Verify registry-dev.kinnoo.ai renders authenticated user''s registry as
-    before.'
-  - 'step5: Verify `next build` succeeds for static deployment workflow (Next.js 16
-    removed `next export`).'
+  - 'step3: Verify valid login leads to registry-dev.kinnoo.ai behavior-equivalent registry route.'
+  - 'step4: Verify registry-dev.kinnoo.ai renders authenticated user''s registry as before.'
+  - 'step5: Verify `next build` succeeds for static deployment workflow (Next.js 16 removed `next export`).'
   expected: feature110 acceptance criteria AC4, AC5, AC6, AC7 are satisfied
-  pass_criteria: 'AC4: No ''Email us'' link or mailto contact flow is shown anywhere
-    in the web experience.; AC5: Valid login redirects the user to registry-dev.kinnoo.ai
-    behavior-equivalent registry route.; AC6: registry-dev.kinnoo.ai renders the authenticated
-    user''s registry view as before.; AC7: `next build` succeeds for static deployment
-    workflow (Next.js 16 removed `next export`).'
+  pass_criteria: 'AC4: No ''Email us'' link or mailto contact flow is shown anywhere in the web experience.; AC5: Valid login redirects the user to registry-dev.kinnoo.ai behavior-equivalent registry route.; AC6: registry-dev.kinnoo.ai renders the authenticated user''s registry view as before.; AC7: `next build` succeeds for static deployment workflow (Next.js 16 removed `next export`).'
   covers:
   - feature: feature17
     ac: AC4
@@ -1574,17 +1484,13 @@ tests:
 - id: test76
   title: feature99 trusted publisher OIDC manual verification
   type: manual
-  preconditions: PyPI project admin access and GitHub Actions master-push workflow
-    configured
+  preconditions: PyPI project admin access and GitHub Actions master-push workflow configured
   steps:
-  - 'step1: Configure trusted publisher in PyPI project settings for repository master-push
-    workflow.'
+  - 'step1: Configure trusted publisher in PyPI project settings for repository master-push workflow.'
   - 'step2: Trigger a test release/tag pipeline to validate OIDC auth path.'
-  - 'step3: Confirm no API token is required and publish auth succeeds through trusted
-    publisher.'
+  - 'step3: Confirm no API token is required and publish auth succeeds through trusted publisher.'
   expected: PyPI trusted publisher is correctly configured and validated
-  pass_criteria: Release workflow authenticates via OIDC and reaches publish stage
-    without static credentials
+  pass_criteria: Release workflow authenticates via OIDC and reaches publish stage without static credentials
   covers:
   - feature: feature16
     ac: AC4
@@ -1598,15 +1504,9 @@ tests:
   type: unit
   preconditions: task528 /terms page implementation is present
   steps:
-  - 'step1: Render TermsOfServicePage and assert the H1 title and last-updated date
-    are visible.'
-  - 'step2: Assert the thirteen top-level section headings render in the expected
-    order.'
-  - 'step3: Assert presence of the production-ready clauses required by issue #379:
-    non-endorsement, Human-in-the-Loop user responsibility, AS-IS / AS-AVAILABLE limitation
-    of liability including autonomous-error language, Acceptable Use prohibitions
-    (deepfakes, self-harm prompts, scraping), user IP retention, sole-discretion archival
-    retention on termination, and 18+/COPPA/CalOPPA age requirement.'
+  - 'step1: Render TermsOfServicePage and assert the H1 title and last-updated date are visible.'
+  - 'step2: Assert the thirteen top-level section headings render in the expected order.'
+  - 'step3: Assert presence of the production-ready clauses required by issue #379: non-endorsement, Human-in-the-Loop user responsibility, AS-IS / AS-AVAILABLE limitation of liability including autonomous-error language, Acceptable Use prohibitions (deepfakes, self-harm prompts, scraping), user IP retention, sole-discretion archival retention on termination, and 18+/COPPA/CalOPPA age requirement.'
   - 'step4: Assert at least one in-page link navigates to /privacy.'
   expected: /terms page renders all required sections and clauses called out in issue
   pass_criteria: All assertions pass under Vitest jsdom environment.
@@ -1629,17 +1529,11 @@ tests:
   type: unit
   preconditions: task528 /privacy page implementation is present
   steps:
-  - 'step1: Render PrivacyPolicyPage and assert the H1 title and last-updated date
-    are visible.'
-  - 'step2: Assert the thirteen top-level section headings render in the expected
-    order.'
-  - 'step3: Assert presence of GDPR, CCPA, and CalOPPA references; identification
-    of Kinde Auth as data processor with Google and GitHub social sign-in; collection
-    of name and email; the no-sale-of-data declaration; the no-payments declaration;
-    and the no-children-under-13 clause.'
+  - 'step1: Render PrivacyPolicyPage and assert the H1 title and last-updated date are visible.'
+  - 'step2: Assert the thirteen top-level section headings render in the expected order.'
+  - 'step3: Assert presence of GDPR, CCPA, and CalOPPA references; identification of Kinde Auth as data processor with Google and GitHub social sign-in; collection of name and email; the no-sale-of-data declaration; the no-payments declaration; and the no-children-under-13 clause.'
   - 'step4: Assert at least one in-page link navigates to /terms.'
-  expected: /privacy page renders all required sections and clauses called out in
-    issue
+  expected: /privacy page renders all required sections and clauses called out in issue
   pass_criteria: All assertions pass under Vitest jsdom environment.
   covers:
   - feature: feature18

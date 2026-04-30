@@ -1,51 +1,82 @@
+# This file contains a list of the features implemented by SWE agents - numbered feature0, feature1, feature2, etc...
+# A feature can be broken down into one or more individual tasks. Each task can be completed by the same SWE agent, or SWE sub-agents if needed. 
+# Each new feature should just increment the feature number.
+# 
+# The description of the test cases are kept in a separate TESTS.txt, which is a running list of test cases
+# The description of the tasks are kept in a separate TASKS.txt, which is a running list of tasks. In the example above, task1 might be "create a white button in the camera view" and task2 might be "create an action event of capturing a photo when the user presses the white button".
+#
+# This file contains the project features as YAML entries. Each feature should
+# be represented as an item in the top-level `features` list. Use the template
+# below and the example to add new features. The validator script
+# `scripts/validate_project_manifests.py` enforces unique IDs and cross-file links.
+#
+# Template (YAML):
+# features:
+#   - id: featureX
+#     title: Short title
+#     description: 1-3 sentence measurable description
+#     tasks: [task1, task2]
+#     acceptance_criteria:
+#       - id: AC1
+#         description: Measurable acceptance criterion
+#       - id: AC2
+#         description: Another criterion
+#     owner: person/agent
+#     dependencies: [featureY]
+#     status: not-started / in-progress / etc...
+#
+# Example (one feature entry):
+# features:
+#   - id: feature2
+#     title: Implement camera button
+#     description: Add a white capture button centered at the bottom of the camera view.
+#     tasks: [task0, task1]
+#     acceptance_criteria:
+#       - id: AC1
+#         description: Button is visible bottom-center on iPhone 12/13/14 in portrait.
+#       - id: AC2
+#         description: Tapping the button captures an image and stores it in a temporary buffer within 200ms.
+#     owner: swe-agent
+#     dependencies: []
+#     status: not-started
+#
 features:
 - id: feature1
   title: Manifest schema and validation
-  description: 'Define the kinnoo.yaml manifest schema and implement a validator that
-    parses and validates manifest files against it. The validator returns clear,
-    actionable error messages and is usable as a library function for other commands
-    (pack, run, etc.). Schema definition: | Field              | Required | Type
-    | Constraints                                      |
+  description: |
+    Define the kinnoo.yaml manifest schema and implement a validator that parses
+    and validates manifest files against it. The validator returns clear, actionable
+    error messages and is usable as a library function for other commands (pack, run, etc.).
+
+    Schema definition:
+    | Field              | Required | Type         | Constraints                                      |
     |--------------------|----------|--------------|--------------------------------------------------|
-    | name               | yes      | string       | non-empty, valid package name
-    (alphanumeric, -)  | | version            | yes      | string       | valid semver
-    (e.g., "0.1.0", "1.2.3")            | | entrypoint         | yes      | string
-    | non-empty file path                              | | runtime.language   | yes
-    | string       | e.g., "python"                                   | |
-    runtime.version    | yes      | string       | version constraint (e.g., ">=3.10")
-    | | runtime.type       | yes      | string       | e.g., "one-shot"
-    | | dependencies       | yes      | list[string] | can be empty list
-    | | inputs.type        | yes      | string       | e.g., "text"
-    | | outputs.type       | yes      | string       | e.g., "text"
-    | | framework          | no       | string       | optional, e.g., "langchain"
-    |'
-  tasks:
-  - task1
-  - task2
-  - task3
-  - task4
+    | name               | yes      | string       | non-empty, valid package name (alphanumeric, -)  |
+    | version            | yes      | string       | valid semver (e.g., "0.1.0", "1.2.3")            |
+    | entrypoint         | yes      | string       | non-empty file path                              |
+    | runtime.language   | yes      | string       | e.g., "python"                                   |
+    | runtime.version    | yes      | string       | version constraint (e.g., ">=3.10")              |
+    | runtime.type       | yes      | string       | e.g., "one-shot"                                 |
+    | dependencies       | yes      | list[string] | can be empty list                                |
+    | inputs.type        | yes      | string       | e.g., "text"                                     |
+    | outputs.type       | yes      | string       | e.g., "text"                                     |
+    | framework          | no       | string       | optional, e.g., "langchain"                      |
+  tasks: [task1, task2, task3, task4]
   acceptance_criteria:
   - id: AC1
-    description: A kinnoo.yaml with all required fields and valid values passes validation
-      without errors.
+    description: A kinnoo.yaml with all required fields and valid values passes validation without errors.
   - id: AC2
-    description: Missing any required field (name, version, entrypoint, runtime.language,
-      runtime.version, runtime.type, dependencies, inputs.type, outputs.type) produces
-      a specific error naming the missing field.
+    description: Missing any required field (name, version, entrypoint, runtime.language, runtime.version, runtime.type, dependencies, inputs.type, outputs.type) produces a specific error naming the missing field.
   - id: AC3
-    description: Invalid field types (e.g., version as number, dependencies as string)
-      produce a specific error describing the type mismatch.
+    description: Invalid field types (e.g., version as number, dependencies as string) produce a specific error describing the type mismatch.
   - id: AC4
     description: Invalid semver format in version field produces a descriptive error.
   - id: AC5
-    description: 'The validator is callable as a Python function that returns (is_valid:
-      bool, errors: list[str]).'
+    description: 'The validator is callable as a Python function that returns (is_valid: bool, errors: list[str]).'
   - id: AC6
-    description: Optional field 'framework' is accepted when present, ignored when
-      absent.
+    description: Optional field 'framework' is accepted when present, ignored when absent.
   - id: AC7
-    description: runtime.type set to any value other than "one-shot" produces a descriptive
-      error stating it is not supported in this version.
+    description: runtime.type set to any value other than "one-shot" produces a descriptive error stating it is not supported in this version.
   owner: techlead-agent
   dependencies: []
   status: completed
@@ -54,52 +85,48 @@ features:
 
 - id: feature2
   title: kinnoo init — Project scaffolding
-  description: "Implement the `kinnoo init` CLI command that generates a template\
-    \ agent directory\nwith the canonical kinnoo structure. Creates a working hello-world\
-    \ agent that\npasses validation and can be run immediately with `kinnoo run`.\n\
-    \nCreates `<agent-name>/` directory in the current working directory.\n\nGenerated\
-    \ structure:\n```\n<agent-name>/\n  kinnoo.yaml        # Pre-filled manifest with\
-    \ user-provided name\n  run.py             # Hello-world entrypoint with asyncio\
-    \ boilerplate\n  requirements.txt   # Empty for MVP, but file should exist\n \
-    \ README.md          # Basic documentation template\n  tools/             # Empty\
-    \ directory for future tools\n  prompts/           # Empty directory for prompt\
-    \ templates\n```\n\nThe command accepts an agent name as argument: `kinnoo init\
-    \ my-agent`\n"
-  tasks:
-  - task5
-  - task6
-  - task7
+  description: |
+    Implement the `kinnoo init` CLI command that generates a template agent directory
+    with the canonical kinnoo structure. Creates a working hello-world agent that
+    passes validation and can be run immediately with `kinnoo run`.
+
+    Creates `<agent-name>/` directory in the current working directory.
+
+    Generated structure:
+    ```
+    <agent-name>/
+      kinnoo.yaml        # Pre-filled manifest with user-provided name
+      run.py             # Hello-world entrypoint with asyncio boilerplate
+      requirements.txt   # Empty for MVP, but file should exist
+      README.md          # Basic documentation template
+      tools/             # Empty directory for future tools
+      prompts/           # Empty directory for prompt templates
+    ```
+
+    The command accepts an agent name as argument: `kinnoo init my-agent`
+  tasks: [task5, task6, task7]
   acceptance_criteria:
   - id: AC1
-    description: Running `kinnoo init my-agent` creates a directory named `my-agent/`
-      with all expected files and subdirectories.
+    description: Running `kinnoo init my-agent` creates a directory named `my-agent/` with all expected files and subdirectories.
   - id: AC2
-    description: The generated kinnoo.yaml passes validation (feature1 validator returns
-      True with no errors).
+    description: The generated kinnoo.yaml passes validation (feature1 validator returns True with no errors).
   - id: AC3
-    description: The generated run.py is executable and prints output when run with
-      `python run.py 'test input'`.
+    description: The generated run.py is executable and prints output when run with `python run.py 'test input'`.
   - id: AC4
-    description: The entrypoint includes asyncio.run() boilerplate for compatibility
-      with async-first frameworks (AutoGen, OpenAI SDK).
+    description: The entrypoint includes asyncio.run() boilerplate for compatibility with async-first frameworks (AutoGen, OpenAI SDK).
   - id: AC5
-    description: 'Running `kinnoo init` without an agent name prints a usage error
-      with example: `Usage: kinnoo init <agent-name>`.'
+    description: 'Running `kinnoo init` without an agent name prints a usage error with example: `Usage: kinnoo init <agent-name>`.'
   - id: AC6
-    description: Running `kinnoo init my-agent` when `my-agent/` already exists prints
-      an error and does not overwrite.
+    description: Running `kinnoo init my-agent` when `my-agent/` already exists prints an error and does not overwrite.
   - id: AC7
-    description: Agent name validation matches manifest rules (lowercase alphanumeric
-      with hyphens, must start with lowercase letter or digit).
+    description: Agent name validation matches manifest rules (lowercase alphanumeric with hyphens, must start with lowercase letter or digit).
   notes:
   - 'original_id: feature2'
-  - Asyncio boilerplate included by default for AutoGen/OpenAI SDK compatibility —
-    harmless for sync agents
+  - Asyncio boilerplate included by default for AutoGen/OpenAI SDK compatibility — harmless for sync agents
   - Name validation reuses manifest NAME_PATTERN from schema.py for consistency
   - No --force flag in MVP to overwrite existing directories — safety first
   - tools/ and prompts/ directories are empty placeholders for future use
-  - Framework-specific templates (--framework=langchain) deferred to V2 per framework
-    strategy decision
+  - Framework-specific templates (--framework=langchain) deferred to V2 per framework strategy decision
   owner: techlead-agent
   dependencies:
   - feature1
@@ -107,317 +134,203 @@ features:
 
 - id: feature3
   title: Next.js Project Initialization & Directory Structure
-  description: 'Initialize a Next.js 15+ (App Router) project with TypeScript and
-    Tailwind CSS v3 in a top-level web/ directory, separate from the Python codebase and
-    server/ directory. Set up the foundational directory structure using Next.js route
-    groups: (public)/ for unauthenticated pages (landing, login, signup) and (auth)/ for
-    session-guarded pages (registry). Install core dependencies: Radix UI primitives,
-    Lucide React icons, and framer-motion. Configure Tailwind with the project''s
-    dark-mode design tokens. Create placeholder page.tsx files for each route so the
-    routing skeleton is navigable. Use npm as package manager. Require Node.js 20+.'
-  tasks:
-  - task104
-  - task105
-  - task106
-  - task107
+  description: 'Initialize a Next.js 15+ (App Router) project with TypeScript and Tailwind CSS v3 in a top-level web/ directory, separate from the Python codebase and server/ directory. Set up the foundational directory structure using Next.js route groups: (public)/ for unauthenticated pages (landing, login, signup) and (auth)/ for session-guarded pages (registry). Install core dependencies: Radix UI primitives, Lucide React icons, and framer-motion. Configure Tailwind with the project''s dark-mode design tokens. Create placeholder page.tsx files for each route so the routing skeleton is navigable. Use npm as package manager. Require Node.js 20+.'
+  tasks: [task104, task105, task106, task107]
   acceptance_criteria:
   - id: AC1
-    description: A web/ directory exists at the project root containing a working
-      Next.js 15+ App Router project initialized with TypeScript.
+    description: A web/ directory exists at the project root containing a working Next.js 15+ App Router project initialized with TypeScript.
   - id: AC2
-    description: 'Tailwind CSS v3 is installed and configured with the project''s
-      dark-mode color scheme (background #000000, text #F9FAFB, accent #3B82F6, surface
-      #111111).'
+    description: 'Tailwind CSS v3 is installed and configured with the project''s dark-mode color scheme (background #000000, text #F9FAFB, accent #3B82F6, surface #111111).'
   - id: AC3
-    description: 'The directory structure includes: app/(public)/page.tsx, app/(public)/login/page.tsx,
-      app/(public)/signup/page.tsx, app/(auth)/layout.tsx, app/(auth)/registry/page.tsx,
-      app/layout.tsx, components/ui/, components/blocks/, lib/, and __tests__/.'
+    description: 'The directory structure includes: app/(public)/page.tsx, app/(public)/login/page.tsx, app/(public)/signup/page.tsx, app/(auth)/layout.tsx, app/(auth)/registry/page.tsx, app/layout.tsx, components/ui/, components/blocks/, lib/, and __tests__/.'
   - id: AC4
-    description: Radix UI primitives (@radix-ui/react-dialog, @radix-ui/react-navigation-menu,
-      @radix-ui/react-slot), lucide-react, and framer-motion are listed in package.json
-      dependencies.
+    description: Radix UI primitives (@radix-ui/react-dialog, @radix-ui/react-navigation-menu, @radix-ui/react-slot), lucide-react, and framer-motion are listed in package.json dependencies.
   - id: AC5
-    description: npm run dev starts the dev server without errors on Node.js 20+ and
-      all placeholder pages are accessible at /, /login, /signup, and /registry.
+    description: npm run dev starts the dev server without errors on Node.js 20+ and all placeholder pages are accessible at /, /login, /signup, and /registry.
   - id: AC6
     description: npm run build completes without TypeScript or build errors.
   - id: AC7
-    description: Font family is set to 'Avenir Next', 'Segoe UI', sans-serif in the
-      global CSS/Tailwind config.
+    description: Font family is set to 'Avenir Next', 'Segoe UI', sans-serif in the global CSS/Tailwind config.
   owner: techlead-agent
   dependencies: []
+  status: completed
   notes:
   - 'original_id: feature49'
 
 - id: feature4
   title: MainLayout, Design System & Global Theme
-  description: 'Build the root MainLayout component rendered in app/layout.tsx with the
-    project''s visual identity. Includes: a top-left hamburger menu (Lucide Menu icon)
-    that opens a Radix UI sheet/drawer with three links (GitHub, Docs, Report an Issue);
-    a top-right area with ghost-style "Login" and "Sign Up" buttons. Define a global
-    ThemeConfig object in lib/theme.ts exporting all design tokens (colors, radii,
-    spacing, typography) so future components reference a single source of truth. Apply
-    OpenClaw-inspired aesthetics: 1px borders (border-white/10), glassmorphism
-    (backdrop-blur), dark background. Ensure the layout is responsive — desktop-first
-    but usable on mobile browsers.'
-  tasks:
-  - task108
-  - task109
-  - task110
-  - task111
+  description: 'Build the root MainLayout component rendered in app/layout.tsx with the project''s visual identity. Includes: a top-left hamburger menu (Lucide Menu icon) that opens a Radix UI sheet/drawer with three links (GitHub, Docs, Report an Issue); a top-right area with ghost-style "Login" and "Sign Up" buttons. Define a global ThemeConfig object in lib/theme.ts exporting all design tokens (colors, radii, spacing, typography) so future components reference a single source of truth. Apply OpenClaw-inspired aesthetics: 1px borders (border-white/10), glassmorphism (backdrop-blur), dark background. Ensure the layout is responsive — desktop-first but usable on mobile browsers.'
+  tasks: [task108, task109, task110, task111]
   acceptance_criteria:
   - id: AC1
-    description: 'A ThemeConfig object is exported from lib/theme.ts containing: colors
-      (bg, text, accent, surface, cardBorder), radii (card: 8px, button: 4px), typography
-      (h1: 48px, h2: 32px, h3: 24px, body: 16px), and spacing unit (4px).'
+    description: 'A ThemeConfig object is exported from lib/theme.ts containing: colors (bg, text, accent, surface, cardBorder), radii (card: 8px, button: 4px), typography (h1: 48px, h2: 32px, h3: 24px, body: 16px), and spacing unit (4px).'
   - id: AC2
-    description: The root layout (app/layout.tsx) renders a header with a hamburger
-      menu icon (top-left) and Login + Sign Up buttons (top-right) on every page.
+    description: The root layout (app/layout.tsx) renders a header with a hamburger menu icon (top-left) and Login + Sign Up buttons (top-right) on every page.
   - id: AC3
-    description: 'Clicking the hamburger icon opens a Radix UI sheet/drawer containing
-      three links: GitHub repo, Docs, and Report an Issue.'
+    description: 'Clicking the hamburger icon opens a Radix UI sheet/drawer containing three links: GitHub repo, Docs, and Report an Issue.'
   - id: AC4
-    description: The Login button navigates to /login. The Sign Up button navigates
-      to /signup.
+    description: The Login button navigates to /login. The Sign Up button navigates to /signup.
   - id: AC5
-    description: 'The layout uses the dark theme by default: background #000000, text
-      #F9FAFB, 1px borders with border-white/10, and backdrop-blur glassmorphism on
-      the header.'
+    description: 'The layout uses the dark theme by default: background #000000, text #F9FAFB, 1px borders with border-white/10, and backdrop-blur glassmorphism on the header.'
   - id: AC6
-    description: 'The header layout is responsive: on mobile viewports (< 768px),
-      the hamburger and buttons remain accessible and do not overflow or overlap.'
+    description: 'The header layout is responsive: on mobile viewports (< 768px), the hamburger and buttons remain accessible and do not overflow or overlap.'
   - id: AC7
-    description: 'Smoke tests pass: root layout renders hamburger menu and Login button,
-      ThemeConfig design tokens match specification.'
+    description: 'Smoke tests pass: root layout renders hamburger menu and Login button, ThemeConfig design tokens match specification.'
   owner: techlead-agent
   dependencies:
   - feature3
+  status: completed
   notes:
   - 'original_id: feature50'
 
 - id: feature5
   title: Landing Page Content, Terminal Preview, and Feature Grid
-  description: 'Build the public landing page at / with the exact Phase 5 marketing copy
-    and structure: hero title, long-form sub-headline, terminal preview module with
-    copy-to-clipboard button, and a six-card Features section with hoverable cards. The
-    implementation should reuse the global theme and layout from Sub-phase 1, remain
-    responsive, and preserve accessibility semantics for headings, buttons, and regions.'
-  tasks:
-  - task112
-  - task113
-  - task114
-  - task115
+  description: 'Build the public landing page at / with the exact Phase 5 marketing copy and structure: hero title, long-form sub-headline, terminal preview module with copy-to-clipboard button, and a six-card Features section with hoverable cards. The implementation should reuse the global theme and layout from Sub-phase 1, remain responsive, and preserve accessibility semantics for headings, buttons, and regions.'
+  tasks: [task112, task113, task114, task115]
   acceptance_criteria:
   - id: AC1
-    description: 'Landing page (/) renders main tagline (under the ''kinnoo'' title)
-      exactly as: ''Building AI agents together''.'
+    description: 'Landing page (/) renders main tagline (under the ''kinnoo'' title) exactly as: ''Building AI agents together''.'
   - id: AC2
-    description: Landing page renders sub-headline exactly as defined in phase5-planning.md
-      for Sub-phase 2.
+    description: Landing page renders sub-headline exactly as defined in phase5-planning.md for Sub-phase 2.
   - id: AC3
-    description: A Terminal Preview component renders command text 'pip install kinnoo'
-      and includes a copy button with success feedback state.
+    description: A Terminal Preview component renders command text 'pip install kinnoo' and includes a copy button with success feedback state.
   - id: AC4
-    description: A Features section renders six hoverable cards with the exact header
-      and subtext copy defined in Sub-phase 2 planning.
+    description: A Features section renders six hoverable cards with the exact header and subtext copy defined in Sub-phase 2 planning.
   - id: AC5
-    description: The landing page is responsive at 375px, 768px, and 1280px viewport
-      widths without content overlap or clipping.
+    description: The landing page is responsive at 375px, 768px, and 1280px viewport widths without content overlap or clipping.
   - id: AC6
-    description: 'The page preserves accessibility basics: one h1, semantic sectioning,
-      keyboard-focusable copy button, and visible focus styles.'
+    description: 'The page preserves accessibility basics: one h1, semantic sectioning, keyboard-focusable copy button, and visible focus styles.'
   - id: AC7
-    description: Automated tests validate hero content, terminal preview command/copy
-      button, and all six feature cards.
+    description: Automated tests validate hero content, terminal preview command/copy button, and all six feature cards.
   owner: techlead-agent
   dependencies:
   - feature4
+  status: completed
   notes:
   - 'original_id: feature51'
 
 - id: feature6
   title: Secure Login UI, Validation, and Session-Cookie Submission Flow
-  description: 'Build the public login page at /login as a centered minimalist card with
-    username (email) and password fields, client-side validation, forgot-password stub
-    link, and a loading state on submit. Implement submission through the Next.js BFF
-    proxy to FastAPI /login with credentials included and no token persistence in
-    localStorage/sessionStorage. On successful authentication, route users to /registry
-    while preserving server-issued session cookies.'
-  tasks:
-  - task116
-  - task117
-  - task118
-  - task119
+  description: Build the public login page at /login as a centered minimalist card with username (email) and password fields, client-side validation, forgot-password stub link, and a loading state on submit. Implement submission through the Next.js BFF proxy to FastAPI /login with credentials included and no token persistence in localStorage/sessionStorage. On successful authentication, route users to /registry while preserving server-issued session cookies.
+  tasks: [task116, task117, task118, task119]
   acceptance_criteria:
   - id: AC1
-    description: Login page route /login renders a centered card with Username (E-mail)
-      and Password fields plus a Login submit button.
+    description: Login page route /login renders a centered card with Username (E-mail) and Password fields plus a Login submit button.
   - id: AC2
-    description: Login page includes a 'Forgot Password' stub link that navigates
-      to /forgot-password.
+    description: Login page includes a 'Forgot Password' stub link that navigates to /forgot-password.
   - id: AC3
-    description: Client-side validation blocks submission on invalid/missing email
-      or password and displays actionable inline errors.
+    description: Client-side validation blocks submission on invalid/missing email or password and displays actionable inline errors.
   - id: AC4
-    description: Login button enters a loading/disabled state while the authentication
-      request is in flight and recovers on completion.
+    description: Login button enters a loading/disabled state while the authentication request is in flight and recovers on completion.
   - id: AC5
-    description: Login submission uses the proxy path (/login) with credentials included
-      and does not store auth tokens in localStorage or sessionStorage.
+    description: Login submission uses the proxy path (/login) with credentials included and does not store auth tokens in localStorage or sessionStorage.
   - id: AC6
-    description: On successful auth response, the frontend navigates to /registry
-      instead of FastAPI's default /agents redirect.
+    description: On successful auth response, the frontend navigates to /registry instead of FastAPI's default /agents redirect.
   - id: AC7
-    description: Automated tests verify required fields, validation behavior, loading
-      state, and successful redirect handling for the login flow.
+    description: Automated tests verify required fields, validation behavior, loading state, and successful redirect handling for the login flow.
   owner: techlead-agent
   dependencies:
   - feature4
   - feature5
+  status: completed
   notes:
   - 'original_id: feature52'
 
 - id: feature7
   title: Authenticated Registry Dashboard Shell, Tabs, and Data Views
-  description: 'Build the authenticated /registry dashboard shell with a secondary
-    navigation bar containing My Agents, Search, and Logout actions, plus
-    state-controlled My Agents and Search views. Implement data loading for both views
-    using existing backend endpoints through the frontend proxy, and add framer-motion
-    transitions when switching between tabs.'
-  tasks:
-  - task120
-  - task121
-  - task122
-  - task123
+  description: Build the authenticated /registry dashboard shell with a secondary navigation bar containing My Agents, Search, and Logout actions, plus state-controlled My Agents and Search views. Implement data loading for both views using existing backend endpoints through the frontend proxy, and add framer-motion transitions when switching between tabs.
+  tasks: [task120, task121, task122, task123]
   acceptance_criteria:
   - id: AC1
-    description: Route /registry renders a logged-in secondary nav bar with My Agents,
-      Search, and Logout controls.
+    description: Route /registry renders a logged-in secondary nav bar with My Agents, Search, and Logout controls.
   - id: AC2
-    description: My Agents view renders a grid of the current user's published agents
-      and is the default active view on /registry load.
+    description: My Agents view renders a grid of the current user's published agents and is the default active view on /registry load.
   - id: AC3
-    description: Search view renders a search input and a 'Show only my agents' checkbox,
-      and supports querying all public agents plus the user's own agents.
+    description: Search view renders a search input and a 'Show only my agents' checkbox, and supports querying all public agents plus the user's own agents.
   - id: AC4
-    description: Switching between My Agents and Search uses framer-motion transitions
-      and preserves a smooth UI state change.
+    description: Switching between My Agents and Search uses framer-motion transitions and preserves a smooth UI state change.
   - id: AC5
-    description: Dashboard data fetching uses existing backend routes via frontend
-      proxy paths (including /api/agents and /api/search) with session-cookie-compatible
-      requests.
+    description: Dashboard data fetching uses existing backend routes via frontend proxy paths (including /api/agents and /api/search) with session-cookie-compatible requests.
   - id: AC6
-    description: My Agents and Search views provide clear loading, empty, and error
-      states without layout breakage.
+    description: My Agents and Search views provide clear loading, empty, and error states without layout breakage.
   - id: AC7
-    description: Automated tests validate nav/tab rendering, default state, search
-      controls, and tab transition behavior.
+    description: Automated tests validate nav/tab rendering, default state, search controls, and tab transition behavior.
   owner: techlead-agent
   dependencies:
   - feature6
+  status: completed
   notes:
   - 'original_id: feature53'
 
 - id: feature8
   title: Agent Cards, Manifest Modal, and Install Command Copy Flow
-  description: 'Build reusable AgentCard and manifest modal workflows for dashboard
-    results. Cards must display the required metadata fields, with clickable Name
-    opening a modal that shows full manifest details loaded from the agent detail
-    endpoint. For search results, include a terminal-style install command and
-    copy-to-clipboard action in the modal.'
-  tasks:
-  - task124
-  - task125
-  - task126
-  - task127
+  description: Build reusable AgentCard and manifest modal workflows for dashboard results. Cards must display the required metadata fields, with clickable Name opening a modal that shows full manifest details loaded from the agent detail endpoint. For search results, include a terminal-style install command and copy-to-clipboard action in the modal.
+  tasks: [task124, task125, task126, task127]
   acceptance_criteria:
   - id: AC1
-    description: Agent cards in both My Agents and Search views render Tenant, Name,
-      Version, Author, Framework, Size, and Description fields.
+    description: Agent cards in both My Agents and Search views render Tenant, Name, Version, Author, Framework, Size, and Description fields.
   - id: AC2
-    description: Agent Name is clickable and opens a modal/dialog overlay containing
-      manifest details for that agent.
+    description: Agent Name is clickable and opens a modal/dialog overlay containing manifest details for that agent.
   - id: AC3
-    description: Modal includes an explicit close control (X) and supports closing
-      reliably without losing dashboard context.
+    description: Modal includes an explicit close control (X) and supports closing reliably without losing dashboard context.
   - id: AC4
-    description: Manifest modal data is fetched from GET /api/agents/{tenant_slug}/{agent_slug}
-      and renders version-history/metadata response safely.
+    description: Manifest modal data is fetched from GET /api/agents/{tenant_slug}/{agent_slug} and renders version-history/metadata response safely.
   - id: AC5
-    description: Search-result modal includes a terminal-like install command graphic
-      and copy-to-clipboard button for the install command.
+    description: Search-result modal includes a terminal-like install command graphic and copy-to-clipboard button for the install command.
   - id: AC6
-    description: Copy action provides visible success feedback and keeps install command
-      text deterministic for user verification.
+    description: Copy action provides visible success feedback and keeps install command text deterministic for user verification.
   - id: AC7
-    description: Automated component tests validate card field rendering, name click
-      behavior, modal open/close, manifest content rendering, and install-command
-      copy functionality.
+    description: Automated component tests validate card field rendering, name click behavior, modal open/close, manifest content rendering, and install-command copy functionality.
   owner: techlead-agent
   dependencies:
   - feature7
+  status: completed
   notes:
   - 'original_id: feature54'
 
 - id: feature9
   title: Embedded integrity manifest (META-INF/integrity.json)
-  description: 'During `kinnoo pack`, generate a JSON manifest listing every file in the
-    archive with its SHA-256 hash and file size. Store the manifest inside the .kno
-    archive at META-INF/integrity.json. Create a new module src/kinnoo/integrity.py with
-    functions to compute and verify file hashes.'
-  tasks:
-  - task145
-  - task146
+  description: During `kinnoo pack`, generate a JSON manifest listing every file in the archive with its SHA-256 hash and file size. Store the manifest inside the .kno archive at META-INF/integrity.json. Create a new module src/kinnoo/integrity.py with functions to compute and verify file hashes.
+  tasks: [task145, task146]
   acceptance_criteria:
   - id: AC1
     description: '`kinnoo pack` produces a .kno containing META-INF/integrity.json.'
   - id: AC2
-    description: META-INF/integrity.json contains SHA-256 hash and size for every
-      file in the archive (excluding META-INF/ itself).
+    description: META-INF/integrity.json contains SHA-256 hash and size for every file in the archive (excluding META-INF/ itself).
   - id: AC3
-    description: Integrity module provides `compute_integrity_manifest(directory)
-      -> dict` and `verify_integrity_manifest(directory, manifest) -> list[str]`.
+    description: Integrity module provides `compute_integrity_manifest(directory) -> dict` and `verify_integrity_manifest(directory, manifest) -> list[str]`.
   - id: AC4
-    description: Manifest format is documented with a JSON schema or example in the
-      module docstring.
+    description: Manifest format is documented with a JSON schema or example in the module docstring.
   - id: AC5
-    description: Existing tests for pack continue to pass; new tests cover manifest
-      generation.
+    description: Existing tests for pack continue to pass; new tests cover manifest generation.
+  status: completed
   notes:
   - 'original_id: feature86'
   - 'New module: src/kinnoo/integrity.py'
   - 'Modify: src/kinnoo/pack_command.py to call integrity module after archiving'
-  - META-INF/integrity.json must be the last file added to the archive (so it covers
-    all other files)
+  - META-INF/integrity.json must be the last file added to the archive (so it covers all other files)
   - See phase8-planning-3.md for full context
   owner: swe-agent
   dependencies: []
 
 - id: feature10
   title: Embedded signature (META-INF/signature.json)
-  description: 'When `kinnoo pack --sign` is used, sign the integrity manifest
-    (META-INF/integrity.json) using the existing Ed25519 signing infrastructure in
-    signing.py and embed the signature in META-INF/signature.json. The signature JSON
-    includes the base64 signature, the public key fingerprint, and a timestamp.'
-  tasks:
-  - task147
-  - task148
+  description: When `kinnoo pack --sign` is used, sign the integrity manifest (META-INF/integrity.json) using the existing Ed25519 signing infrastructure in signing.py and embed the signature in META-INF/signature.json. The signature JSON includes the base64 signature, the public key fingerprint, and a timestamp.
+  tasks: [task147, task148]
   acceptance_criteria:
   - id: AC1
-    description: '`kinnoo pack --sign` produces META-INF/signature.json alongside
-      META-INF/integrity.json.'
+    description: '`kinnoo pack --sign` produces META-INF/signature.json alongside META-INF/integrity.json.'
   - id: AC2
     description: Signature covers the raw bytes of META-INF/integrity.json.
   - id: AC3
-    description: 'signature.json contains: signature (base64), public_key_fingerprint
-      (hex), signed_at (ISO 8601).'
+    description: 'signature.json contains: signature (base64), public_key_fingerprint (hex), signed_at (ISO 8601).'
   - id: AC4
-    description: '`kinnoo pack` without `--sign` does NOT produce signature.json (integrity.json
-      is still generated).'
+    description: '`kinnoo pack` without `--sign` does NOT produce signature.json (integrity.json is still generated).'
   - id: AC5
     description: Existing signing.py functions are reused; no new crypto dependencies.
   - id: AC6
     description: Tests verify signed archives have valid signatures.
+  status: completed
   notes:
   - 'original_id: feature87'
   - 'Reuses: src/kinnoo/signing.py (Ed25519 keygen + sign functions)'
@@ -429,33 +342,24 @@ features:
 
 - id: feature11
   title: Install-time integrity verification
-  description: 'During `kinnoo install`, verify the integrity manifest before extracting
-    files. If `--strict` flag is passed, also verify the signature. Report clear error
-    messages for any mismatches. Add a `--skip-verify` flag to bypass verification for
-    development workflows.'
-  tasks:
-  - task149
-  - task150
+  description: During `kinnoo install`, verify the integrity manifest before extracting files. If `--strict` flag is passed, also verify the signature. Report clear error messages for any mismatches. Add a `--skip-verify` flag to bypass verification for development workflows.
+  tasks: [task149, task150]
   acceptance_criteria:
   - id: AC1
-    description: '`kinnoo install` verifies META-INF/integrity.json hashes against
-      actual file contents.'
+    description: '`kinnoo install` verifies META-INF/integrity.json hashes against actual file contents.'
   - id: AC2
     description: Installation aborts with clear error message if any file hash mismatches.
   - id: AC3
-    description: '`kinnoo install --strict` additionally verifies META-INF/signature.json
-      and fails if missing or invalid.'
+    description: '`kinnoo install --strict` additionally verifies META-INF/signature.json and fails if missing or invalid.'
   - id: AC4
     description: '`kinnoo install --skip-verify` bypasses all verification.'
   - id: AC5
-    description: Archives without META-INF/integrity.json install with a warning (backward
-      compatibility with pre-feature86 archives).
+    description: Archives without META-INF/integrity.json install with a warning (backward compatibility with pre-feature86 archives).
   - id: AC6
-    description: 'Verification results are logged: number of files checked, pass/fail
-      status.'
+    description: 'Verification results are logged: number of files checked, pass/fail status.'
   - id: AC7
-    description: 'Tests cover: valid archive, tampered file, missing integrity manifest,
-      unsigned + strict mode, skip-verify.'
+    description: 'Tests cover: valid archive, tampered file, missing integrity manifest, unsigned + strict mode, skip-verify.'
+  status: completed
   notes:
   - 'original_id: feature88'
   - 'Modify: src/kinnoo/install_command.py'
@@ -468,27 +372,20 @@ features:
 
 - id: feature12
   title: kinnoo.yaml specification document
-  description: 'Create a comprehensive specification document for the kinnoo.yaml
-    manifest format. Document every field, its type, whether required/optional, default
-    values, and validation rules. Include examples for each supported framework.
-    Document the framework-specific fields and constraints.'
-  tasks:
-  - task151
-  - task152
+  description: Create a comprehensive specification document for the kinnoo.yaml manifest format. Document every field, its type, whether required/optional, default values, and validation rules. Include examples for each supported framework. Document the framework-specific fields and constraints.
+  tasks: [task151, task152]
   acceptance_criteria:
   - id: AC1
     description: docs/kinnoo-yaml-spec.md exists and documents every manifest field.
   - id: AC2
-    description: 'Each field has: name, type, required/optional, default, description,
-      validation rules.'
+    description: 'Each field has: name, type, required/optional, default, description, validation rules.'
   - id: AC3
-    description: Examples provided for chatgpt, gemini, openai, claude, and generic
-      frameworks.
+    description: Examples provided for chatgpt, gemini, openai, claude, and generic frameworks.
   - id: AC4
-    description: Document specifies the manifest version and any backward compatibility
-      notes.
+    description: Document specifies the manifest version and any backward compatibility notes.
   - id: AC5
     description: Cross-referenced from README.md and CLI help text.
+  status: completed
   notes:
   - 'original_id: feature92'
   - 'Create: docs/kinnoo-yaml-spec.md'
@@ -499,13 +396,8 @@ features:
 
 - id: feature13
   title: Security model document
-  description: 'Create a security model document describing kinnoo''s trust and security
-    architecture. Cover: threat model, signing model (Ed25519), integrity verification,
-    trust store, permission model, auth flow (JWT), password hashing (Argon2id), rate
-    limiting, and upload validation.'
-  tasks:
-  - task154
-  - task155
+  description: 'Create a security model document describing kinnoo''s trust and security architecture. Cover: threat model, signing model (Ed25519), integrity verification, trust store, permission model, auth flow (JWT), password hashing (Argon2id), rate limiting, and upload validation.'
+  tasks: [task154, task155]
   acceptance_criteria:
   - id: AC1
     description: docs/security-model.md exists and covers the complete security architecture.
@@ -514,10 +406,10 @@ features:
   - id: AC3
     description: Signing model explains Ed25519 key generation, signing, and verification.
   - id: AC4
-    description: 'Auth flow documented: registration, login, JWT issuance, token refresh,
-      logout.'
+    description: 'Auth flow documented: registration, login, JWT issuance, token refresh, logout.'
   - id: AC5
     description: Cross-referenced from README.md.
+  status: completed
   notes:
   - 'original_id: feature94'
   - 'Create: docs/security-model.md'
@@ -530,17 +422,11 @@ features:
 
 - id: feature14
   title: Getting started guide and registry guide
-  description: 'Create two user-facing guides: (1) a getting-started guide walking
-    through creating, packing, and running an agent from scratch, and (2) a registry
-    guide covering account creation, publishing, searching, and installing from the
-    remote registry.'
-  tasks:
-  - task156
-  - task157
+  description: 'Create two user-facing guides: (1) a getting-started guide walking through creating, packing, and running an agent from scratch, and (2) a registry guide covering account creation, publishing, searching, and installing from the remote registry.'
+  tasks: [task156, task157]
   acceptance_criteria:
   - id: AC1
-    description: docs/getting-started.md exists with a complete walkthrough from install
-      to running an agent.
+    description: docs/getting-started.md exists with a complete walkthrough from install to running an agent.
   - id: AC2
     description: docs/registry-guide.md exists with publish, search, and install workflows.
   - id: AC3
@@ -549,6 +435,7 @@ features:
     description: Both guides include expected output snippets.
   - id: AC5
     description: Cross-referenced from README.md.
+  status: completed
   notes:
   - 'original_id: feature95'
   - 'Create: docs/getting-started.md, docs/registry-guide.md'
@@ -558,27 +445,20 @@ features:
 
 - id: feature15
   title: README rewrite and supported agents document
-  description: 'Rewrite README.md for the beta release. Include: project overview,
-    install instructions, quick-start example, link to docs, feature highlights,
-    supported frameworks. Create docs/supported-agents.md with a framework compatibility
-    matrix.'
-  tasks:
-  - task158
-  - task159
+  description: 'Rewrite README.md for the beta release. Include: project overview, install instructions, quick-start example, link to docs, feature highlights, supported frameworks. Create docs/supported-agents.md with a framework compatibility matrix.'
+  tasks: [task158, task159]
   acceptance_criteria:
   - id: AC1
     description: 'README.md is rewritten for beta: concise, professional, with badges.'
   - id: AC2
-    description: 'README includes: overview, pip install, quick-start (5-command workflow),
-      links to docs.'
+    description: 'README includes: overview, pip install, quick-start (5-command workflow), links to docs.'
   - id: AC3
-    description: docs/supported-agents.md lists all supported frameworks with feature
-      matrix.
+    description: docs/supported-agents.md lists all supported frameworks with feature matrix.
   - id: AC4
-    description: 'Framework matrix covers: init scaffold, pack, run, publish, install
-      for each framework.'
+    description: 'Framework matrix covers: init scaffold, pack, run, publish, install for each framework.'
   - id: AC5
     description: README does not reference internal development details.
+  status: completed
   notes:
   - 'original_id: feature96'
   - 'Modify: README.md'
@@ -589,18 +469,11 @@ features:
 
 - id: feature16
   title: PyPI package publishing configuration
-  description: 'Configure the project for PyPI publishing. Validate pyproject.toml has
-    correct metadata (name, version, description, author, license, classifiers, URLs).
-    Set up trusted publisher in PyPI for GitHub Actions. Create
-    .github/workflows/pypi-publish.yml triggered on push to master.'
-  tasks:
-  - task161
-  - task162
-  - task169
+  description: Configure the project for PyPI publishing. Validate pyproject.toml has correct metadata (name, version, description, author, license, classifiers, URLs). Set up trusted publisher in PyPI for GitHub Actions. Create .github/workflows/pypi-publish.yml triggered on push to master.
+  tasks: [task161, task162, task169]
   acceptance_criteria:
   - id: AC1
-    description: pyproject.toml has complete PyPI metadata (name, version, description,
-      author, license, classifiers, project-urls).
+    description: pyproject.toml has complete PyPI metadata (name, version, description, author, license, classifiers, project-urls).
   - id: AC2
     description: '`pip install kinnoo` works from a built wheel.'
   - id: AC3
@@ -609,6 +482,7 @@ features:
     description: Workflow uses trusted publisher (OIDC) — no API tokens.
   - id: AC5
     description: Version is sourced from a single location (pyproject.toml or __version__).
+  status: completed
   notes:
   - 'original_id: feature99'
   - 'Modify: pyproject.toml'
@@ -619,36 +493,24 @@ features:
 
 - id: feature17
   title: Landing page update for invite-only beta
-  description: 'Keep the landing page unchanged for now. Update the signup path to show
-    a minimal invite-only message and a single "Contact Me" action that opens a
-    Twitter/X DM compose link to Jerry. Do not render any email or mailto contact path.
-    Preserve login and registry behavior for authenticated users, and keep static export
-    compatibility for deployment.'
-  tasks:
-  - task163
-  - task164
+  description: Keep the landing page unchanged for now. Update the signup path to show a minimal invite-only message and a single "Contact Me" action that opens a Twitter/X DM compose link to Jerry. Do not render any email or mailto contact path. Preserve login and registry behavior for authenticated users, and keep static export compatibility for deployment.
+  tasks: [task163, task164]
   acceptance_criteria:
   - id: AC1
-    description: Landing page remains unchanged from the current version (no copy/layout
-      changes).
+    description: Landing page remains unchanged from the current version (no copy/layout changes).
   - id: AC2
-    description: 'Clicking Sign Up routes to a simple invite-only page with text:
-      ''Sign up is currently invite-only. Please contact me for early access.''.'
+    description: 'Clicking Sign Up routes to a simple invite-only page with text: ''Sign up is currently invite-only. Please contact me for early access.''.'
   - id: AC3
-    description: Invite-only page has a single 'Contact Me' button that opens https://twitter.com/messages/compose?recipient_id=4118511499
-      in a new tab/modal flow.
+    description: Invite-only page has a single 'Contact Me' button that opens https://twitter.com/messages/compose?recipient_id=4118511499 in a new tab/modal flow.
   - id: AC4
-    description: No 'Email us' link or mailto contact flow is shown anywhere in the
-      web experience.
+    description: No 'Email us' link or mailto contact flow is shown anywhere in the web experience.
   - id: AC5
-    description: Valid login redirects the user to registry-dev.kinnoo.ai behavior-equivalent
-      registry route.
+    description: Valid login redirects the user to registry-dev.kinnoo.ai behavior-equivalent registry route.
   - id: AC6
-    description: registry-dev.kinnoo.ai renders the authenticated user's registry
-      view as before.
+    description: registry-dev.kinnoo.ai renders the authenticated user's registry view as before.
   - id: AC7
-    description: '`next build` succeeds for static deployment workflow (Next.js 16
-      removed `next export` in favor of build-time static export configuration).'
+    description: '`next build` succeeds for static deployment workflow (Next.js 16 removed `next export` in favor of build-time static export configuration).'
+  status: completed
   notes:
   - 'original_id: feature110'
   - 'Modify: web/ directory (Next.js frontend)'
@@ -660,40 +522,20 @@ features:
 
 - id: feature18
   title: Long-form professional Terms of Service and Privacy Policy pages
-  description: 'Add /terms and /privacy public pages to the Kinnoo web frontend with
-    long-form, professional legal text drafted to address issue #379. The Terms of
-    Service include the production-ready protections requested in the issue
-    (non-endorsement, Human-in-the-Loop user responsibility, AS-IS / AS-AVAILABLE
-    limitation of liability, Acceptable Use Policy, IP ownership and license grant,
-    sole-discretion termination with archival retention, and 18+ age requirement with
-    COPPA/CalOPPA carve-out). The Privacy Policy describes data collected, identifies
-    Kinde Auth as our data processor (including Google/GitHub social sign-in), states
-    that we do not sell data and do not handle payments, covers GDPR/CCPA/CalOPPA
-    compliance, and includes a no-children-under-13 clause. Both pages are reachable
-    from the global site footer and the navigation menu.'
-  tasks:
-  - task172
+  description: 'Add /terms and /privacy public pages to the Kinnoo web frontend with long-form, professional legal text drafted to address issue #379. The Terms of Service include the production-ready protections requested in the issue (non-endorsement, Human-in-the-Loop user responsibility, AS-IS / AS-AVAILABLE limitation of liability, Acceptable Use Policy, IP ownership and license grant, sole-discretion termination with archival retention, and 18+ age requirement with COPPA/CalOPPA carve-out). The Privacy Policy describes data collected, identifies Kinde Auth as our data processor (including Google/GitHub social sign-in), states that we do not sell data and do not handle payments, covers GDPR/CCPA/CalOPPA compliance, and includes a no-children-under-13 clause. Both pages are reachable from the global site footer and the navigation menu.'
+  tasks: [task172]
   acceptance_criteria:
   - id: AC1
-    description: /terms route renders a long-form Terms of Service page including
-      non-endorsement, Human-in-the-Loop user responsibility, AS-IS / AS-AVAILABLE
-      limitation of liability, Acceptable Use Policy, IP, sole-discretion termination
-      with archival retention, and 18+/COPPA/CalOPPA age requirement sections.
+    description: /terms route renders a long-form Terms of Service page including non-endorsement, Human-in-the-Loop user responsibility, AS-IS / AS-AVAILABLE limitation of liability, Acceptable Use Policy, IP, sole-discretion termination with archival retention, and 18+/COPPA/CalOPPA age requirement sections.
   - id: AC2
-    description: /privacy route renders a long-form Privacy Policy page that identifies
-      Kinde Auth as the data processor (including Google/GitHub social sign-in), declares
-      names and emails as collected data with no sale of data and no payment handling,
-      covers GDPR/CCPA/CalOPPA rights and compliance, and includes a no-children-under-13
-      clause.
+    description: /privacy route renders a long-form Privacy Policy page that identifies Kinde Auth as the data processor (including Google/GitHub social sign-in), declares names and emails as collected data with no sale of data and no payment handling, covers GDPR/CCPA/CalOPPA rights and compliance, and includes a no-children-under-13 clause.
   - id: AC3
-    description: Both /terms and /privacy are reachable from the global site footer
-      and the navigation menu, and link to each other.
+    description: Both /terms and /privacy are reachable from the global site footer and the navigation menu, and link to each other.
   - id: AC4
-    description: Automated Vitest coverage asserts that the required sections and
-      clauses are rendered on both pages.
+    description: Automated Vitest coverage asserts that the required sections and clauses are rendered on both pages.
   notes:
   - 'original_id: feature122'
   - 'Source: issue #379.'
   owner: swe-agent
   dependencies: []
-  status: needs-review
+  status: completed
