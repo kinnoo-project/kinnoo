@@ -15,6 +15,7 @@ tests:
   automation_path: tests/test_validator.py::test_valid_manifest_passes
   notes:
   - 'original_id: test0'
+
 - id: test2
   title: Missing required field produces specific error
   type: unit
@@ -31,6 +32,7 @@ tests:
   automation_path: tests/test_validator.py::test_missing_required_field
   notes:
   - 'original_id: test1'
+
 - id: test3
   title: Invalid field type produces specific error
   type: unit
@@ -48,6 +50,7 @@ tests:
   automation_path: tests/test_validator.py::test_invalid_field_type
   notes:
   - 'original_id: test2'
+
 - id: test4
   title: Invalid semver format produces descriptive error
   type: unit
@@ -65,6 +68,7 @@ tests:
   automation_path: tests/test_validator.py::test_invalid_semver_format
   notes:
   - 'original_id: test3'
+
 - id: test5
   title: Validator function returns correct type signature
   type: unit
@@ -82,6 +86,7 @@ tests:
   automation_path: tests/test_validator.py::test_validator_return_type
   notes:
   - 'original_id: test4'
+
 - id: test6
   title: Optional framework field is accepted with and without value
   type: unit
@@ -98,6 +103,7 @@ tests:
   automation_path: tests/test_validator.py::test_framework_optional
   notes:
   - 'original_id: test5'
+
 - id: test7
   title: runtime.type not "one-shot" produces descriptive error
   type: unit
@@ -116,6 +122,7 @@ tests:
   automation_path: tests/test_validator.py::test_invalid_runtime_type
   notes:
   - 'original_id: test6'
+
 - id: test8
   title: Missing agent name prints usage error
   type: unit
@@ -132,6 +139,7 @@ tests:
   automation_path: tests/test_init.py::test_init_missing_name_prints_usage
   notes:
   - 'original_id: test7'
+
 - id: test9
   title: Invalid agent name prints validation error
   type: unit
@@ -149,6 +157,7 @@ tests:
   automation_path: tests/test_init.py::test_init_invalid_name_rejected
   notes:
   - 'original_id: test8'
+
 - id: test10
   title: Init creates directory with expected structure
   type: integration
@@ -168,6 +177,7 @@ tests:
   automation_path: tests/test_init.py::test_init_creates_directory_structure
   notes:
   - 'original_id: test9'
+
 - id: test11
   title: Generated kinnoo.yaml passes validation
   type: integration
@@ -184,6 +194,7 @@ tests:
   automation_path: tests/test_init.py::test_generated_manifest_passes_validation
   notes:
   - 'original_id: test10'
+
 - id: test12
   title: Generated run.py executes and prints output
   type: integration
@@ -200,6 +211,7 @@ tests:
   automation_path: tests/test_init.py::test_generated_entrypoint_executes
   notes:
   - 'original_id: test11'
+
 - id: test13
   title: Generated run.py includes asyncio boilerplate
   type: unit
@@ -216,6 +228,7 @@ tests:
   automation_path: tests/test_init.py::test_generated_entrypoint_has_asyncio
   notes:
   - 'original_id: test12'
+
 - id: test14
   title: Init on existing directory prints error
   type: integration
@@ -233,6 +246,7 @@ tests:
   automation_path: tests/test_init.py::test_init_existing_directory_fails
   notes:
   - 'original_id: test13'
+
 - id: test15
   title: Full init workflow integration test
   type: e2e
@@ -255,6 +269,7 @@ tests:
   automation_path: tests/test_init.py::test_init_full_workflow
   notes:
   - 'original_id: test14'
+
 - id: test16
   title: CLI is installable and runnable
   type: integration
@@ -269,6 +284,7 @@ tests:
   automation_path: tests/test_cli.py::test_cli_installable_and_runnable
   notes:
   - 'original_id: test15'
+
 - id: test17
   title: Usage message for missing agent name
   type: unit
@@ -284,6 +300,7 @@ tests:
   automation_path: tests/test_init.py::test_init_missing_name_prints_usage
   notes:
   - 'original_id: test33'
+
 - id: test18
   title: Error and no overwrite for existing directory
   type: unit
@@ -299,6 +316,7 @@ tests:
   automation_path: tests/test_init.py::test_init_existing_directory_fails
   notes:
   - 'original_id: test34'
+
 - id: test19
   title: checksum utility computes and parses stable sha256 values
   type: unit
@@ -315,6 +333,7 @@ tests:
   automation_path: tests/test_archive_integrity.py::test_checksum_helpers_compute_and_parse
   notes:
   - 'original_id: test137'
+
 - id: test20
   title: DEPRECATED — Analyzer detects Jupyter notebook entrypoint
   status: deprecated
@@ -332,6 +351,7 @@ tests:
   automation_path: tests/test_validator.py::test_analyzer_notebook_detection
   notes:
   - 'original_id: test386'
+
 - id: test21
   title: DEPRECATED — Notebook conversion produces valid Python script
   status: deprecated
@@ -349,6 +369,7 @@ tests:
   automation_path: tests/test_cli_install.py::test_import_notebook_conversion
   notes:
   - 'original_id: test387'
+
 - id: test22
   title: DEPRECATED — Verify analyzer detects CrewAI framework from imports
   status: deprecated
@@ -366,6 +387,7 @@ tests:
   automation_path: tests/test_validator.py::test_crewai_detection
   notes:
   - 'original_id: test406'
+
 - id: test23
   title: DEPRECATED — Verify analyzer detects OpenAI Swarm framework from imports
   status: deprecated
@@ -383,6 +405,7 @@ tests:
   automation_path: tests/test_validator.py::test_swarm_detection
   notes:
   - 'original_id: test407'
+
 - id: test24
   title: DEPRECATED — Verify analyzer detects Agno/Phi framework from imports
   status: deprecated
@@ -400,6 +423,7 @@ tests:
   automation_path: tests/test_validator.py::test_agno_detection
   notes:
   - 'original_id: test408'
+
 - id: test25
   title: DEPRECATED — Verify IMPORT_TO_PYPI mapping includes extended frameworks
   status: deprecated
@@ -416,6 +440,7 @@ tests:
   automation_path: tests/test_validator.py::test_import_to_pypi_completeness
   notes:
   - 'original_id: test409'
+
 - id: test26
   title: Next.js project scaffolded in web/ with TypeScript and App Router
   type: integration
@@ -435,6 +460,7 @@ tests:
     ac: AC1
   notes:
   - 'original_id: test421'
+
 - id: test27
   title: npm run dev starts and npm run build succeeds without errors
   type: integration
@@ -455,6 +481,7 @@ tests:
     ac: AC6
   notes:
   - 'original_id: test422'
+
 - id: test28
   title: Tailwind config includes dark-mode design tokens and global styles
   type: unit
@@ -478,6 +505,7 @@ tests:
     ac: AC7
   notes:
   - 'original_id: test423'
+
 - id: test29
   title: Directory structure matches specification with route groups
   type: integration
@@ -499,6 +527,7 @@ tests:
     ac: AC3
   notes:
   - 'original_id: test424'
+
 - id: test30
   title: All placeholder pages are navigable in dev server
   type: integration
@@ -518,6 +547,7 @@ tests:
     ac: AC5
   notes:
   - 'original_id: test425'
+
 - id: test31
   title: Core UI dependencies installed in package.json
   type: unit
@@ -538,6 +568,7 @@ tests:
     ac: AC4
   notes:
   - 'original_id: test426'
+
 - id: test32
   title: ThemeConfig exports correct color tokens
   type: unit
@@ -558,6 +589,7 @@ tests:
     ac: AC1
   notes:
   - 'original_id: test427'
+
 - id: test33
   title: ThemeConfig exports correct radii, typography, and spacing tokens
   type: unit
@@ -579,6 +611,7 @@ tests:
     ac: AC1
   notes:
   - 'original_id: test428'
+
 - id: test34
   title: Root layout renders hamburger menu icon and Login + Sign Up buttons
   type: integration
@@ -598,6 +631,7 @@ tests:
     ac: AC2
   notes:
   - 'original_id: test429'
+
 - id: test35
   title: Hamburger menu opens a sheet with GitHub, Docs, and Report links
   type: integration
@@ -617,6 +651,7 @@ tests:
     ac: AC3
   notes:
   - 'original_id: test430'
+
 - id: test36
   title: Header layout is responsive and usable on mobile viewports
   type: integration
@@ -635,6 +670,7 @@ tests:
     ac: AC6
   notes:
   - 'original_id: test431'
+
 - id: test37
   title: Landing page renders exact hero title and sub-headline
   type: integration
@@ -655,6 +691,7 @@ tests:
     ac: AC2
   notes:
   - 'original_id: test432'
+
 - id: test38
   title: Terminal Preview renders install command and copy button
   type: integration
@@ -676,6 +713,7 @@ tests:
     ac: AC6
   notes:
   - 'original_id: test433'
+
 - id: test39
   title: Features section renders all six required cards with exact copy
   type: integration
@@ -694,6 +732,7 @@ tests:
     ac: AC4
   notes:
   - 'original_id: test434'
+
 - id: test40
   title: Landing feature cards expose hover/focus affordances without overflow
   type: integration
@@ -714,6 +753,7 @@ tests:
     ac: AC6
   notes:
   - 'original_id: test435'
+
 - id: test41
   title: Landing page test suite covers hero, terminal preview, and features
   type: integration
@@ -731,6 +771,7 @@ tests:
     ac: AC7
   notes:
   - 'original_id: test436'
+
 - id: test42
   title: Login page renders required fields and forgot-password link
   type: integration
@@ -750,6 +791,7 @@ tests:
     ac: AC2
   notes:
   - 'original_id: test437'
+
 - id: test43
   title: Client-side validation blocks invalid login submissions
   type: integration
@@ -768,6 +810,7 @@ tests:
     ac: AC3
   notes:
   - 'original_id: test438'
+
 - id: test44
   title: Login button shows loading/disabled state during auth request
   type: integration
@@ -786,6 +829,7 @@ tests:
     ac: AC4
   notes:
   - 'original_id: test439'
+
 - id: test45
   title: Login request uses credentials include and avoids token storage
   type: integration
@@ -804,6 +848,7 @@ tests:
     ac: AC5
   notes:
   - 'original_id: test440'
+
 - id: test46
   title: Successful login redirects to /registry
   type: integration
@@ -821,6 +866,7 @@ tests:
     ac: AC6
   notes:
   - 'original_id: test441'
+
 - id: test47
   title: Login suite verifies field presence, validation, loading, and redirect
   type: integration
@@ -837,6 +883,7 @@ tests:
     ac: AC7
   notes:
   - 'original_id: test442'
+
 - id: test48
   title: Registry route renders secondary nav controls
   type: integration
@@ -853,6 +900,7 @@ tests:
     ac: AC1
   notes:
   - 'original_id: test443'
+
 - id: test49
   title: My Agents is default active dashboard view
   type: integration
@@ -869,6 +917,7 @@ tests:
     ac: AC2
   notes:
   - 'original_id: test444'
+
 - id: test50
   title: Search view renders query input and show-only-my-agents checkbox
   type: integration
@@ -886,6 +935,7 @@ tests:
     ac: AC3
   notes:
   - 'original_id: test445'
+
 - id: test51
   title: Tab switching applies framer-motion-backed transition flow
   type: integration
@@ -905,6 +955,7 @@ tests:
     ac: AC7
   notes:
   - 'original_id: test446'
+
 - id: test52
   title: Dashboard data loading uses proxy routes and handles load states
   type: integration
@@ -925,6 +976,7 @@ tests:
     ac: AC6
   notes:
   - 'original_id: test447'
+
 - id: test53
   title: AgentCard renders required metadata fields and clickable name
   type: integration
@@ -943,6 +995,7 @@ tests:
     ac: AC1
   notes:
   - 'original_id: test448'
+
 - id: test54
   title: Clicking agent name opens manifest modal and X closes it
   type: integration
@@ -963,6 +1016,7 @@ tests:
     ac: AC3
   notes:
   - 'original_id: test449'
+
 - id: test55
   title: Manifest modal fetches and renders agent detail endpoint data
   type: integration
@@ -980,6 +1034,7 @@ tests:
     ac: AC4
   notes:
   - 'original_id: test450'
+
 - id: test56
   title: Search modal includes install command block and copy behavior
   type: integration
@@ -1000,6 +1055,7 @@ tests:
     ac: AC6
   notes:
   - 'original_id: test451'
+
 - id: test57
   title: Agent card and modal suite validates full interaction flow
   type: integration
@@ -1017,6 +1073,7 @@ tests:
     ac: AC7
   notes:
   - 'original_id: test452'
+
 - id: test58
   title: feature86 verify AC1, AC2, AC3
   type: integration
@@ -1046,6 +1103,7 @@ tests:
   automation_path: tests/test_feature_86.py::test_feature86_group1
   notes:
   - 'original_id: test541'
+
 - id: test59
   title: feature86 verify AC4, AC5
   type: integration
@@ -1071,6 +1129,7 @@ tests:
   automation_path: tests/test_feature_86.py::test_feature86_group2
   notes:
   - 'original_id: test542'
+
 - id: test60
   title: feature87 verify AC1, AC2, AC3
   type: integration
@@ -1100,6 +1159,7 @@ tests:
   automation_path: tests/test_feature_87.py::test_feature87_group1
   notes:
   - 'original_id: test543'
+
 - id: test61
   title: feature87 verify AC4, AC5, AC6
   type: integration
@@ -1127,6 +1187,7 @@ tests:
   automation_path: tests/test_feature_87.py::test_feature87_group2
   notes:
   - 'original_id: test544'
+
 - id: test62
   title: feature88 verify AC1, AC2, AC3, AC4
   type: integration
@@ -1159,6 +1220,7 @@ tests:
   automation_path: tests/test_feature_88.py::test_feature88_group1
   notes:
   - 'original_id: test545'
+
 - id: test63
   title: feature88 verify AC5, AC6, AC7
   type: integration
@@ -1189,6 +1251,7 @@ tests:
   automation_path: tests/test_feature_88.py::test_feature88_group2
   notes:
   - 'original_id: test546'
+
 - id: test64
   title: feature92 verify AC1, AC2, AC3
   type: unit
@@ -1217,6 +1280,7 @@ tests:
   automation_path: tests/test_feature_92.py::test_feature92_group1
   notes:
   - 'original_id: test553'
+
 - id: test65
   title: feature92 verify AC4, AC5
   type: unit
@@ -1239,6 +1303,7 @@ tests:
   automation_path: tests/test_feature_92.py::test_feature92_group2
   notes:
   - 'original_id: test554'
+
 - id: test66
   title: feature94 verify AC1, AC2, AC3
   type: unit
@@ -1265,6 +1330,7 @@ tests:
   automation_path: tests/test_feature_94.py::test_feature94_group1
   notes:
   - 'original_id: test557'
+
 - id: test67
   title: feature94 verify AC4, AC5
   type: unit
@@ -1287,6 +1353,7 @@ tests:
   automation_path: tests/test_feature_94.py::test_feature94_group2
   notes:
   - 'original_id: test558'
+
 - id: test68
   title: feature95 verify AC1, AC2, AC3
   type: unit
@@ -1314,6 +1381,7 @@ tests:
   automation_path: tests/test_feature_95.py::test_feature95_group1
   notes:
   - 'original_id: test559'
+
 - id: test69
   title: feature95 verify AC4, AC5
   type: unit
@@ -1335,6 +1403,7 @@ tests:
   automation_path: tests/test_feature_95.py::test_feature95_group2
   notes:
   - 'original_id: test560'
+
 - id: test70
   title: feature96 verify AC1, AC2, AC3
   type: unit
@@ -1363,6 +1432,7 @@ tests:
   automation_path: tests/test_feature_96.py::test_feature96_group1
   notes:
   - 'original_id: test561'
+
 - id: test71
   title: feature96 verify AC4, AC5
   type: unit
@@ -1385,6 +1455,7 @@ tests:
   automation_path: tests/test_feature_96.py::test_feature96_group2
   notes:
   - 'original_id: test562'
+
 - id: test72
   title: feature99 verify AC1, AC2, AC3
   type: integration
@@ -1412,6 +1483,7 @@ tests:
   automation_path: tests/test_feature_99.py::test_feature99_group1
   notes:
   - 'original_id: test567'
+
 - id: test73
   title: feature99 verify AC4, AC5
   type: integration
@@ -1433,6 +1505,7 @@ tests:
   automation_path: tests/test_feature_99.py::test_feature99_group2
   notes:
   - 'original_id: test568'
+
 - id: test74
   status: deprecated
   title: feature110 verify AC1, AC2, AC3
@@ -1462,6 +1535,7 @@ tests:
   automation_path: tests/test_feature_110.py::test_feature110_group1
   notes:
   - 'original_id: test592'
+
 - id: test75
   status: deprecated
   title: feature110 verify AC4, AC5, AC6, AC7
@@ -1496,6 +1570,7 @@ tests:
   automation_path: tests/test_feature_110.py::test_feature110_group2
   notes:
   - 'original_id: test593'
+
 - id: test76
   title: feature99 trusted publisher OIDC manual verification
   type: manual
@@ -1517,6 +1592,7 @@ tests:
   automation_path: scripts/ops/check_pypi_trusted_publisher.sh
   notes:
   - 'original_id: test601'
+
 - id: test77
   title: issue379 terms of service page renders required sections and clauses
   type: unit
@@ -1547,6 +1623,7 @@ tests:
   - 'automation_path_subfolder: web/__tests__'
   automated: true
   automation_path: web/__tests__/legal-pages.test.tsx
+
 - id: test78
   title: issue379 privacy policy page renders required sections and clauses
   type: unit

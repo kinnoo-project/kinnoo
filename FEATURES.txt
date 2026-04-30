@@ -2,43 +2,23 @@ features:
 - id: feature1
   title: Manifest schema and validation
   description: 'Define the kinnoo.yaml manifest schema and implement a validator that
-    parses
-
-    and validates manifest files against it. The validator returns clear, actionable
-
-    error messages and is usable as a library function for other commands (pack, run,
-    etc.).
-
-
-    Schema definition:
-
-    | Field              | Required | Type         | Constraints                                      |
-
+    parses and validates manifest files against it. The validator returns clear,
+    actionable error messages and is usable as a library function for other commands
+    (pack, run, etc.). Schema definition: | Field              | Required | Type
+    | Constraints                                      |
     |--------------------|----------|--------------|--------------------------------------------------|
-
     | name               | yes      | string       | non-empty, valid package name
-    (alphanumeric, -)  |
-
-    | version            | yes      | string       | valid semver (e.g., "0.1.0",
-    "1.2.3")            |
-
-    | entrypoint         | yes      | string       | non-empty file path                              |
-
-    | runtime.language   | yes      | string       | e.g., "python"                                   |
-
-    | runtime.version    | yes      | string       | version constraint (e.g., ">=3.10")              |
-
-    | runtime.type       | yes      | string       | e.g., "one-shot"                                 |
-
-    | dependencies       | yes      | list[string] | can be empty list                                |
-
-    | inputs.type        | yes      | string       | e.g., "text"                                     |
-
-    | outputs.type       | yes      | string       | e.g., "text"                                     |
-
-    | framework          | no       | string       | optional, e.g., "langchain"                      |
-
-    '
+    (alphanumeric, -)  | | version            | yes      | string       | valid semver
+    (e.g., "0.1.0", "1.2.3")            | | entrypoint         | yes      | string
+    | non-empty file path                              | | runtime.language   | yes
+    | string       | e.g., "python"                                   | |
+    runtime.version    | yes      | string       | version constraint (e.g., ">=3.10")
+    | | runtime.type       | yes      | string       | e.g., "one-shot"
+    | | dependencies       | yes      | list[string] | can be empty list
+    | | inputs.type        | yes      | string       | e.g., "text"
+    | | outputs.type       | yes      | string       | e.g., "text"
+    | | framework          | no       | string       | optional, e.g., "langchain"
+    |'
   tasks:
   - task1
   - task2
@@ -71,6 +51,7 @@ features:
   status: completed
   notes:
   - 'original_id: feature1'
+
 - id: feature2
   title: kinnoo init — Project scaffolding
   description: "Implement the `kinnoo init` CLI command that generates a template\
@@ -123,30 +104,17 @@ features:
   dependencies:
   - feature1
   status: completed
+
 - id: feature3
   title: Next.js Project Initialization & Directory Structure
   description: 'Initialize a Next.js 15+ (App Router) project with TypeScript and
-    Tailwind CSS v3 in a
-
-    top-level web/ directory, separate from the Python codebase and server/ directory.
-    Set up
-
-    the foundational directory structure using Next.js route groups: (public)/ for
-    unauthenticated
-
-    pages (landing, login, signup) and (auth)/ for session-guarded pages (registry).
-    Install core
-
-    dependencies: Radix UI primitives, Lucide React icons, and framer-motion. Configure
-    Tailwind
-
-    with the project''s dark-mode design tokens. Create placeholder page.tsx files
-    for each route
-
-    so the routing skeleton is navigable. Use npm as package manager. Require Node.js
-    20+.
-
-    '
+    Tailwind CSS v3 in a top-level web/ directory, separate from the Python codebase and
+    server/ directory. Set up the foundational directory structure using Next.js route
+    groups: (public)/ for unauthenticated pages (landing, login, signup) and (auth)/ for
+    session-guarded pages (registry). Install core dependencies: Radix UI primitives,
+    Lucide React icons, and framer-motion. Configure Tailwind with the project''s
+    dark-mode design tokens. Create placeholder page.tsx files for each route so the
+    routing skeleton is navigable. Use npm as package manager. Require Node.js 20+.'
   tasks:
   - task104
   - task105
@@ -180,30 +148,18 @@ features:
   dependencies: []
   notes:
   - 'original_id: feature49'
+
 - id: feature4
   title: MainLayout, Design System & Global Theme
-  description: 'Build the root MainLayout component rendered in app/layout.tsx with
-    the project''s visual
-
-    identity. Includes: a top-left hamburger menu (Lucide Menu icon) that opens a
-    Radix UI
-
-    sheet/drawer with three links (GitHub, Docs, Report an Issue); a top-right area
-    with
-
-    ghost-style "Login" and "Sign Up" buttons. Define a global ThemeConfig object
-    in lib/theme.ts
-
-    exporting all design tokens (colors, radii, spacing, typography) so future components
-
-    reference a single source of truth. Apply OpenClaw-inspired aesthetics: 1px borders
-
-    (border-white/10), glassmorphism (backdrop-blur), dark background. Ensure the
-    layout is
-
-    responsive — desktop-first but usable on mobile browsers.
-
-    '
+  description: 'Build the root MainLayout component rendered in app/layout.tsx with the
+    project''s visual identity. Includes: a top-left hamburger menu (Lucide Menu icon)
+    that opens a Radix UI sheet/drawer with three links (GitHub, Docs, Report an Issue);
+    a top-right area with ghost-style "Login" and "Sign Up" buttons. Define a global
+    ThemeConfig object in lib/theme.ts exporting all design tokens (colors, radii,
+    spacing, typography) so future components reference a single source of truth. Apply
+    OpenClaw-inspired aesthetics: 1px borders (border-white/10), glassmorphism
+    (backdrop-blur), dark background. Ensure the layout is responsive — desktop-first
+    but usable on mobile browsers.'
   tasks:
   - task108
   - task109
@@ -238,22 +194,14 @@ features:
   - feature3
   notes:
   - 'original_id: feature50'
+
 - id: feature5
   title: Landing Page Content, Terminal Preview, and Feature Grid
-  description: 'Build the public landing page at / with the exact Phase 5 marketing
-    copy and structure:
-
-    hero title, long-form sub-headline, terminal preview module with copy-to-clipboard
-    button,
-
-    and a six-card Features section with hoverable cards. The implementation should
-    reuse the
-
-    global theme and layout from Sub-phase 1, remain responsive, and preserve accessibility
-
-    semantics for headings, buttons, and regions.
-
-    '
+  description: 'Build the public landing page at / with the exact Phase 5 marketing copy
+    and structure: hero title, long-form sub-headline, terminal preview module with
+    copy-to-clipboard button, and a six-card Features section with hoverable cards. The
+    implementation should reuse the global theme and layout from Sub-phase 1, remain
+    responsive, and preserve accessibility semantics for headings, buttons, and regions.'
   tasks:
   - task112
   - task113
@@ -286,24 +234,15 @@ features:
   - feature4
   notes:
   - 'original_id: feature51'
+
 - id: feature6
   title: Secure Login UI, Validation, and Session-Cookie Submission Flow
-  description: 'Build the public login page at /login as a centered minimalist card
-    with username (email)
-
-    and password fields, client-side validation, forgot-password stub link, and a
-    loading state
-
-    on submit. Implement submission through the Next.js BFF proxy to FastAPI /login
-    with
-
-    credentials included and no token persistence in localStorage/sessionStorage.
-    On successful
-
-    authentication, route users to /registry while preserving server-issued session
-    cookies.
-
-    '
+  description: 'Build the public login page at /login as a centered minimalist card with
+    username (email) and password fields, client-side validation, forgot-password stub
+    link, and a loading state on submit. Implement submission through the Next.js BFF
+    proxy to FastAPI /login with credentials included and no token persistence in
+    localStorage/sessionStorage. On successful authentication, route users to /registry
+    while preserving server-issued session cookies.'
   tasks:
   - task116
   - task117
@@ -337,20 +276,14 @@ features:
   - feature5
   notes:
   - 'original_id: feature52'
+
 - id: feature7
   title: Authenticated Registry Dashboard Shell, Tabs, and Data Views
   description: 'Build the authenticated /registry dashboard shell with a secondary
-    navigation bar containing
-
-    My Agents, Search, and Logout actions, plus state-controlled My Agents and Search
-    views.
-
-    Implement data loading for both views using existing backend endpoints through
-    the frontend
-
-    proxy, and add framer-motion transitions when switching between tabs.
-
-    '
+    navigation bar containing My Agents, Search, and Logout actions, plus
+    state-controlled My Agents and Search views. Implement data loading for both views
+    using existing backend endpoints through the frontend proxy, and add framer-motion
+    transitions when switching between tabs.'
   tasks:
   - task120
   - task121
@@ -384,20 +317,14 @@ features:
   - feature6
   notes:
   - 'original_id: feature53'
+
 - id: feature8
   title: Agent Cards, Manifest Modal, and Install Command Copy Flow
   description: 'Build reusable AgentCard and manifest modal workflows for dashboard
-    results. Cards must
-
-    display the required metadata fields, with clickable Name opening a modal that
-    shows full
-
-    manifest details loaded from the agent detail endpoint. For search results, include
-    a
-
-    terminal-style install command and copy-to-clipboard action in the modal.
-
-    '
+    results. Cards must display the required metadata fields, with clickable Name
+    opening a modal that shows full manifest details loaded from the agent detail
+    endpoint. For search results, include a terminal-style install command and
+    copy-to-clipboard action in the modal.'
   tasks:
   - task124
   - task125
@@ -431,18 +358,13 @@ features:
   - feature7
   notes:
   - 'original_id: feature54'
+
 - id: feature9
   title: Embedded integrity manifest (META-INF/integrity.json)
-  description: 'During `kinnoo pack`, generate a JSON manifest listing every file
-    in the
-
-    archive with its SHA-256 hash and file size. Store the manifest inside the
-
-    .kno archive at META-INF/integrity.json. Create a new module
-
-    src/kinnoo/integrity.py with functions to compute and verify file hashes.
-
-    '
+  description: 'During `kinnoo pack`, generate a JSON manifest listing every file in the
+    archive with its SHA-256 hash and file size. Store the manifest inside the .kno
+    archive at META-INF/integrity.json. Create a new module src/kinnoo/integrity.py with
+    functions to compute and verify file hashes.'
   tasks:
   - task145
   - task146
@@ -470,19 +392,13 @@ features:
   - See phase8-planning-3.md for full context
   owner: swe-agent
   dependencies: []
+
 - id: feature10
   title: Embedded signature (META-INF/signature.json)
   description: 'When `kinnoo pack --sign` is used, sign the integrity manifest
-
-    (META-INF/integrity.json) using the existing Ed25519 signing infrastructure
-
-    in signing.py and embed the signature in META-INF/signature.json. The
-
-    signature JSON includes the base64 signature, the public key fingerprint,
-
-    and a timestamp.
-
-    '
+    (META-INF/integrity.json) using the existing Ed25519 signing infrastructure in
+    signing.py and embed the signature in META-INF/signature.json. The signature JSON
+    includes the base64 signature, the public key fingerprint, and a timestamp.'
   tasks:
   - task147
   - task148
@@ -510,17 +426,13 @@ features:
   owner: swe-agent
   dependencies:
   - feature9
+
 - id: feature11
   title: Install-time integrity verification
   description: 'During `kinnoo install`, verify the integrity manifest before extracting
-
-    files. If `--strict` flag is passed, also verify the signature. Report
-
-    clear error messages for any mismatches. Add a `--skip-verify` flag to
-
-    bypass verification for development workflows.
-
-    '
+    files. If `--strict` flag is passed, also verify the signature. Report clear error
+    messages for any mismatches. Add a `--skip-verify` flag to bypass verification for
+    development workflows.'
   tasks:
   - task149
   - task150
@@ -553,18 +465,13 @@ features:
   dependencies:
   - feature9
   - feature10
+
 - id: feature12
   title: kinnoo.yaml specification document
   description: 'Create a comprehensive specification document for the kinnoo.yaml
-    manifest
-
-    format. Document every field, its type, whether required/optional, default
-
+    manifest format. Document every field, its type, whether required/optional, default
     values, and validation rules. Include examples for each supported framework.
-
-    Document the framework-specific fields and constraints.
-
-    '
+    Document the framework-specific fields and constraints.'
   tasks:
   - task151
   - task152
@@ -589,17 +496,13 @@ features:
   - 'Reference: existing test fixtures for valid manifest examples'
   owner: swe-agent
   dependencies: []
+
 - id: feature13
   title: Security model document
   description: 'Create a security model document describing kinnoo''s trust and security
-
-    architecture. Cover: threat model, signing model (Ed25519), integrity
-
-    verification, trust store, permission model, auth flow (JWT), password
-
-    hashing (Argon2id), rate limiting, and upload validation.
-
-    '
+    architecture. Cover: threat model, signing model (Ed25519), integrity verification,
+    trust store, permission model, auth flow (JWT), password hashing (Argon2id), rate
+    limiting, and upload validation.'
   tasks:
   - task154
   - task155
@@ -624,18 +527,13 @@ features:
   - feature9
   - feature10
   - feature11
+
 - id: feature14
   title: Getting started guide and registry guide
   description: 'Create two user-facing guides: (1) a getting-started guide walking
-    through
-
-    creating, packing, and running an agent from scratch, and (2) a registry
-
-    guide covering account creation, publishing, searching, and installing from
-
-    the remote registry.
-
-    '
+    through creating, packing, and running an agent from scratch, and (2) a registry
+    guide covering account creation, publishing, searching, and installing from the
+    remote registry.'
   tasks:
   - task156
   - task157
@@ -657,18 +555,13 @@ features:
   - Focus on the invite-only beta workflow
   owner: swe-agent
   dependencies: []
+
 - id: feature15
   title: README rewrite and supported agents document
   description: 'Rewrite README.md for the beta release. Include: project overview,
-    install
-
-    instructions, quick-start example, link to docs, feature highlights,
-
-    supported frameworks. Create docs/supported-agents.md with a framework
-
-    compatibility matrix.
-
-    '
+    install instructions, quick-start example, link to docs, feature highlights,
+    supported frameworks. Create docs/supported-agents.md with a framework compatibility
+    matrix.'
   tasks:
   - task158
   - task159
@@ -693,18 +586,13 @@ features:
   owner: swe-agent
   dependencies:
   - feature12
+
 - id: feature16
   title: PyPI package publishing configuration
-  description: 'Configure the project for PyPI publishing. Validate pyproject.toml
-    has
-
-    correct metadata (name, version, description, author, license, classifiers,
-
-    URLs). Set up trusted publisher in PyPI for GitHub Actions. Create
-
-    .github/workflows/pypi-publish.yml triggered on push to master.
-
-    '
+  description: 'Configure the project for PyPI publishing. Validate pyproject.toml has
+    correct metadata (name, version, description, author, license, classifiers, URLs).
+    Set up trusted publisher in PyPI for GitHub Actions. Create
+    .github/workflows/pypi-publish.yml triggered on push to master.'
   tasks:
   - task161
   - task162
@@ -728,20 +616,14 @@ features:
   - Trusted publisher setup requires manual PyPI configuration by operator
   owner: swe-agent
   dependencies: []
+
 - id: feature17
   title: Landing page update for invite-only beta
-  description: 'Keep the landing page unchanged for now. Update the signup path to
-    show a
-
-    minimal invite-only message and a single "Contact Me" action that opens a
-
-    Twitter/X DM compose link to Jerry. Do not render any email or mailto
-
-    contact path. Preserve login and registry behavior for authenticated users,
-
-    and keep static export compatibility for deployment.
-
-    '
+  description: 'Keep the landing page unchanged for now. Update the signup path to show
+    a minimal invite-only message and a single "Contact Me" action that opens a
+    Twitter/X DM compose link to Jerry. Do not render any email or mailto contact path.
+    Preserve login and registry behavior for authenticated users, and keep static export
+    compatibility for deployment.'
   tasks:
   - task163
   - task164
@@ -775,33 +657,20 @@ features:
   - Signup CTA contact path is Twitter/X DM only
   owner: swe-agent
   dependencies: []
+
 - id: feature18
   title: Long-form professional Terms of Service and Privacy Policy pages
   description: 'Add /terms and /privacy public pages to the Kinnoo web frontend with
-
-    long-form, professional legal text drafted to address issue #379. The
-
-    Terms of Service include the production-ready protections requested in
-
-    the issue (non-endorsement, Human-in-the-Loop user responsibility, AS-IS
-
-    / AS-AVAILABLE limitation of liability, Acceptable Use Policy, IP
-
-    ownership and license grant, sole-discretion termination with archival
-
-    retention, and 18+ age requirement with COPPA/CalOPPA carve-out). The
-
-    Privacy Policy describes data collected, identifies Kinde Auth as our
-
-    data processor (including Google/GitHub social sign-in), states that we
-
-    do not sell data and do not handle payments, covers GDPR/CCPA/CalOPPA
-
-    compliance, and includes a no-children-under-13 clause. Both pages are
-
-    reachable from the global site footer and the navigation menu.
-
-    '
+    long-form, professional legal text drafted to address issue #379. The Terms of
+    Service include the production-ready protections requested in the issue
+    (non-endorsement, Human-in-the-Loop user responsibility, AS-IS / AS-AVAILABLE
+    limitation of liability, Acceptable Use Policy, IP ownership and license grant,
+    sole-discretion termination with archival retention, and 18+ age requirement with
+    COPPA/CalOPPA carve-out). The Privacy Policy describes data collected, identifies
+    Kinde Auth as our data processor (including Google/GitHub social sign-in), states
+    that we do not sell data and do not handle payments, covers GDPR/CCPA/CalOPPA
+    compliance, and includes a no-children-under-13 clause. Both pages are reachable
+    from the global site footer and the navigation menu.'
   tasks:
   - task172
   acceptance_criteria:
