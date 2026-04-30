@@ -1,0 +1,59 @@
+# This file contains a list of epics for the project - numbered E1, E2, E3, etc.
+# An epic is a main category that represents a large, continuous body of work. 
+# Each task in TASKS.txt should be linked to one or more epics. If there is no appropriate epic, then it is possible a new epic needs to be created.
+# A task can belong to more than one epic, when appropriate.
+# By analogy, all tests are also linked to an epic. This helps with organization and compartmentalization of regression tests.
+# A project manager (human or agent) can use this file for planning and management.
+#
+epics:
+  - id: E1
+    title: Kinnoo Manifest Schema
+    description: |
+      The manifest YAML definition - required and optional fields that describe an agent.
+
+  - id: E2
+    title: Kinnoo Client CLI
+    description: |
+      End-user command-line interface - all of the ```kinnoo``` CLI commands a developer or end-user uses to work with agents.
+
+  - id: E3
+    title: Kinnoo Platform Administration CLI
+    description: |
+      Administrative command-line interface for platform management and operational workflows used by maintainers.
+      Covers registry and backend management capabilities, service configuration, access administration, and maintenance workflows.
+
+  - id: E4
+    title: Kinnoo Web Frontend
+    description: |
+      The web interface - includes landing pages, registry UI.
+
+  - id: E5
+    title: Kinnoo Documentation
+    description: |
+      Documentation and reference guides for Kinnoo.
+
+  - id: E6
+    title: Security, Trust, and Compliance
+    description: |
+      Covers signing, integrity, permission model, sandboxing, runtime monitoring, encryption, input guard, security scanning, auth hardening, and secret-handling policy.
+
+  - id: E7
+    title: Platform Reliability and Delivery
+    description: |
+      Environment setup, delivery automation, release readiness, runtime reliability, and service quality practices.
+
+  - id: E8
+    title: Access and Identity Experience
+    description: |
+      User and tenant lifecycle workflows, authentication experiences, session handling, and integration tooling.
+
+  - id: E9
+    title: Quality Engineering, Testing and Release Management
+    description: |
+      Quality strategy, coverage policies, validation contracts, test organization, and release-readiness checklists.
+
+  - id: E10
+    title: Frameworks, Ecosystem, and Third-Party Tooling Support
+    description: |
+      Includes improving support for frameworks like OpenClaw, PydanticAI, etc and supporting new frameworks and AI protocols / standards such as MCP and A2A.
+      Also includes general AI ecosystem and third-party tooling support.

@@ -1,0 +1,12 @@
+chore: migrate Kinnoo CLI, web, tests, docs, and other supporting docs to public repository
+
+Migrate the Kinnoo open-source surface into the public repository as a
+single baseline commit.
+
+Includes:
+- CLI code under src/kinnoo
+- Web frontend under web/
+- Public docs, tests, scripts, manifests, and CI workflows
+- Other supporting files such as project files and notes
+ 
+This is an intentional squashed baseline commit that encapsulates all pre-release CLI and web frontend work and migration into the public repository.
