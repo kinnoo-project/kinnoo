@@ -1,0 +1,21 @@
+## task44 implementation notes
+
+- Implemented runtime env var resolution from process environment for manifest-declared `env_vars`.
+- Added normalization helper in `<redacted-path>`:
+	- `normalize_env_vars(env_vars: object) -> list[str]`
+	- Produces deterministic, unique, non-empty variable-name list.
+- Updated `<redacted-path>` to:
+	- read and normalize `env_vars` from manifest,
+	- resolve each required variable from current process environment,
+	- fail fast with name-only diagnostics when required vars are missing,
+	- keep no-op behavior for manifests without `env_vars`,
+	- pass resolved environment into subprocess execution.
+- Added `tests/test_cli_env_vars.py` with:
+	- `test_env_vars_resolve_from_process_environment` (test78)
+	- `test_agents_without_env_vars_unaffected` (test83)
+- Status updates:
+	- `task44` moved `not-started -> in-progress -> needs-review` in `TASKS.txt`.
+- Verification:
+	- `python3 -m pytest tests/test_cli_env_vars.py -k "feature10 or env_vars or secret"` → pass
+	- `python3 -m pytest tests/test_cli.py -k "run_missing_args or run_missing_entrypoint"` → pass
+	- `python3 <redacted-path> → pass

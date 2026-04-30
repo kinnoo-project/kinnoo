@@ -1,0 +1,4363 @@
+tasks:
+- id: task1
+  title: Project structure and schema definition
+  type: task
+  epic:
+  - E1
+  description: 'Create the kinnoo Python package structure and define the manifest
+    schema as constants. Create the validate() function stub with the correct signature
+    (is_valid: bool, errors: list[str]).'
+  files:
+  - src/kinnoo/__init__.py
+  - src/kinnoo/schema.py
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Create src/kinnoo/ package with __init__.py
+  - step2: In schema.py, define REQUIRED_FIELDS list and FIELD_TYPES dict
+  - step3: 'In validator.py, create validate(manifest_path: str) -> tuple[bool, list[str]]
+      stub'
+  - step4: Add PyYAML to requirements.txt
+  dependencies: []
+  tests:
+  - test5
+  status: completed
+  notes:
+  - 'original_id: task0'
+
+- id: task2
+  title: Required field and type validation
+  type: task
+  epic:
+  - E1
+  description: 'Implement YAML parsing and validation for required fields and correct
+    types. Return specific error messages naming the missing field or describing type
+    mismatch.'
+  files:
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Parse YAML file using PyYAML
+  - step2: Check each required field exists; collect errors for missing ones
+  - step3: Check each field has correct type; collect errors for mismatches
+  - step4: Return (False, errors) if any errors, (True, []) otherwise
+  dependencies:
+  - task1
+  tests:
+  - test2
+  - test3
+  status: completed
+  notes:
+  - 'original_id: task1'
+
+- id: task3
+  title: Semantic validation (semver, runtime.type, name format)
+  type: task
+  epic:
+  - E1
+  description: 'Implement semantic validation: semver format for the version field,
+    runtime.type must be "one-shot", name must be alphanumeric with hyphens only.'
+  files:
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Add semver regex validation for version field
+  - step2: Add check that runtime.type == "one-shot"; error if not
+  - step3: Add package name format validation (^[a-z0-9][a-z0-9-]*$)
+  - step4: Collect errors with descriptive messages for each violation
+  dependencies:
+  - task2
+  tests:
+  - test4
+  - test7
+  status: completed
+  notes:
+  - 'original_id: task2'
+
+- id: task4
+  title: Optional fields and integration
+  type: task
+  epic:
+  - E1
+  description: 'Handle optional framework field (accept if present, ignore if absent).
+    Ensure a fully valid manifest passes with no errors. Add docstrings and type hints.'
+  files:
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Ensure framework field does not trigger "missing field" error
+  - step2: Ensure framework field with valid string value passes
+  - step3: Verify complete valid manifest returns (True, [])
+  - step4: Add docstrings and type hints to public API
+  dependencies:
+  - task3
+  tests:
+  - test1
+  - test6
+  status: completed
+  notes:
+  - 'original_id: task3'
+
+- id: task5
+  title: CLI entry point and argument parsing
+  type: task
+  epic:
+  - E2
+  description: 'Create the kinnoo CLI entry point with argparse. Implement the `init`
+    subcommand that parses the agent name argument. Handle missing arguments with clear
+    usage message. Validate agent name format using NAME_PATTERN from schema.py.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/__init__.py
+  steps:
+  - step1: Create src/kinnoo/cli.py with argparse-based CLI structure
+  - step2: Add `init` subcommand that accepts a positional `agent-name` argument
+  - step3: 'Print usage error if agent name is missing: ''Usage: kinnoo init <agent-name>'''
+  - step4: Import NAME_PATTERN from schema.py and validate agent name; print error
+      if invalid
+  - step5: Add `kinnoo` console script entry point to pyproject.toml (create pyproject.toml
+      if needed)
+  dependencies:
+  - task1
+  tests:
+  - test8
+  - test9
+  - test16
+  status: completed
+  notes:
+  - 'original_id: task4'
+
+- id: task6
+  title: Template files and directory generation
+  type: task
+  epic:
+  - E2
+  description: 'Create the scaffolding module that generates the agent directory
+    structure with all template files. The generated kinnoo.yaml must pass feature1
+    validation. The run.py must include asyncio.run() boilerplate.'
+  files:
+  - src/kinnoo/templates.py
+  - src/kinnoo/init_command.py
+  steps:
+  - step1: Create src/kinnoo/templates.py with string templates for kinnoo.yaml, run.py,
+      requirements.txt, README.md. requirements.txt template should be an empty file
+      for MVP (no dependencies for hello-world agent)
+  - step2: 'kinnoo.yaml template: use agent name, version 0.1.0, entrypoint run.py,
+      runtime python/>=3.10/one-shot, empty deps, inputs/outputs text'
+  - step3: 'run.py template: include asyncio.run() boilerplate with main(input_text)
+      async function, print hello-world output'
+  - step4: Create src/kinnoo/init_command.py with init_agent(name, target_dir) function
+  - step5: Generate directory structure with tools/, prompts/ subdirectories
+  - step6: Write all template files to the created directory
+  dependencies:
+  - task5
+  tests:
+  - test10
+  - test11
+  - test12
+  - test13
+  status: completed
+  notes:
+  - 'original_id: task5'
+
+- id: task7
+  title: Directory collision detection and CLI integration
+  type: task
+  epic:
+  - E2
+  description: 'Add check for existing directory before scaffolding. Print error if
+    directory already exists. Wire up init_command to CLI. Add integration test.'
+  files:
+  - src/kinnoo/init_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: In init_command.py, check if target directory exists before creating
+  - step2: 'If exists, raise error or return failure: ''Error: Directory <name>/ already
+      exists. Will not overwrite.'''
+  - step3: Wire init_command.init_agent() into cli.py init subcommand handler
+  - step4: Add integration test that runs full `kinnoo init` and verifies generated
+      manifest passes validation
+  dependencies:
+  - task6
+  tests:
+  - test14
+  - test15
+  status: completed
+  notes:
+  - 'original_id: task6'
+
+- id: task8
+  title: Manifest validation in kinnoo run
+  type: task
+  epic:
+  - E2
+  description: Validate kinnoo.yaml manifest before execution using the feature1 validator.
+    Print clear errors and abort if invalid or missing.
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Load kinnoo.yaml from agent directory
+  - step2: Call validator; if invalid, print errors and exit
+  dependencies:
+  - task4
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task7'
+
+- id: task9
+  title: Create Python venv in agent directory
+  type: task
+  epic:
+  - E2
+  description: Ensure .venv/ is created in the agent directory if it does not exist,
+    using standard Python venv tools.
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Check for .venv/ in agent directory
+  - step2: If missing, create venv using Python's venv module
+  dependencies: []
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task8'
+
+- id: task10
+  title: Install dependencies from requirements.txt
+  type: task
+  epic:
+  - E2
+  description: Install all dependencies listed in requirements.txt into the agent’s
+    venv before running the entrypoint.
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Read requirements.txt from agent directory
+  - step2: Install packages into .venv/ using pip
+  dependencies:
+  - task9
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task9'
+
+- id: task11
+  title: Execute entrypoint with user input
+  type: task
+  epic:
+  - E2
+  description: Run the entrypoint script (as specified in kinnoo.yaml) with the input
+    string as the first CLI argument (sys.argv[1]).
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Parse entrypoint from kinnoo.yaml
+  - step2: Run entrypoint with input as sys.argv[1]
+  dependencies:
+  - task8
+  - task10
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task10'
+
+- id: task12
+  title: Stream stdout and stderr from entrypoint
+  type: task
+  epic:
+  - E2
+  description: Stream both stdout and stderr from the entrypoint process to the terminal
+    as output is produced.
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Capture stdout and stderr from entrypoint process
+  - step2: Stream output to terminal in real-time
+  dependencies:
+  - task11
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task11'
+
+- id: task13
+  title: Propagate entrypoint exit code
+  type: task
+  epic:
+  - E2
+  description: Ensure that the exit code from the entrypoint script is returned as
+    the kinnoo process exit code.
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Capture exit code from entrypoint process
+  - step2: Return exit code from kinnoo run
+  dependencies:
+  - task11
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task12'
+
+- id: task14
+  title: Print usage error when arguments are missing
+  type: task
+  epic:
+  - E2
+  description: If kinnoo run is called without required arguments, print a usage error
+    with example. The usage/help message should show the input argument in single
+    quotes, e.g., kinnoo run myagent 'hello world'.
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Check for required arguments
+  - step2: If missing, print usage error and exit non-zero
+  dependencies: []
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task13'
+
+- id: task15
+  title: Handle missing entrypoint file gracefully
+  type: task
+  epic:
+  - E2
+  description: If the entrypoint file (as declared in kinnoo.yaml) is missing, print
+    a clear error and abort before execution.
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Check if entrypoint file exists before running
+  - step2: If missing, print error and exit non-zero
+  dependencies:
+  - task8
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task14'
+
+- id: task16
+  title: CLI Argument Parsing and Validation for --framework
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Update kinnoo init CLI to accept an optional --framework flag. Validate
+    the value of --framework. If an unsupported value is provided (e.g., langgraph,
+    pigglypoo), print an error message listing supported frameworks and the general
+    usage message. Exit without creating files or directories.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/init_command.py
+  steps:
+  - step1: Add --framework flag to kinnoo init CLI argument parser
+  - step2: 'Validate framework value; supported: gemini, chatgpt, claude-chat'
+  - step3: Print error and usage if unsupported value; exit without creating files
+  dependencies:
+  - task5
+  tests: []
+  acceptance_criteria:
+  - CLI accepts --framework flag and validates value
+  - Invalid values print error and usage, no files created
+  notes:
+  - 'original_id: task16'
+  - Error message: 'Unsupported framework. The supported frameworks are: gemini, chatgpt,
+      claude-chat.'
+  - Usage message matches existing CLI convention
+  status: completed
+
+- id: task17
+  title: Framework-Specific Template Generation
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'For each supported framework, generate run.py with LLM API call
+    boilerplate, requirements.txt with correct dependency, and README.md with API key
+    setup instructions and run example. All other files/directories remain as before.'
+  files:
+  - src/kinnoo/templates.py
+  - src/kinnoo/init_command.py
+  steps:
+  - step1: Add templates for gemini, chatgpt, claude-chat to templates.py
+  - step2: Generate run.py, requirements.txt, README.md for each framework
+  - step3: Ensure tools/ and prompts/ directories are created as before
+  dependencies:
+  - task16
+  tests: []
+  acceptance_criteria:
+  - Directory contains correct files for each framework
+  - requirements.txt lists correct dependency
+  - README.md includes API key setup and run instructions
+  notes:
+  - 'original_id: task17'
+  - Templates must be minimal but runnable (hello-world for each LLM)
+  status: completed
+
+- id: task18
+  title: Manifest Validation for Generated Agents
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Ensure generated kinnoo.yaml passes validation using feature1 validator.
+    Entry point and fields must be correct for each template.'
+  files:
+  - src/kinnoo/init_command.py
+  - src/kinnoo/templates.py
+  steps:
+  - step1: Generate kinnoo.yaml for each framework template
+  - step2: Validate manifest using feature1 validator
+  - step3: Fix template fields as needed to pass validation
+  dependencies:
+  - task17
+  tests: []
+  acceptance_criteria:
+  - kinnoo.yaml passes validation (no errors)
+  notes:
+  - 'original_id: task18'
+  - Use validator from src/kinnoo/validator.py
+  status: completed
+
+- id: task19
+  title: General Usage and Error Handling
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'If kinnoo init is run without agent name, print usage message. If agent
+    directory already exists, print error and do not overwrite. If --framework is
+    omitted, generate vanilla agent as before.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/init_command.py
+  steps:
+  - step1: Check for agent name argument; print usage if missing
+  - step2: Check for existing directory; print error and do not overwrite
+  - step3: If --framework omitted, generate vanilla agent
+  dependencies:
+  - task16
+  tests:
+  - test17
+  - test18
+  acceptance_criteria:
+  - Usage and error messages are clear and actionable
+  - No files are overwritten or created in error cases
+  notes:
+  - 'original_id: task19'
+  - Follows safety-first conventions from previous features
+  status: completed
+
+- id: task20
+  title: kinnoo pack CLI argument parsing and error handling
+  type: task
+  epic:
+  - E2
+  description: 'Implement the kinnoo pack subcommand in the CLI. Parse the agent
+    directory argument, print usage if missing, and handle error cases (e.g., running
+    from inside agent dir).'
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Add pack subcommand to CLI parser
+  - step2: Parse <agent-dir> argument; print usage if missing
+  - step3: Detect if running from inside agent directory; print error and abort if
+      so
+  - step4: Print clear error if agent directory does not exist
+  dependencies: []
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task23'
+
+- id: task21
+  title: Manifest validation before packaging
+  type: task
+  epic:
+  - E2
+  description: 'Load and validate kinnoo.yaml in the agent directory using the feature1
+    validator. Abort and print errors if invalid or missing.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Load kinnoo.yaml from agent directory
+  - step2: Call validator; if invalid, print errors and exit
+  dependencies:
+  - task20
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task24'
+
+- id: task22
+  title: Gather required files for packaging
+  type: task
+  epic:
+  - E2
+  description: 'Collect kinnoo.yaml, entrypoint, requirements.txt, and any additional
+    files declared in the manifest for inclusion in the archive.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/pack_command.py
+  steps:
+  - step1: Parse manifest for entrypoint and additional files
+  - step2: Check existence of all required files; abort with error if any are missing
+  dependencies:
+  - task21
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task25'
+
+- id: task23
+  title: Build wheel files for dependencies
+  type: task
+  epic:
+  - E2
+  description: 'Use pip wheel or pip download to build/download wheel files for all
+    dependencies listed in requirements.txt, storing them in a temp directory for
+    packaging.'
+  files:
+  - src/kinnoo/pack_command.py
+  steps:
+  - step1: Read requirements.txt
+  - step2: Use pip to build/download wheels for all dependencies
+  - step3: Store wheels in a temp directory for inclusion in the archive
+  - step4: Abort with error if any dependency cannot be built/downloaded
+  dependencies:
+  - task22
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task26'
+
+- id: task24
+  title: Create .kno archive with all contents
+  type: task
+  epic:
+  - E2
+  description: 'Bundle kinnoo.yaml, entrypoint, requirements.txt, additional files, and
+    wheel files into a zip/tar.gz archive with a .kno extension.'
+  files:
+  - src/kinnoo/pack_command.py
+  steps:
+  - step1: Create archive with correct structure and .kno extension
+  - step2: Add all required files and wheels to the archive
+  - step3: Ensure archive is inspectable with standard tools
+  dependencies:
+  - task23
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task27'
+
+- id: task25
+  title: CLI argument parsing and usage error for kinnoo install
+  type: task
+  epic:
+  - E2
+  description: Implement argument parsing for kinnoo install command. Print usage
+    error if no archive argument is provided.
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - Parse CLI arguments for kinnoo install.
+  - 'Print usage: ''Usage: kinnoo install <archive.kno>'' if no argument is given.
+
+    '
+  dependencies: []
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task29'
+
+- id: task26
+  title: Extract .kno archive to new directory with collision handling
+  type: task
+  epic:
+  - E2
+  description: Extract the .kno archive to a new directory, handling name collisions
+    by incrementing suffixes (_1, _2, etc.).
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - Extract .kno archive using tar -xzf.
+  - If target directory exists, create <archive>_1, <archive>_2, etc.
+  dependencies:
+  - task25
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task30'
+
+- id: task27
+  title: Validate manifest before installation
+  type: task
+  epic:
+  - E2
+  description: Validate kinnoo.yaml manifest before proceeding with installation.
+    Abort and print error if invalid.
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/validator.py
+  steps:
+  - Locate kinnoo.yaml in extracted directory.
+  - Run feature1 validator.
+  - Abort install and print error if manifest is invalid.
+  dependencies:
+  - task26
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task31'
+
+- id: task28
+  title: Create Python venv and install dependencies from wheels
+  type: task
+  epic:
+  - E2
+  description: Create Python virtual environment in agent directory and install dependencies
+    from wheel files in archive.
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - Create .venv in agent directory.
+  - Install dependencies from wheel files using pip.
+  dependencies:
+  - task27
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task32'
+
+- id: task29
+  title: Ensure agent is runnable with kinnoo run after install
+  type: task
+  epic:
+  - E2
+  description: Verify that the installed agent can be run immediately with kinnoo
+    run and produces expected output.
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - Run kinnoo run <agent-dir> "<input>" after install.
+  - Check for successful execution and output.
+  dependencies:
+  - task28
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task33'
+
+- id: task30
+  title: Error handling for invalid archive or missing files
+  type: task
+  epic:
+  - E2
+  description: Implement error handling for invalid .kno archive or missing required
+    files. Print clear error messages.
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - Detect invalid archive format or missing files.
+  - Print descriptive error and abort install.
+  dependencies:
+  - task25
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task34'
+
+- id: task31
+  title: Prevent overwrites unless --force flag is provided
+  type: task
+  epic:
+  - E2
+  description: Prevent overwriting existing directories unless --force flag is specified.
+    Print error if directory exists and --force is not used.
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - Check if target directory exists.
+  - Abort and print error unless --force flag is present.
+  dependencies:
+  - task26
+  tests: []
+  status: paused
+  notes:
+  - 'original_id: task35'
+
+- id: task32
+  title: Allow user-specified extraction directory for kinnoo install
+  type: task
+  epic:
+  - E2
+  description: Add support for an optional target directory argument to kinnoo install.
+    If provided, extract the archive to the specified directory; otherwise, use default
+    collision-handling logic.
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/install_command.py
+  steps:
+  - Update CLI argument parsing to accept an optional [target-dir] argument.
+  - If target-dir is provided, extract archive to that directory.
+  - Validate directory name and handle conflicts (unless --force is used).
+  - Update usage/help message and documentation.
+  - Add/modify tests for extraction to user-specified directory.
+  dependencies:
+  - task25
+  - task26
+  - task31
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task36'
+
+- id: task33
+  title: Extract install flow into install_command module
+  type: task
+  epic:
+  - E2
+  description: 'Refactor CLI structure so install behavior is implemented in a dedicated
+    src/kinnoo/install_command.py module and invoked from cli.py, matching the existing
+    modular pattern used by init_command.py and pack_command.py.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/install_command.py
+  - src/kinnoo/__init__.py
+  steps:
+  - step1: Define clear install command entry function signature in install_command.py
+      for reuse by CLI handlers
+  - step2: Move install-specific logic from cli.py into install_command.py while preserving
+      current behavior and error messaging
+  - step3: Update cli.py to delegate install command handling to install_command.py
+  - step4: Verify all install paths still propagate exit codes and surface actionable
+      errors for future unit/integration tests
+  dependencies:
+  - task25
+  - task26
+  - task27
+  - task28
+  - task29
+  - task30
+  - task32
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task39'
+
+- id: task34
+  title: Add global CLI version flag support
+  type: task
+  epic:
+  - E2
+  description: 'Add --version support to the top-level kinnoo CLI so users can retrieve
+    the installed package version quickly and reliably.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/__init__.py
+  - pyproject.toml
+  steps:
+  - step1: Add parser-level --version flag that works without requiring a subcommand
+  - step2: Source version from a single canonical package location and avoid hardcoded
+      duplication
+  - step3: Ensure --version prints version text and exits with code 0 with no side
+      effects
+  - step4: Keep output stable and minimal so it can be asserted by upcoming unit tests
+  dependencies:
+  - task5
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task40'
+
+- id: task35
+  title: Include transitive dependencies in pack artifacts
+  type: task
+  epic:
+  - E2
+  description: 'Update packaging dependency resolution so `kinnoo pack` bundles wheels
+    for both direct and transitive dependencies required for offline installation.'
+  files:
+  - src/kinnoo/pack_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Remove any dependency-resolution behavior that limits wheel collection
+      to direct dependencies only
+  - step2: Ensure wheel build/download flow resolves and collects full dependency
+      closure compatible with requirements constraints
+  - step3: Preserve clear user-facing output that reports dependency collection progress
+      and actionable failures
+  - step4: Keep implementation deterministic so future unit/integration tests can
+      assert artifact contents reliably
+  dependencies:
+  - task23
+  - task24
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task42'
+
+- id: task36
+  title: Add non-fatal wheel build fallback warnings
+  type: task
+  epic:
+  - E2
+  description: 'Make wheel build failures non-fatal during `kinnoo pack`: emit warnings,
+    continue packaging, and record which dependencies are missing wheels.'
+  files:
+  - src/kinnoo/pack_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Wrap per-dependency wheel build/download operations so individual failures
+      do not abort full pack
+  - step2: Track missing/failed wheel dependencies in a structured list for downstream
+      install handling
+  - step3: Print concise warning messages with dependency names and next-step guidance
+  - step4: Preserve package success criteria and output shape for future assertions
+      in automated tests
+  dependencies:
+  - task35
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task44'
+
+- id: task37
+  title: Add install fallback to PyPI for missing wheels
+  type: task
+  epic:
+  - E2
+  description: 'Update `kinnoo install` to detect missing wheel artifacts and fall back
+    to network installation from PyPI with explicit user-visible warnings.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Detect dependency gaps between requirements and bundled wheel artifacts
+      at install time
+  - step2: Attempt local-wheel install first, then install unresolved dependencies
+      from PyPI
+  - step3: Emit clear warning output when fallback occurs, including that internet
+      access is required
+  - step4: Keep exit-code and error semantics stable so fallback/non-fallback paths
+      can be tested independently
+  dependencies:
+  - task28
+  - task36
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task45'
+
+- id: task38
+  title: Harden offline install behavior and messaging
+  type: task
+  epic:
+  - E2
+  description: 'Ensure installations remain fully offline when all required wheels are
+    bundled, and provide actionable failure messaging when offline install is impossible
+    due to missing artifacts.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/pack_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Keep install path strictly local when wheel set is complete (no implicit
+      network operations)
+  - step2: If required wheels are missing and fallback cannot run, fail with a clear
+      message that names missing dependencies
+  - step3: Ensure pack/install outputs make offline readiness visible for operators
+      before runtime failures
+  - step4: Structure logic so future offline integration tests can deterministically
+      validate both success and failure branches
+  dependencies:
+  - task35
+  - task37
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task46'
+
+- id: task39
+  title: Detect platform-specific wheels and warn users
+  type: task
+  epic:
+  - E2
+  description: 'Add platform-compatibility checks during packaging and display warnings
+    when bundled wheels may not be portable across operating systems.'
+  files:
+  - src/kinnoo/pack_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Parse wheel filenames/tags to identify platform-specific artifacts during
+      pack
+  - step2: Emit the specified portability warning when non-universal wheels are detected
+  - step3: Keep warnings user-focused and non-blocking while preserving successful
+      archive creation
+  - step4: Keep detection output stable and explicit for future unit tests that assert
+      warning conditions
+  dependencies:
+  - task35
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task47'
+
+- id: task40
+  title: Extend schema for optional V2 manifest fields
+  type: task
+  epic:
+  - E1
+  description: 'Update manifest schema definitions to support optional V2 metadata
+    fields: description, author, license, and env_vars.'
+  files:
+  - src/kinnoo/schema.py
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Add schema/type definitions for optional fields description, author, license,
+      and env_vars
+  - step2: Ensure optional fields do not become required and preserve V1 compatibility
+      behavior
+  - step3: Keep schema constants and validation hooks explicit and deterministic for
+      upcoming unit tests
+  - step4: Document any new schema constants/interfaces in module-level docs for maintainability
+  dependencies:
+  - task4
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task48'
+
+- id: task41
+  title: Implement validator type checks for new optional fields
+  type: task
+  epic:
+  - E1
+  description: 'Implement validation logic for feature9 optional fields with precise
+    errors, including list[str] enforcement for env_vars.'
+  files:
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Validate description, author, and license as strings when present
+  - step2: Validate env_vars as list[str] when present and reject non-list or non-string
+      items
+  - step3: Validate env_vars entries are non-empty strings and emit field-specific
+      errors
+  - step4: Keep error message wording stable and specific so unit tests can assert
+      exact expectations
+  dependencies:
+  - task40
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task49'
+
+- id: task42
+  title: Preserve V1 manifest compatibility under V2 schema
+  type: task
+  epic:
+  - E1
+  description: 'Ensure existing V1 manifests continue to validate unchanged after adding
+    feature9 optional fields.'
+  files:
+  - src/kinnoo/validator.py
+  - src/kinnoo/schema.py
+  steps:
+  - step1: Confirm validation flow treats new fields as optional-only with no impact
+      on legacy required fields
+  - step2: Verify absence of new fields does not alter valid/invalid outcomes for
+      existing V1 manifests
+  - step3: Avoid introducing side effects in normalization or parsing paths unrelated
+      to feature9
+  - step4: Keep compatibility logic isolated and readable for future regression unit
+      tests
+  dependencies:
+  - task41
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task50'
+
+- id: task43
+  title: Update init templates with description and author placeholders
+  type: task
+  epic:
+  - E1
+  description: 'Update kinnoo init-generated manifest templates to include optional
+    description and author placeholder fields.'
+  files:
+  - src/kinnoo/templates.py
+  - src/kinnoo/init_command.py
+  steps:
+  - step1: Add description and author placeholders to generated kinnoo.yaml templates
+  - step2: Ensure template output remains valid under validator rules and existing
+      init flows
+  - step3: Keep placeholder values clear and stable for deterministic template assertions
+      in unit tests
+  - step4: Preserve backward compatibility for framework-specific init template generation
+      paths
+  dependencies:
+  - task6
+  - task42
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task51'
+
+- id: task44
+  title: Resolve declared env_vars from process environment
+  type: task
+  epic:
+  - E2
+  - E6
+  description: 'Implement runtime resolution of manifest-declared env_vars from the
+    current process environment as the first resolution source.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/schema.py
+  steps:
+  - step1: Read env_vars from validated manifest and normalize into a deterministic
+      list for runtime checks
+  - step2: Resolve each declared variable from current process environment before
+      any fallback sources
+  - step3: Keep behavior no-op for agents that do not declare env_vars
+  - step4: Ensure all user-facing output references only variable names, never values,
+      to support strict security unit tests
+  dependencies:
+  - task41
+  - task42
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task53'
+
+- id: task45
+  title: Add secure .env fallback resolution
+  type: task
+  epic:
+  - E2
+  - E6
+  description: 'Add .env-based fallback for unresolved env_vars using agent-directory
+    scope without exposing secret values in logs or terminal output.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/schema.py
+  - README.md
+  steps:
+  - step1: When declared env_vars are missing from process environment, load candidate
+      values from agent-local .env file
+  - step2: Restrict .env lookup to agent directory boundaries and handle malformed
+      lines safely
+  - step3: Merge resolved names into runtime context while preventing any value echo
+      in stdout/stderr
+  - step4: Keep deterministic resolution behavior and messaging so fallback path can
+      be asserted via unit/integration tests
+  dependencies:
+  - task44
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task54'
+
+- id: task46
+  title: Implement masked prompt fallback and cancel handling
+  type: task
+  epic:
+  - E2
+  - E6
+  description: 'Prompt interactively for unresolved env_vars using masked input and
+    abort safely if user declines or cancels input.'
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: For any still-missing declared env_vars, prompt user with non-echo masked
+      input
+  - step2: Handle interruption/decline paths (e.g., Ctrl+C) with clear error that
+      names missing variable only
+  - step3: Ensure prompt and error paths never display captured secret values
+  - step4: Structure prompt behavior for deterministic unit tests around masking and
+      cancel flows
+  dependencies:
+  - task45
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task55'
+
+- id: task47
+  title: Inject resolved env_vars into subprocess execution
+  type: task
+  epic:
+  - E2
+  - E6
+  description: 'Inject resolved env_vars into the agent subprocess environment for
+    execution while preserving existing run behavior for non-env_vars agents.'
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Build subprocess environment by combining base environment with resolved
+      declared env_vars
+  - step2: Pass merged environment to entrypoint process invocation path
+  - step3: Keep run behavior unchanged when manifest has no env_vars declarations
+  - step4: Ensure subprocess injection code paths expose variable names only in diagnostics,
+      never values
+  dependencies:
+  - task46
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task56'
+
+- id: task48
+  title: Add inspect CLI command parsing
+  type: task
+  epic:
+  - E2
+  description: 'Add `kinnoo inspect` command parsing and usage handling so users can
+    inspect either an agent directory or a `.kno` archive path.'
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Add `inspect` subcommand with positional target argument in the top-level
+      CLI parser
+  - step2: Implement usage/help behavior for missing arguments consistent with existing
+      command patterns
+  - step3: Wire the subcommand handler to a dedicated inspect command module entrypoint
+  - step4: Keep parser behavior deterministic and structured for future unit tests
+      around valid/invalid argument paths
+  dependencies:
+  - task33
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task62'
+
+- id: task49
+  title: Implement inspect target detection
+  type: task
+  epic:
+  - E2
+  description: 'Implement source detection for inspect targets so the command can read
+    manifests from either agent directories or `.kno` archives.'
+  files:
+  - src/kinnoo/inspect_command.py
+  steps:
+  - step1: Detect whether input target is a directory, regular file, or invalid path
+      and emit clear errors
+  - step2: For directory targets, detect presence of `kinnoo.yaml` and `requirements.txt`
+      before manifest load
+  - step3: If `kinnoo.yaml` is missing, print stdout guidance that it must be created
+      and exit gracefully with non-zero status
+  - step4: If `requirements.txt` is missing, print stdout guidance that it must be
+      created and include robust generation guidance (`pip install uv` and `uv export
+      --format requirements-txt > requirements.txt`), then exit gracefully with non-zero
+      status
+  - step5: When both required files exist, load manifest content safely for downstream
+      validation/formatting flow
+  - step6: Keep detection and branching logic isolated and deterministic for upcoming
+      unit tests
+  - step7: For archive targets, branch to archive-manifest extraction path without
+      full extraction
+  dependencies:
+  - task48
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task63'
+
+- id: task50
+  title: Read manifest directly from .kno zip
+  type: task
+  epic:
+  - E2
+  description: 'Read `kinnoo.yaml` from inside `.kno` archives without extracting full
+    archive contents to disk.'
+  files:
+  - src/kinnoo/inspect_command.py
+  - src/kinnoo/install_command.py
+  steps:
+  - step1: Implement zip-based reader that locates and reads `kinnoo.yaml` entry from
+      archive members
+  - step2: Handle missing manifest, invalid zip structure, and read errors with actionable
+      error messages
+  - step3: Ensure archive inspection path does not write extracted files to disk
+  - step4: Structure the archive reader as a reusable helper suitable for focused
+      unit tests
+  dependencies:
+  - task49
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task64'
+
+- id: task51
+  title: Validate manifest and format inspect output
+  type: task
+  epic:
+  - E2
+  description: 'Validate loaded manifests using the shared validator and render
+    human-readable inspect output with optional-field omission rules.'
+  files:
+  - src/kinnoo/inspect_command.py
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Validate loaded manifest with feature1 validator and abort on invalid manifests
+      with clear errors
+  - step2: Ensure missing required-field failures are surfaced with field-by-field
+      clarity from validator output
+  - step3: Render human-readable output for required/optional metadata fields defined
+      in feature11 ACs
+  - step4: Omit missing optional fields from output and avoid raw YAML dumps
+  - step5: Keep output formatting stable for future snapshot-style unit tests
+  dependencies:
+  - task49
+  - task50
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task65'
+
+- id: task52
+  title: Add inspect guidance templates with maintenance note
+  type: task
+  epic:
+  - E2
+  description: 'Add reusable inspect guidance templates for missing `kinnoo.yaml` and
+    missing `requirements.txt`, including a minimal manifest example kept in code with
+    an explicit `[agent]` maintenance note.'
+  files:
+  - src/kinnoo/inspect_command.py
+  - src/kinnoo/templates.py
+  steps:
+  - step1: Define a minimal `kinnoo.yaml` example in a single reusable code location
+      referenced by inspect guidance output
+  - step2: Add an explicit `[agent]` comment near the example stating it must be updated
+      whenever schema/template changes affect minimal required manifest fields
+  - step3: Ensure missing `kinnoo.yaml` guidance prints the reusable minimal example
+      and remains stdout-safe
+  - step4: Ensure missing `requirements.txt` guidance includes the robust `uv export`
+      command path and remains concise
+  - step5: Keep template strings centralized and deterministic to support future unit/snapshot
+      tests
+  dependencies:
+  - task49
+  - task51
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task68'
+
+- id: task53
+  title: Define registry abstraction and local backend
+  type: task
+  epic:
+  - E2
+  description: 'Introduce a registry abstraction layer for publish/resolve/list/search
+    flows, and implement a local filesystem backend rooted at `~/.kinnoo/registry/`.
+    Structure this so swapping to a remote backend in V3 requires minimal changes.'
+  files:
+  - src/kinnoo/registry.py
+  - src/kinnoo/registry_backends.py
+  - src/kinnoo/__init__.py
+  steps:
+  - step1: Define a backend interface/contract for publish, resolve, list, and search
+      operations
+  - step2: Implement a local backend that enforces canonical on-disk layout `~/.kinnoo/registry/<name>/<version>/`
+  - step3: Isolate filesystem concerns behind the backend boundary so CLI command
+      handlers remain backend-agnostic
+  - step4: Keep method signatures and return structures deterministic to support focused
+      unit tests per backend behavior
+  dependencies:
+  - task33
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task69'
+
+- id: task54
+  title: Add publish command parsing and CLI wiring
+  type: task
+  epic:
+  - E2
+  description: 'Add `kinnoo publish <archive.kno> [--local]` to the CLI with clear usage
+    and errors, and route execution through the registry abstraction.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/publish_command.py
+  steps:
+  - step1: Add `publish` subcommand with required archive argument and optional `--local`
+      flag
+  - step2: Ensure `--local` is accepted as explicit forward-compatible backend selection
+      without changing local behavior
+  - step3: Print concise usage/help on missing arguments or invalid paths and exit
+      non-zero
+  - step4: Keep parser output and error text stable for upcoming CLI unit tests
+  dependencies:
+  - task33
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task70'
+
+- id: task55
+  title: Implement publish metadata extraction and copy flow
+  type: task
+  epic:
+  - E2
+  description: 'Implement publish behavior that reads name/version from archive manifest
+    and stores the archive in the local registry path. Reject duplicate name+version
+    publishes with a clear error.'
+  files:
+  - src/kinnoo/publish_command.py
+  - src/kinnoo/inspect_command.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Read `kinnoo.yaml` directly from `.kno` and extract `name` and `version`
+      using existing manifest-loading logic
+  - step2: Validate extracted metadata and create destination path `~/.kinnoo/registry/<name>/<version>/`
+  - step3: Copy archive to destination and persist metadata needed for list/search
+      display (for example manifest-derived fields)
+  - step4: Fail fast with explicit duplicate error if the same name+version already
+      exists; never silently overwrite
+  - step5: Keep side effects and error paths deterministic for future unit tests around
+      duplicate publish and invalid archive cases
+  dependencies:
+  - task54
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task71'
+
+- id: task56
+  title: Parse install registry spec while preserving file install
+  type: task
+  epic:
+  - E2
+  description: 'Extend install CLI argument handling to accept registry selectors
+    (`<name>` and `<name>==<version>`) while preserving existing `kinnoo install
+    <file.kno>` path-based behavior.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/install_command.py
+  - src/kinnoo/registry.py
+  steps:
+  - step1: Add robust selector parsing that distinguishes filesystem archive paths
+      from registry name selectors
+  - step2: Support `<name>` as latest-version install request and `<name>==<version>`
+      as explicit-version request
+  - step3: Preserve current install behavior for direct archive files with no regression
+      in usage and error messaging
+  - step4: Keep parser and branching logic explicit and stable for future unit tests
+      covering path-vs-registry disambiguation
+  dependencies:
+  - task33
+  - task53
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task72'
+
+- id: task57
+  title: Implement registry version resolution rules
+  type: task
+  epic:
+  - E2
+  description: 'Implement local registry resolution for latest and specific versions,
+    including deterministic version ordering and clear not-found errors.'
+  files:
+  - src/kinnoo/registry_backends.py
+  - src/kinnoo/registry.py
+  steps:
+  - step1: Implement lookup for `<name>==<version>` that resolves only an exact stored
+      version path
+  - step2: Implement latest-version resolution for `<name>` using deterministic semver-aware
+      ordering when versions are available
+  - step3: Return clear actionable errors when agent name or requested version does
+      not exist
+  - step4: Structure resolution logic to be directly unit-testable with fixtures that
+      include multiple versions of the same agent in the registry
+  dependencies:
+  - task53
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task73'
+
+- id: task58
+  title: Integrate registry resolution into install flow
+  type: task
+  epic:
+  - E2
+  description: 'Wire registry-resolved archives into the existing install pipeline so
+    installs by name/version reuse current extraction, validation, and venv/dependency
+    setup behavior.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/registry.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Resolve registry selector to a concrete archive path via backend abstraction
+  - step2: Reuse existing install execution path from resolved archive (no duplicate
+      install logic)
+  - step3: Ensure offline behavior for local registry installs and preserve existing
+      exit-code semantics
+  - step4: Keep integration points narrow and deterministic for future unit/integration
+      tests of named installs
+  dependencies:
+  - task56
+  - task57
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task74'
+
+- id: task59
+  title: Add local registry list command
+  type: task
+  epic:
+  - E2
+  description: 'Implement `kinnoo list` to display all locally published agents with
+    name, latest version, and description from registry metadata.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/list_command.py
+  - src/kinnoo/registry.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Add `list` subcommand and delegate to registry-backed listing logic
+  - step2: Aggregate available versions per agent and compute latest version for display
+  - step3: Display name, latest version, and description in a human-readable stable
+      format
+  - step4: Keep output ordering deterministic to support future snapshot-style CLI
+      unit tests
+  dependencies:
+  - task53
+  - task57
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task75'
+
+- id: task60
+  title: Add local registry search command
+  type: task
+  epic:
+  - E2
+  description: 'Implement `kinnoo search <query>` against local registry metadata with
+    case-insensitive substring matching on name and description.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/search_command.py
+  - src/kinnoo/registry.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Add `search` subcommand with required query argument and clear usage errors
+  - step2: Implement case-insensitive name/description substring matching over locally
+      published entries
+  - step3: Return stable, human-readable output for both match and no-match cases
+  - step4: Keep filtering semantics explicit and deterministic for future unit tests
+      across mixed registry fixtures
+  dependencies:
+  - task53
+  - task59
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task76'
+
+- id: task61
+  title: Define archive and registry storage abstractions
+  type: task
+  epic:
+  - E2
+  description: 'Introduce clear storage abstractions for local archive and registry
+    targets so pack/publish/install/list/search can switch from mock registry to remote
+    backend later with minimal changes.'
+  files:
+  - src/kinnoo/registry.py
+  - src/kinnoo/registry_backends.py
+  - src/kinnoo/archive.py
+  steps:
+  - step1: Define interfaces/contracts for archive source operations and registry
+      target operations
+  - step2: Implement local archive backend rooted at `~/.kinnoo/archive/`
+  - step3: Implement mock registry backend rooted at `registry-scratch/jerry/`
+  - step4: Keep method signatures deterministic and decoupled from CLI specifics for
+      future remote backend swap
+  dependencies:
+  - task53
+  tests: []
+  notes:
+  - 'original_id: task80'
+
+- id: task62
+  title: Refactor pack default archive destination
+  type: task
+  epic:
+  - E2
+  description: 'Update `kinnoo pack` default behavior to always store versioned archives
+    under `~/.kinnoo/archive/<agent>/<version>/<agent>.kno`.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/pack_command.py
+  - src/kinnoo/archive.py
+  steps:
+  - step1: Resolve package destination from validated manifest name/version into canonical
+      archive path
+  - step2: Ensure parent directories are created safely as needed
+  - step3: Remove dependency on ad-hoc current-directory output as primary packaging
+      behavior
+  - step4: Keep behavior stable for deterministic path assertions in tests
+  dependencies:
+  - task21
+  - task61
+  tests: []
+  notes:
+  - 'original_id: task81'
+
+- id: task63
+  title: Refactor publish CLI to agent-name source
+  type: task
+  epic:
+  - E2
+  description: 'Change publish flow from archive-path input to `kinnoo publish
+    <agent-name>` that resolves latest local archived artifact before publishing.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/publish_command.py
+  - src/kinnoo/archive.py
+  steps:
+  - step1: Update CLI argument parsing and usage for `kinnoo publish <agent-name>`
+  - step2: Resolve latest version archive for agent from local archive backend
+  - step3: Validate source archive metadata consistency before publish copy
+  - step4: Keep clear non-zero errors when agent/archive/version cannot be resolved
+  dependencies:
+  - task61
+  - task62
+  tests: []
+  notes:
+  - 'original_id: task83'
+
+- id: task64
+  title: Implement publish mock registry target and rollover
+  type: task
+  epic:
+  - E2
+  description: 'Publish resolved archive to mock registry path
+    `registry-scratch/jerry/<agent>/<version>/<agent>.kno` and prevent hard overwrite
+    via untagged rollover semantics.'
+  files:
+  - src/kinnoo/publish_command.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Copy publish payload to canonical mock registry target path
+  - step2: If tagged version already exists, archive prior artifact as `untagged-<n>`
+      before writing new tagged artifact
+  - step3: Emit clear publish outcome messages for source, target, and rollover actions
+  - step4: Keep rollover numbering deterministic for repeatable tests
+  dependencies:
+  - task63
+  tests: []
+  notes:
+  - 'original_id: task84'
+
+- id: task65
+  title: Install by registry name/version using mock backend
+  type: task
+  epic:
+  - E2
+  description: 'Implement install resolution for registry selectors against the mock
+    registry backend while preserving architecture for future real remote registry
+    integration.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/registry.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Resolve `<name>` to latest available version from mock registry backend
+  - step2: Resolve `<name>==<version>` to exact version from mock registry backend
+  - step3: Route resolved registry archive through existing install pipeline without
+      duplicating install logic
+  - step4: Isolate backend calls so mock backend can be replaced with real remote
+      registry backend later
+  dependencies:
+  - task61
+  - task63
+  - task64
+  tests: []
+  notes:
+  - 'original_id: task85'
+
+- id: task66
+  title: Refactor list with default local and source flags
+  type: task
+  epic:
+  - E2
+  description: 'Implement `kinnoo list` source selection behavior: default/local for
+    archive view, and remote for mock registry view.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/list_command.py
+  - src/kinnoo/archive.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Implement default `kinnoo list` as local archive listing
+  - step2: Add `--local` flag with same local archive behavior as default
+  - step3: Add `--remote` flag for mock registry listing
+  - step4: Keep output schema stable (name, latest version, description) across sources
+  dependencies:
+  - task61
+  - task62
+  - task64
+  tests: []
+  notes:
+  - 'original_id: task86'
+
+- id: task67
+  title: Refactor search with default local and source flags
+  type: task
+  epic:
+  - E2
+  description: 'Implement `kinnoo search` source selection behavior: default/local for
+    archive search, and remote for mock registry search.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/search_command.py
+  - src/kinnoo/archive.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Implement default `kinnoo search <query>` as local archive search
+  - step2: Add `--local <query>` local archive search behavior
+  - step3: Add `--remote <query>` mock registry search behavior
+  - step4: Keep case-insensitive name/description matching semantics stable across
+      sources
+  dependencies:
+  - task61
+  - task62
+  - task64
+  - task66
+  tests: []
+  notes:
+  - 'original_id: task87'
+
+- id: task68
+  title: Preserve file-path install compatibility
+  type: task
+  epic:
+  - E2
+  description: 'Preserve existing direct file-path install behavior while adding
+    registry name/version install behavior.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Keep `kinnoo install <file-path/file.kno>` selector path unchanged
+  - step2: Ensure selector disambiguation does not regress existing archive-path installs
+  - step3: Keep usage and error messaging clear for both path and registry selector
+      modes
+  - step4: Verify backward compatibility with existing install test scenarios
+  dependencies:
+  - task65
+  tests: []
+  notes:
+  - 'original_id: task88'
+
+- id: task69
+  title: Harden source-mode CLI validation and errors
+  type: task
+  epic:
+  - E2
+  description: 'Add explicit argument-validation guardrails and deterministic error
+    messaging for new source-mode behaviors in install/list/search/publish.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/install_command.py
+  - src/kinnoo/list_command.py
+  - src/kinnoo/search_command.py
+  - src/kinnoo/publish_command.py
+  steps:
+  - step1: Enforce mutually exclusive `--local` and `--remote` flags where applicable
+  - step2: Ensure missing required inputs (e.g., missing search query, invalid install
+      selector forms) return clear usage and non-zero status
+  - step3: Ensure publish/install/list/search do not silently fall back to unintended
+      sources on invalid argument combinations
+  - step4: Keep error messages stable and concise for deterministic CLI unit tests
+  dependencies:
+  - task63
+  - task65
+  - task66
+  - task67
+  tests: []
+  notes:
+  - 'original_id: task90'
+
+- id: task70
+  title: Add --preflight CLI mode wiring
+  type: task
+  epic:
+  - E2
+  description: 'Add `--preflight` mode to `kinnoo run` argument parsing and route
+    execution into a preflight-only flow that performs checks and exits without running
+    the agent entrypoint.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/run_command.py
+  steps:
+  - step1: Extend run command parser to accept `--preflight` in a way that is clear
+      and backward compatible
+  - step2: Add explicit preflight execution branch that skips entrypoint invocation
+      and subprocess run
+  - step3: Keep usage/help and error paths deterministic for future unit tests around
+      argument handling
+  - step4: Return non-zero on preflight failures and zero on full preflight pass
+  dependencies:
+  - task33
+  tests: []
+  notes:
+  - 'original_id: task92'
+
+- id: task71
+  title: Implement runtime version preflight check
+  type: task
+  epic:
+  - E2
+  description: 'Implement Python runtime compatibility check for preflight mode by
+    validating active interpreter version against manifest `runtime.version`
+    constraints.'
+  files:
+  - src/kinnoo/run_command.py
+  - src/kinnoo/validator.py
+  steps:
+  - step1: Parse `runtime.version` constraint from manifest in preflight flow
+  - step2: Compare active interpreter version against constraint and record pass/fail
+      result
+  - step3: Emit actionable failure guidance when version does not satisfy constraint
+  - step4: Keep check output stable and concise so future tests can assert exact messages
+  dependencies:
+  - task70
+  tests: []
+  notes:
+  - 'original_id: task93'
+
+- id: task72
+  title: Implement env vars preflight resolution check
+  type: task
+  epic:
+  - E2
+  description: 'Reuse env_vars resolution logic to verify that declared env vars are
+    resolvable during preflight, while maintaining strict secret non-disclosure.'
+  files:
+  - src/kinnoo/run_command.py
+  - src/kinnoo/cli.py
+  - src/kinnoo/schema.py
+  steps:
+  - step1: Reuse existing env var resolution sources (environment and `.env`) for
+      preflight checks
+  - step2: Record per-variable pass/fail using variable names only, never values
+  - step3: Ensure preflight does not prompt for values in non-interactive contexts
+      unless explicitly intended
+  - step4: Keep failure messaging deterministic and secret-safe for future unit and
+      security regression tests
+  dependencies:
+  - task70
+  - task44
+  - task45
+  tests: []
+  notes:
+  - 'original_id: task94'
+
+- id: task73
+  title: Implement entrypoint and dependency checks
+  type: task
+  epic:
+  - E2
+  description: 'Add preflight checks for entrypoint existence and dependency readiness
+    in agent venv without executing agent business logic.'
+  files:
+  - src/kinnoo/run_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Validate that manifest-declared entrypoint exists and is readable
+  - step2: Check venv/dependency readiness against requirements with clear pass/fail
+      outcomes
+  - step3: Report installability gaps with actionable remediation hints
+  - step4: Keep checks isolated from normal run execution path for testable behavior
+      separation
+  dependencies:
+  - task70
+  - task10
+  - task15
+  tests: []
+  notes:
+  - 'original_id: task95'
+
+- id: task74
+  title: Add checklist output and ready summary
+  type: task
+  epic:
+  - E2
+  description: 'Produce structured preflight checklist output with pass/fail status for
+    each check and a final readiness summary.'
+  files:
+  - src/kinnoo/run_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - step1: Define stable checklist sections for runtime version, env vars, entrypoint,
+      and dependencies
+  - step2: Print consistent pass/fail indicators and per-failure actionable guidance
+  - step3: Print `Ready to run` only when all checks pass; otherwise print concise
+      remediation summary
+  - step4: Ensure formatting remains deterministic for future snapshot-style unit
+      tests
+  dependencies:
+  - task71
+  - task72
+  - task73
+  tests: []
+  notes:
+  - 'original_id: task96'
+
+- id: task75
+  title: Install summary display and confirmation prompt with --yes flag
+  type: task
+  epic:
+  - E6
+  description: 'Update `kinnoo install` to extract env_var NAMES, dependency NAMES, and
+    runtime type from the manifest inside the .kno archive, display them in a readable
+    summary, and prompt the user for yes/no confirmation before proceeding with
+    installation. Add a `--yes` (`-y`) CLI flag that skips the confirmation prompt for
+    CI/automation. Summary must NEVER display env var or secret VALUES — only names.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/install_command.py
+  steps:
+  - step1: Add --yes/-y flag to the install subparser in cli.py
+  - step2: After .kno extraction of manifest, extract env_var names, dependency names,
+      and runtime type
+  - step3: Print formatted summary (agent name, version, runtime, dependencies, env
+      var names)
+  - step4: If --yes not set, prompt "Continue with install? [y/N]" — abort on 'n'
+      or empty
+  - step5: If --yes is set, skip prompt and proceed directly
+  - step6: Add inline comment documenting the no-secret-values invariant on the summary
+      display code
+  dependencies:
+  - task53
+  - task44
+  tests: []
+  notes:
+  - 'original_id: task98'
+
+- id: task76
+  title: Unverified source confirmation prompt
+  type: task
+  epic:
+  - E6
+  description: 'When installing a .kno file that does not have an accompanying
+    .kno.sha256 checksum file, display a warning: "This agent is from an unverified
+    source." and prompt for confirmation. The --yes/-y flag from task98 also bypasses
+    this prompt. If the .kno.sha256 file exists (even if not yet verified — that is
+    feature16''s job), skip this warning.'
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - step1: Before extraction, check if <archive>.sha256 file exists alongside the
+      .kno file
+  - step2: If missing, print warning and prompt "This agent is from an unverified
+      source. Continue? (y/n)"
+  - step3: Abort on 'n' or empty; proceed on 'y'
+  - step4: If --yes is set, print warning but skip prompt
+  dependencies:
+  - task75
+  tests: []
+  notes:
+  - 'original_id: task99'
+
+- id: task77
+  title: Run trace logging to ~/.kinnoo/logs/
+  type: task
+  epic:
+  - E6
+  description: 'After each `kinnoo run` execution, write a trace log to
+    ~/.kinnoo/logs/run.<TIMESTAMP>.log. The filename format must be exactly
+    `run.<TIMESTAMP>.log` where `<TIMESTAMP>` is UTC only. The log content must be JSON
+    with this exact shape: {"timestamp": <TIMESTAMP>, "agent_name": <agent-name>,
+    "agent-version": <agent-version>, "runtime_type": <runtime-type>, "exit_code":
+    <exit-code>}. It must NEVER contain input content, env var values, secrets, or
+    stdout/stderr. Create the ~/.kinnoo/logs/ directory if it does not exist.'
+  files:
+  - src/kinnoo/run_command.py
+  steps:
+  - step1: After agent execution completes (or fails), create ~/.kinnoo/logs/ if needed
+  - step2: Use UTC timestamps only for both filename and JSON `timestamp` field
+  - step3: Write trace log to ~/.kinnoo/logs/run.<TIMESTAMP>.log as a single JSON
+      object with keys `timestamp`, `agent_name`, `agent-version`, `runtime_type`,
+      `exit_code`
+  - step4: Add inline comment on the log write call documenting the no-secret-values
+      invariant
+  - step5: Ensure graceful failure if log directory creation fails (warn, don't crash)
+  dependencies:
+  - task33
+  tests: []
+  notes:
+  - 'original_id: task100'
+
+- id: task78
+  title: Inline no-secret-values comments on trust code
+  type: task
+  epic:
+  - E6
+  description: 'Review all trust-related display and logging code paths (install
+    summary, run trace log, inspect env var display, preflight env var display) and
+    ensure each includes an inline comment documenting the "no secret values" invariant.
+    This is a code-quality and auditability requirement — future contributors must see
+    the invariant at each sensitive site.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/run_command.py
+  - src/kinnoo/inspect_command.py
+  steps:
+  - step1: Identify all code sites that display or log env var / secret-related data
+  - 'step2: Add "[agent] SECURITY INVARIANT: only env var NAMES, never values" comments
+    at each site'
+  - step3: Verify no existing code path accidentally leaks values
+  dependencies:
+  - task75
+  - task77
+  tests: []
+  notes:
+  - 'original_id: task102'
+
+- id: task79
+  title: Env var exposure heuristic sweep in inspect and pack
+  type: task
+  epic:
+  - E6
+  description: 'Implement a regex-based heuristic scanner that detects patterns where
+    env var values may be printed, logged, or written to files in agent Python source
+    code. Scan all .py files in the agent directory excluding .venv/. Integrate into
+    `kinnoo inspect` as a "Security sweep:" section and into `kinnoo pack` as a
+    non-blocking warning. Patterns to detect: print(os.environ/os.getenv), logging with
+    os.environ/os.getenv, file.write(os.environ/os.getenv). Include disclaimer about
+    false positives.'
+  files:
+  - src/kinnoo/code_sweep.py
+  - src/kinnoo/inspect_command.py
+  - src/kinnoo/pack_command.py
+  steps:
+  - step1: Create src/kinnoo/code_sweep.py with sweep_env_var_exposure(agent_dir,
+      declared_env_vars) function
+  - step2: Implement regex patterns for print/log/write with os.environ/os.getenv
+  - step3: Return list of warnings with file path and line number
+  - 'step4: Integrate into inspect_command.py — add "Security sweep:" section to inspect
+    output'
+  - step5: Integrate into pack_command.py — run sweep before archiving, print warnings
+      as non-blocking
+  - 'step6: If no warnings, print "Security sweep: no env var exposure patterns detected
+    (heuristic)"'
+  - 'step7: Add disclaimer "(heuristic scan — may produce false positives; not a substitute
+    for code review)"'
+  dependencies:
+  - task48
+  - task20
+  tests: []
+  notes:
+  - 'original_id: task103'
+
+- id: task80
+  title: Generate checksum sidecar during pack
+  type: task
+  epic:
+  - E6
+  description: 'Extend `kinnoo pack` to compute SHA256 for the final `.kno` archive and
+    write a sibling checksum file `<archive>.kno.sha256`. Ensure behavior works both for
+    direct output and archive-first local storage paths.'
+  files:
+  - src/kinnoo/pack_command.py
+  steps:
+  - step1: After successful archive creation, compute SHA256 of the `.kno` bytes
+  - step2: Write `<archive>.kno.sha256` next to the archive using stable text format
+      `<sha256>  <filename>`
+  - step3: Ensure checksum sidecar is also present for archives stored in local archive
+      paths
+  - step4: Print a clear message indicating checksum file location
+  dependencies:
+  - task24
+  - task63
+  tests: []
+  notes:
+  - 'original_id: task105'
+
+- id: task81
+  title: Add checksum utility helpers
+  type: task
+  epic:
+  - E6
+  description: 'Introduce shared checksum utilities for SHA256 computation, sidecar
+    parsing, and archive integrity verification. Reuse helpers in install, inspect, and
+    publish flows to keep logic consistent and testable.'
+  files:
+  - src/kinnoo/checksum.py
+  - src/kinnoo/install_command.py
+  - src/kinnoo/inspect_command.py
+  - src/kinnoo/publish_command.py
+  steps:
+  - step1: Implement helper to compute SHA256 for a file path
+  - step2: Implement helper to read and parse `.kno.sha256` sidecar content
+  - step3: Implement helper to verify expected hash against archive hash
+  - step4: Integrate helpers in command modules without duplicating checksum logic
+  dependencies:
+  - task80
+  tests:
+  - test19
+  notes:
+  - 'original_id: task106'
+
+- id: task82
+  title: Enforce checksum verification on install
+  type: task
+  epic:
+  - E6
+  description: 'For `kinnoo install <file.kno>`, if `<file.kno>.sha256` exists, verify
+    integrity before extraction. Abort installation on mismatch with a clear
+    integrity-failure error.'
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - step1: Detect sibling `.kno.sha256` file for file-path installs
+  - step2: Verify archive hash before extraction when sidecar exists
+  - step3: Abort install on mismatch with exact user-facing integrity failure message
+  - step4: Preserve existing extraction/install flow on successful verification
+  dependencies:
+  - task81
+  tests: []
+  notes:
+  - 'original_id: task107'
+
+- id: task83
+  title: Missing checksum warning on install
+  type: task
+  epic:
+  - E6
+  description: 'If a `.kno.sha256` sidecar is absent for file-path install, continue
+    installation but print a clear warning that archive integrity was not verified.'
+  files:
+  - src/kinnoo/install_command.py
+  steps:
+  - step1: Detect absence of expected sidecar path `<archive>.sha256`
+  - step2: Print warning `No checksum file found — archive integrity not verified`
+  - step3: Continue with normal install behavior and unchanged exit semantics
+  dependencies:
+  - task82
+  tests: []
+  notes:
+  - 'original_id: task108'
+
+- id: task84
+  title: Show checksum in inspect output
+  type: task
+  epic:
+  - E6
+  description: 'Extend `kinnoo inspect` to display archive checksum when available from
+    a sidecar file or by deterministic computation where appropriate for `.kno` targets.'
+  files:
+  - src/kinnoo/inspect_command.py
+  steps:
+  - step1: Resolve checksum availability for `.kno` inspection target
+  - step2: Display checksum in human-readable inspect output under metadata section
+  - step3: Keep output deterministic and avoid exposing unrelated file contents
+  dependencies:
+  - task81
+  tests: []
+  notes:
+  - 'original_id: task109'
+
+- id: task85
+  title: Publish checksum sidecar with archive
+  type: task
+  epic:
+  - E6
+  description: 'Update publish flow to copy `.kno.sha256` alongside `.kno` when
+    available, keeping registry artifact and checksum paired for downstream integrity
+    verification.'
+  files:
+  - src/kinnoo/publish_command.py
+  steps:
+  - step1: Check whether source archive has sibling `.sha256` file
+  - step2: Copy sidecar into publish destination next to published `.kno`
+  - step3: Keep publish behavior unchanged when sidecar is absent
+  - step4: Include checksum sidecar status in publish output messaging
+  dependencies:
+  - task81
+  - task64
+  tests: []
+  notes:
+  - 'original_id: task110'
+
+- id: task86
+  title: Pack archive size reporting and large-archive warning
+  type: task
+  epic:
+  - E2
+  description: 'Add archive size reporting to `kinnoo pack` output and emit a warning
+    when final archive size exceeds 100 MB. Keep output human-readable and
+    deterministic.'
+  files:
+  - src/kinnoo/pack_command.py
+  steps:
+  - step1: Compute final archive file size after archive is stored
+  - 'step2: Print `Archive size: <human-readable>` after pack completion'
+  - 'step3: If size exceeds 100 MB, print warning `Warning: archive is large (X MB).
+    Consider whether all dependencies are necessary.`'
+  - step4: Add test-friendly threshold control (for example env-var override) to avoid
+      generating >100 MB fixtures in CI
+  dependencies:
+  - task63
+  tests: []
+  notes:
+  - 'original_id: task112'
+
+- id: task87
+  title: Inspect displays archive size metadata
+  type: task
+  epic:
+  - E2
+  description: 'Extend `kinnoo inspect <archive.kno>` output to include archive size in
+    human-readable form so users can assess package footprint before installation.'
+  files:
+  - src/kinnoo/inspect_command.py
+  steps:
+  - step1: Resolve archive byte size for `.kno` inspection targets
+  - 'step2: Print `- Archive Size: <human-readable>` in archive inspect output'
+  - step3: Keep output additive and non-breaking for existing inspect fields
+  dependencies:
+  - task86
+  tests: []
+  notes:
+  - 'original_id: task113'
+
+- id: task88
+  title: List output includes archive size
+  type: task
+  epic:
+  - E2
+  description: 'Update `kinnoo list` output to include archive size for local archive
+    and remote registry listings, preserving existing list behavior and deterministic
+    columns.'
+  files:
+  - src/kinnoo/list_command.py
+  - src/kinnoo/archive.py
+  - src/kinnoo/registry_backends.py
+  steps:
+  - step1: Extend list data model to carry archive size per version/artifact
+  - step2: Add archive-size column/field to `kinnoo list`, `kinnoo list --local`,
+      and `kinnoo list --remote`
+  - step3: Preserve backward-compatible output ordering while adding size visibility
+  dependencies:
+  - task86
+  - task67
+  tests: []
+  notes:
+  - 'original_id: task114'
+
+- id: task89
+  title: InputGuard protocol, result models, and factory function
+  type: task
+  epic:
+  - E6
+  description: 'Create `src/kinnoo/input_guard.py` with the core architecture for the
+    input safety guard system. Define result models (`InputGuardResult`,
+    `InputWarning`), the `InputGuard` Protocol with two methods (`check` for single
+    values and `check_inputs` for multi-value parameterized input), threat category
+    constants, and the `get_default_guard()` factory function. This task establishes the
+    pluggable contract: any class satisfying the Protocol can replace the regex guard
+    (e.g., an ML classifier) by changing only the factory function.'
+  files:
+  - src/kinnoo/input_guard.py
+  steps:
+  - 'step1: Create `src/kinnoo/input_guard.py`'
+  - 'step2: Define `InputWarning` dataclass with fields: `threat_category: str`, `description:
+    str`, `param_name: str | None = None`'
+  - 'step3: Define `InputGuardResult` dataclass with fields: `safe: bool`, `warnings:
+    list[InputWarning]`'
+  - 'step4: Define threat category string constants: SQL_INJECTION, SHELL_INJECTION,
+    PATH_TRAVERSAL, SSRF, XSS, TEMPLATE_INJECTION'
+  - 'step5: Define `InputGuard` Protocol class with methods: `check(self, value: str,
+    input_type: str = "text") -> InputGuardResult` and `check_inputs(self, inputs:
+    list[tuple[str, str, str]]) -> InputGuardResult` where each tuple is (param_name,
+    value, input_type)'
+  - 'step6: Define `get_default_guard() -> InputGuard` factory function that returns
+    `RegexInputGuard()` (placeholder class for now, fully implemented in task117)'
+  - 'step7: Ensure the module is importable and `get_default_guard()` returns an instance
+    with both `check` and `check_inputs` methods'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task116'
+
+- id: task90
+  title: RegexInputGuard — comprehensive injection pattern library
+  type: task
+  epic:
+  - E6
+  description: "Implement the full `RegexInputGuard` class in `src/kinnoo/input_guard.py`\
+    \ with\ncomprehensive regex patterns for 6 threat categories. Each pattern is\
+    \ a tuple of\n(compiled_regex, threat_category, human_description). The guard\
+    \ supports type-aware\nchecking: different input_type values activate different\
+    \ pattern subsets. The\n`check_inputs()` method aggregates results across multiple\
+    \ typed parameters for\nfuture parameterized input support (-e, -i, -d, -u flags).\n\
+    \nThreat categories and patterns to implement:\n\n**SQL Injection** (SQL_INJECTION):\n\
+    - UNION SELECT / UNION ALL SELECT\n- DROP TABLE / DROP DATABASE\n- INSERT INTO\
+    \ ... VALUES\n- DELETE FROM\n- Tautology: OR 1=1, OR '1'='1', OR ''='', AND 1=1\n\
+    - Comment injection: --, #, /* (as SQL comment starters following injection context)\n\
+    - WAITFOR DELAY (time-based blind SQLi)\n- EXEC xp_ (stored procedure injection)\n\
+    - Stacked queries: semicolon followed by SELECT/INSERT/UPDATE/DELETE/DROP\n\n\
+    **Shell Injection** (SHELL_INJECTION):\n- Command chaining: ; & | && || followed\
+    \ by dangerous commands (rm, cat, wget, curl,\n  sudo, sh, bash, python, chmod,\
+    \ chown, nc, ncat, mkfifo, dd, kill)\n- Command substitution: $(...) and backtick\
+    \ `...`\n- Pipe to shell: | sh, | bash, | /bin/sh, | /bin/bash\n- Input/output\
+    \ redirection: > /etc/, >> /etc/, < /etc/\n- Null byte injection: \\x00, %00\n\
+    \n**Path Traversal** (PATH_TRAVERSAL):\n- ../ and ..\\ sequences (2+ levels)\n\
+    - URL-encoded variants: %2e%2e%2f, %2e%2e/, ..%2f\n- Double-encoding: %252e%252e%252f\n\
+    - Absolute sensitive paths: /etc/passwd, /etc/shadow, /proc/self, /dev/\n\n**SSRF**\
+    \ (SSRF):\n- Dangerous protocols: file://, gopher://, dict://, ldap://\n- Internal\
+    \ IPs: 127.0.0.1, 0.0.0.0, 10.x.x.x, 172.16-31.x.x, 192.168.x.x\n- IPv6 loopback:\
+    \ [::1], ::1 (as URL host)\n- localhost as hostname\n- Octal IP: 0177.0.0.1\n\
+    - AWS metadata endpoint: 169.254.169.254\n\n**XSS** (XSS):\n- <script tags (with\
+    \ variations like <ScRiPt, <script/src)\n- javascript: URI scheme\n- Event handlers:\
+    \ onerror=, onload=, onclick=, onmouseover=, onfocus=\n- Dangerous tags with event\
+    \ sources: <img, <iframe, <svg, <object, <embed\n- data:text/html\n\n**Template\
+    \ Injection** (TEMPLATE_INJECTION):\n- Jinja2/Twig: {{ and }}\n- ERB: <% and %>\n\
+    - Expression language: ${...}, #{...}\n\n**Type-aware input_type filtering:**\n\
+    - \"text\" or \"string\": all 6 categories\n- \"file_path\": PATH_TRAVERSAL +\
+    \ SHELL_INJECTION only\n- \"url\": SSRF + SHELL_INJECTION only\n- \"id\": SQL_INJECTION\
+    \ + SHELL_INJECTION + TEMPLATE_INJECTION only\n\n**check_inputs() multi-value\
+    \ aggregation:**\n- Iterate over (param_name, value, input_type) tuples\n- Call\
+    \ check(value, input_type) for each\n- Set param_name on each resulting InputWarning\n\
+    - Merge all warnings; safe = True only if all inputs are safe\n"
+  files:
+  - src/kinnoo/input_guard.py
+  steps:
+  - 'step1: Define PATTERNS dict mapping threat category -> list of (regex_str, human_description)
+    tuples'
+  - 'step2: Define TYPE_FILTER dict mapping input_type -> set of applicable threat
+    categories'
+  - 'step3: Implement RegexInputGuard.check(value, input_type) — compile and match
+    patterns filtered by input_type, return InputGuardResult with InputWarning for
+    each match'
+  - 'step4: Implement RegexInputGuard.check_inputs(inputs) — iterate over (param_name,
+    value, input_type) tuples, aggregate results, set param_name on warnings'
+  - 'step5: Add inline documentation for each pattern explaining what it catches and
+    potential false positives'
+  - 'step6: Ensure each pattern can be tested individually via the PATTERNS dict'
+  dependencies:
+  - task89
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task117'
+
+- id: task91
+  title: CLI --no-guard flag and run_command integration
+  type: task
+  epic:
+  - E6
+  description: 'Add the `--no-guard` flag to the `kinnoo run` subcommand in cli.py and
+    integrate the InputGuard into run_command.py. The guard runs after env var
+    resolution but before entrypoint execution. When the guard flags input as unsafe,
+    the user is warned and prompted to proceed. Non-interactive stdin (no TTY)
+    auto-aborts as a fail-safe to prevent unattended execution of flagged input. The
+    --no-guard flag skips the guard entirely for CI/automation pipelines.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/run_command.py
+  steps:
+  - 'step1: Add `--no-guard` argument to the run subparser in cli.py: `run_parser.add_argument("--no-guard",
+    action="store_true", help="Disable input safety check")`'
+  - 'step2: Pass `no_guard=bool(getattr(args, "no_guard", False))` to `run_agent()`
+    call in cli.py'
+  - 'step3: Add `no_guard: bool = False` parameter to `run_agent()` signature in run_command.py'
+  - 'step4: In run_command.py, after env var resolution and before entrypoint execution,
+    add guard integration block: - If not no_guard and input_arg is not None: - Import
+    get_default_guard from input_guard - Call guard.check(input_arg, "text") - If
+    not result.safe: - Print "[kinnoo] Input safety warning:" to stderr - For each
+    warning, print "  - [{threat_category}] {description}" to stderr - If sys.stdin.isatty():
+    prompt "Proceed anyway? [y/N]: " and read response - If not sys.stdin.isatty()
+    (non-interactive): print "Non-interactive mode: aborting." to stderr and return
+    finalize(1) - If response is not "y" (case-insensitive): return finalize(1) -
+    Handle KeyboardInterrupt and EOFError during prompt gracefully (abort with exit
+    1)'
+  - 'step5: Ensure --no-guard bypasses the entire guard block (no import, no check,
+    no prompt)'
+  - 'step6: Ensure the guard does not run in preflight mode (preflight=True already
+    returns early, but verify)'
+  dependencies:
+  - task90
+  tests: []
+  notes:
+  - 'original_id: task118'
+
+- id: task92
+  title: Feature24 schema constants and manifest shape support for services
+  type: task
+  epic:
+  - E1
+  description: 'Add schema-level support for optional `services` declarations and
+    health-check method/service-type constants used by validator and inspect flows.'
+  files:
+  - src/kinnoo/schema.py
+  - src/kinnoo/validator.py
+  steps:
+  - 'step1: Add SUPPORTED_SERVICE_TYPES and SUPPORTED_HEALTH_CHECK_METHODS constants
+    in schema.py'
+  - 'step2: Add optional-field typing support for services and nested health_check
+    payloads'
+  - 'step3: Keep feature9 compatibility: manifests without services remain valid'
+  - 'step4: Keep schema additions modular for feature25 runtime health-check consumption'
+  dependencies:
+  - task42
+  tests: []
+  notes:
+  - 'original_id: task146'
+
+- id: task93
+  title: Pretty print with color across CLI commands
+  type: task
+  epic:
+  - E9
+  description: 'Add colored output (ANSI escape codes) to import, preflight, pack,
+    publish, install, and user prompt commands. Use green for PASS/success, red for
+    FAIL/error, yellow for WARN, cyan for informational, and bold for headers. Respect
+    NO_COLOR and TERM=dumb env vars.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/run_command.py
+  - src/kinnoo/pack_command.py
+  - src/kinnoo/import_command.py
+  steps:
+  - 'step1: Create a color utility module or helper functions'
+  - 'step2: Apply colored output to preflight PASS/FAIL/WARN lines'
+  - 'step3: Apply colored output to pack size reporting and success/failure'
+  - 'step4: Apply colored output to import wizard and user prompts'
+  - 'step5: Respect NO_COLOR env var and non-TTY detection'
+  - 'step6: Add tests verifying color codes in output when TTY and absence when not'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task267'
+
+- id: task94
+  title: Auto-wrapper generation for class-only Python agents
+  type: enhancement
+  epic:
+  - E9
+  - E10
+  description: 'Add class-based agent detection to analyzer.py when no __main__ guard or
+    main() function is found. When a class inheriting from a known agent base class
+    (LangChain BaseSingleActionAgent, OpenAI SDK Agent, etc.) is detected, offer to
+    auto-generate a run.py wrapper during kinnoo import. Includes framework-specific
+    wrapper templates in src/kinnoo/wrapper_templates/.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  - src/kinnoo/wrapper_templates/langchain_wrapper.py.j2
+  - src/kinnoo/wrapper_templates/openai_agents_wrapper.py.j2
+  steps:
+  - 'step1: Add class-based agent detection fallback in _detect_entrypoint()'
+  - 'step2: Create wrapper_templates/ directory with LangChain and OpenAI SDK templates'
+  - 'step3: Add wrapper generation logic in import_command.py for entrypoint_type
+    class'
+  - 'step4: Test with langchain-tool-calling-agent and openai-agents-basic-tools'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task269'
+
+- id: task95
+  title: Jupyter notebook to Python script conversion
+  type: enhancement
+  epic:
+  - E2
+  description: 'DEPRECATED — Skipped per human review (2026-03-23). Notebook conversion
+    burden is on the agent developer, not kinnoo. Developers should extract code from
+    .ipynb to .py files themselves before importing into kinnoo.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  steps:
+  - 'step1: Add .ipynb scanning in _detect_entrypoint() after .py/.js/.ts scan'
+  - 'step2: Implement notebook JSON parsing and code cell extraction'
+  - 'step3: Add conversion logic in import_command.py for entrypoint_type notebook'
+  - 'step4: Test with langgraph-react-from-scratch notebook'
+  dependencies: []
+  tests:
+  - test20
+  - test21
+  notes:
+  - 'original_id: task270'
+
+- id: task96
+  title: Subdirectory entrypoint detection improvement
+  type: enhancement
+  epic:
+  - E9
+  - E10
+  description: 'Improve _detect_entrypoint() to search deeper subdirectories (depth 4
+    instead of 2) and prioritize conventional directory names like src/, source/, app/,
+    backend/. Verify run_command.py correctly handles relative subdirectory entrypoints
+    with proper PYTHONPATH setup.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/run_command.py
+  steps:
+  - 'step1: Increase os.walk max depth to 4 in _detect_entrypoint()'
+  - 'step2: Add priority weighting for conventional subdirectory names'
+  - 'step3: Verify run_command.py handles relative paths like source/main.py'
+  - 'step4: Test with openai-agents-sdk-customer-service and vanilla-python-octoagent'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task271'
+
+- id: task97
+  title: Requirements auto-inference from Python imports
+  type: enhancement
+  epic:
+  - E9
+  - E10
+  description: 'Add _infer_requirements() function to analyzer.py that scans Python
+    imports and maps them to PyPI package names via a curated dict. When no
+    requirements.txt exists, import_command.py offers to generate one from inferred
+    dependencies.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  steps:
+  - 'step1: Create IMPORT_TO_PYPI mapping dict with ~50 common AI/ML packages'
+  - 'step2: Implement _infer_requirements() scanning all .py files for imports'
+  - 'step3: Add requirements.txt generation offer in import_command.py'
+  - 'step4: Test with langgraph-multi-agent-router (compare inferred vs actual)'
+  dependencies: []
+  tests:
+  - test24
+  notes:
+  - 'original_id: task272'
+
+- id: task98
+  title: Node.js/TypeScript agent import and run improvements
+  type: enhancement
+  epic:
+  - E9
+  - E10
+  description: 'Improve analyzer.py detection of Node.js/TS agents via package.json
+    parsing. Add TypeScript execution support via npx tsx in run_command.py. Support
+    multiple package managers (npm, yarn, pnpm) in install_command.py based on lockfile
+    type.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/run_command.py
+  - src/kinnoo/install_command.py
+  steps:
+  - 'step1: Parse package.json for main/scripts.start entrypoint and tsconfig.json
+    detection'
+  - 'step2: Add lockfile-based package manager detection (npm/yarn/pnpm)'
+  - 'step3: Add TypeScript execution via npx tsx in run_command.py'
+  - 'step4: Test with vanilla-typescript-easy-agent'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task273'
+
+- id: task99
+  title: Async entrypoint and hardcoded input detection
+  type: enhancement
+  epic:
+  - E9
+  - E10
+  description: 'Add detection of async entrypoint patterns (asyncio.run, async def main)
+    and hardcoded vs parameterized input (sys.argv/argparse vs literal strings in
+    agent.run calls) in analyzer.py. Set inputs.required accordingly in generated
+    kinnoo.yaml.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  steps:
+  - 'step1: Detect asyncio.run() and async def main() patterns in entrypoint'
+  - 'step2: Detect sys.argv/argparse usage vs hardcoded prompt strings'
+  - 'step3: Set inputs.required field in kinnoo.yaml based on detection'
+  - 'step4: Test with openai-agents-hello-world (hardcoded) and an argparse agent'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task274'
+
+- id: task100
+  title: Service dependency auto-detection
+  type: enhancement
+  epic:
+  - E9
+  - E10
+  description: 'Add _detect_services() to analyzer.py that scans imports and string
+    literals for known service patterns (Ollama, ChromaDB, Redis, PostgreSQL, MongoDB).
+    Detected services are included in generated kinnoo.yaml under the services field.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  steps:
+  - 'step1: Create service pattern mapping (import names and URL patterns)'
+  - 'step2: Implement _detect_services() scanning .py files'
+  - 'step3: Include detected services in kinnoo.yaml during import'
+  - 'step4: Test with vanilla-python-reze-agent and openclaw-ollama-extension-agent'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task275'
+
+- id: task101
+  title: PydanticAI dependency injection (deps) support
+  type: enhancement
+  epic:
+  - E9
+  - E10
+  description: 'Detect PydanticAI Agent(deps_type=...) pattern in analyzer.py. Extract
+    deps class fields and set inputs.type to json in generated kinnoo.yaml. Validate
+    that existing --json-input flow correctly passes structured data for deps injection.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  steps:
+  - 'step1: Detect Agent(deps_type=...) pattern in PydanticAI agents'
+  - 'step2: Extract deps class name and fields from Pydantic model'
+  - 'step3: Set inputs.type to json when deps injection detected'
+  - 'step4: Validate --json-input with pydanticai-bank-support-agent'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task276'
+
+- id: task102
+  title: Streamlit/Gradio UI agent support
+  type: feature
+  epic:
+  - E9
+  - E10
+  description: 'Detect Streamlit and Gradio UI frameworks in agent code. When detected,
+    set runtime.type to ''daemon'' and configure the appropriate run command (e.g.,
+    ''streamlit run app.py'' for Streamlit agents). Gradio agents auto-launch a web
+    server so they also need daemon runtime type. This enables kinnoo to properly
+    import, install, and run UI-based agent demos.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  - src/kinnoo/run_command.py
+  steps:
+  - 'step1: Add Streamlit/Gradio import detection in analyzer.py'
+  - 'step2: Add UI pattern confirmation (st.chat_input, gr.Interface, etc.)'
+  - 'step3: Set runtime.type=daemon and run_command in import_command.py'
+  - 'step4: Handle streamlit run command in run_command.py'
+  - 'step5: Test with nirbar1985-ai-travel-agent and aymenfurter-microagents'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task278'
+
+- id: task103
+  title: DEPRECATED — Extended framework detection (CrewAI, Swarm, Agno, etc.)
+  type: feature
+  epic:
+  - E2
+  deprecation_note: All 9 extended framework detections deferred per human review
+    (2025-03-23). Will be addressed in a future feature.
+  description: 'Extend kinnoo''s analyzer to detect CrewAI, Swarm, Agno, SmolAgents,
+    AutoGen, Semantic Kernel, MetaGPT, LlamaIndex, and Anthropic agent frameworks.
+    DEPRECATED — deferred to a future feature.'
+  files:
+  - src/kinnoo/analyzer.py
+  - src/kinnoo/import_command.py
+  steps:
+  - 'step1: DEPRECATED'
+  dependencies:
+  - task94
+  - task97
+  tests:
+  - test22
+  - test23
+  - test25
+  notes:
+  - 'original_id: task279'
+
+- id: task104
+  title: Initialize Next.js 15+ project in web/ directory
+  type: task
+  epic:
+  - E4
+  description: 'Run `npx create-next-app@latest web --typescript --tailwind --app
+    --eslint --src-dir=false` (or equivalent flags for Next.js 15+) to scaffold the
+    project in the top-level web/ directory. Ensure App Router mode is selected,
+    TypeScript is enabled, and Tailwind CSS v3 is configured. Verify the project uses
+    npm as the package manager. Add an .nvmrc file specifying Node 20. Update the root
+    .gitignore to include web/node_modules/ and web/.next/.'
+  files:
+  - web/package.json
+  - web/tsconfig.json
+  - web/tailwind.config.ts
+  - web/next.config.ts
+  - web/.nvmrc
+  - .gitignore
+  steps:
+  - 'step1: Run create-next-app to scaffold web/ with TypeScript, Tailwind, App Router,
+    and ESLint'
+  - 'step2: Verify package.json has next 15+, react 19+, typescript, tailwindcss as
+    dependencies'
+  - 'step3: Create .nvmrc with contents "20" in web/'
+  - 'step4: Update root .gitignore to exclude web/node_modules/ and web/.next/'
+  - 'step5: Run npm run dev and npm run build to confirm zero errors on Node 20+'
+  dependencies: []
+  tests:
+  - test26
+  - test27
+  notes:
+  - 'original_id: task282'
+
+- id: task105
+  title: Configure Tailwind with dark-mode design tokens
+  type: task
+  epic:
+  - E4
+  description: 'Extend the Tailwind config in web/tailwind.config.ts to include the
+    project''s custom color palette, font family, border radius, and spacing tokens. Set
+    darkMode to ''class'' or use CSS media. Define custom colors: bg-kinnoo (#000000),
+    text-kinnoo (#F9FAFB), accent-kinnoo (#3B82F6), surface-kinnoo (#111111),
+    card-border (rgba(255,255,255,0.1)). Set font family to ["Avenir Next", "Segoe UI",
+    "sans-serif"]. Define border-radius tokens: card (8px), button (4px). Update
+    globals.css with base dark styles (bg black, text #F9FAFB).'
+  files:
+  - web/tailwind.config.ts
+  - web/app/globals.css
+  steps:
+  - 'step1: Extend tailwind.config.ts theme with custom colors, fontFamily, borderRadius'
+  - 'step2: Update globals.css to set body background to #000000 and text to #F9FAFB'
+  - 'step3: Add utility classes for glassmorphism (backdrop-blur) and 1px card borders'
+  - 'step4: Verify Tailwind compiles with the extended theme by running npm run build'
+  dependencies:
+  - task104
+  tests:
+  - test28
+  notes:
+  - 'original_id: task283'
+
+- id: task106
+  title: Create directory structure and placeholder route pages
+  type: task
+  epic:
+  - E4
+  description: 'Create the full directory structure inside web/ as specified in the
+    planning doc. Create route group directories: app/(public)/ and app/(auth)/ with
+    placeholder page.tsx files for each route. Create components/ui/,
+    components/blocks/, lib/, and __tests__/ directories. Each placeholder page should
+    render a minimal identifying element (e.g., <h1>Landing Page</h1>) so routes are
+    navigable during development. Create app/(auth)/layout.tsx with a placeholder that
+    will later contain the session guard.'
+  files:
+  - web/app/(public)/page.tsx
+  - web/app/(public)/login/page.tsx
+  - web/app/(public)/signup/page.tsx
+  - web/app/(auth)/layout.tsx
+  - web/app/(auth)/registry/page.tsx
+  - web/components/ui/.gitkeep
+  - web/components/blocks/.gitkeep
+  - web/lib/.gitkeep
+  - web/__tests__/.gitkeep
+  steps:
+  - 'step1: Create app/(public)/ directory with page.tsx (landing page placeholder)'
+  - 'step2: Create app/(public)/login/page.tsx and app/(public)/signup/page.tsx placeholders'
+  - 'step3: Create app/(auth)/layout.tsx with children pass-through (session guard
+    placeholder comment)'
+  - 'step4: Create app/(auth)/registry/page.tsx placeholder'
+  - 'step5: Create components/ui/, components/blocks/, lib/, __tests__/ directories'
+  - 'step6: Verify all routes are accessible via npm run dev: /, /login, /signup,
+    /registry'
+  dependencies:
+  - task104
+  tests:
+  - test29
+  - test30
+  notes:
+  - 'original_id: task284'
+
+- id: task107
+  title: Install Radix UI, Lucide, and framer-motion dependencies
+  type: task
+  epic:
+  - E4
+  description: 'Install the core UI dependencies: @radix-ui/react-dialog,
+    @radix-ui/react-navigation-menu, @radix-ui/react-slot (Radix primitives for
+    sheet/drawer, menus, and composable buttons), lucide-react (icons), and
+    framer-motion (animations). Verify all packages are in package.json and that npm run
+    build still succeeds after installation.'
+  files:
+  - web/package.json
+  steps:
+  - 'step1: Run npm install @radix-ui/react-dialog @radix-ui/react-navigation-menu
+    @radix-ui/react-slot lucide-react framer-motion'
+  - 'step2: Verify all five packages appear in package.json dependencies'
+  - 'step3: Run npm run build to confirm no dependency conflicts or type errors'
+  dependencies:
+  - task104
+  tests:
+  - test31
+  notes:
+  - 'original_id: task285'
+
+- id: task108
+  title: Create ThemeConfig design token module
+  type: task
+  epic:
+  - E4
+  description: 'Create lib/theme.ts exporting a frozen ThemeConfig object containing all
+    design tokens: colors (bg: ''#000000'', text: ''#F9FAFB'', accent: ''#3B82F6'',
+    surface: ''#111111'', cardBorder: ''rgba(255,255,255,0.1)''), radii (card: ''8px'',
+    button: ''4px''), typography (h1: ''48px'', h2: ''32px'', h3: ''24px'', body:
+    ''16px''), spacing (unit: 4, scale: [8, 12, 16, 24, 32, 48]), fonts (primary:
+    ''"Avenir Next", "Segoe UI", sans-serif''). Export TypeScript types for the config
+    so components can reference tokens with type safety.'
+  files:
+  - web/lib/theme.ts
+  steps:
+  - 'step1: Create lib/theme.ts with ThemeConfig type definition'
+  - 'step2: Export a const themeConfig object matching all design token specifications'
+  - 'step3: Freeze the object (Object.freeze or as const) to prevent mutation'
+  - 'step4: Verify TypeScript compiles the module without errors'
+  dependencies:
+  - task105
+  tests:
+  - test32
+  - test33
+  notes:
+  - 'original_id: task286'
+
+- id: task109
+  title: Build MainLayout header with hamburger menu and auth buttons
+  type: task
+  epic:
+  - E4
+  description: "Create components/blocks/MainLayout.tsx rendered in app/layout.tsx.\
+    \ The header contains:\n- Top-left: A Lucide Menu icon button that opens a Radix\
+    \ UI Dialog (used as a sheet/drawer)\n  containing three navigation links: GitHub\
+    \ repo, Docs, Report an Issue.\n- Top-right: Two ghost-style buttons — \"Login\"\
+    \ (links to /login) and \"Sign Up\" (links to\n  /signup). Buttons use Radix UI\
+    \ Slot for composability.\nThe header should have a fixed/sticky position, glassmorphism\
+    \ effect (backdrop-blur-md),\nand 1px bottom border (border-white/10). Use the\
+    \ ThemeConfig tokens for all style values.\n"
+  files:
+  - web/components/blocks/MainLayout.tsx
+  - web/app/layout.tsx
+  steps:
+  - 'step1: Create MainLayout.tsx with a <header> containing the hamburger icon and
+    auth buttons'
+  - 'step2: Implement the hamburger menu using Radix UI Dialog as a slide-out sheet
+    with three links'
+  - 'step3: Add Login and Sign Up ghost buttons with Next.js Link to /login and /signup'
+  - 'step4: Apply glassmorphism (backdrop-blur-md, bg-black/50) and border-b border-white/10'
+  - 'step5: Wire MainLayout into app/layout.tsx wrapping {children}'
+  - 'step6: Verify hamburger opens/closes and buttons navigate correctly in dev server'
+  dependencies:
+  - task106
+  - task108
+  tests:
+  - test34
+  - test35
+  notes:
+  - 'original_id: task287'
+
+- id: task110
+  title: Make layout responsive for mobile viewports
+  type: task
+  epic:
+  - E4
+  description: 'Ensure the MainLayout header works on mobile: hamburger icon and
+    Login/Sign Up buttons must not overflow or overlap on viewports < 768px. Use
+    Tailwind responsive utilities. The hamburger sheet should take full width on mobile.
+    Test on sm (640px) and md (768px) breakpoints. On very narrow screens (< 400px), the
+    Sign Up button text can collapse to an icon-only variant or smaller font.'
+  files:
+  - web/components/blocks/MainLayout.tsx
+  steps:
+  - 'step1: Add responsive Tailwind classes to header flex layout'
+  - 'step2: Ensure sheet drawer is full-width on mobile (w-full sm:w-80)'
+  - 'step3: Add text-sm or icon fallback for buttons on very narrow viewports'
+  - 'step4: Visually verify at 375px, 640px, 768px, and 1024px widths'
+  dependencies:
+  - task109
+  tests:
+  - test36
+  notes:
+  - 'original_id: task288'
+
+- id: task111
+  title: Write smoke tests for layout and design tokens
+  type: task
+  epic:
+  - E4
+  description: 'Write component smoke tests in web/__tests__/ using React Testing
+    Library (or Vitest with @testing-library/react) that verify: (1) the root layout
+    renders the hamburger menu icon, (2) the Login and Sign Up buttons are present, (3)
+    the ThemeConfig exports contain the specified design tokens. Install
+    @testing-library/react, @testing-library/jest-dom, and vitest (or jest) as dev
+    dependencies if not already present.'
+  files:
+  - web/__tests__/layout.test.tsx
+  - web/__tests__/theme.test.ts
+  - web/package.json
+  steps:
+  - 'step1: Install testing dev dependencies (@testing-library/react, @testing-library/jest-dom,
+    vitest or jest)'
+  - 'step2: Write layout.test.tsx testing that MainLayout renders hamburger button
+    and Login/Sign Up links'
+  - 'step3: Write theme.test.ts testing that themeConfig exports correct color, radii,
+    and typography values'
+  - 'step4: Run tests and verify all pass'
+  dependencies:
+  - task109
+  - task108
+  tests:
+  - test32
+  - test33
+  - test34
+  - test35
+  notes:
+  - 'original_id: task289'
+
+- id: task112
+  title: Implement landing page hero section and responsive structure
+  type: task
+  epic:
+  - E4
+  description: 'Build the landing page shell in web/app/(public)/page.tsx with an
+    accessible semantic structure and responsive spacing. Include the exact hero title
+    and sub-headline copy from Sub-phase 2 planning. Keep typography and spacing aligned
+    with ThemeConfig tokens.'
+  files:
+  - web/app/(public)/page.tsx
+  steps:
+  - 'step1: Add a hero section with exact title text and exact sub-headline text from
+    planning'
+  - 'step2: Use semantic HTML landmarks and ensure only one h1 appears on the page'
+  - 'step3: Add responsive layout classes for mobile/tablet/desktop breakpoints'
+  - 'step4: Verify no clipping/overlap at 375px, 768px, and 1280px widths'
+  dependencies:
+  - task109
+  tests:
+  - test37
+  notes:
+  - 'original_id: task290'
+
+- id: task113
+  title: Create Terminal Preview component with copy-to-clipboard
+  type: task
+  epic:
+  - E4
+  description: 'Implement a reusable terminal preview block that displays the install
+    command "pip install kinnoo" with a copy button. Add transient success feedback (for
+    example, "Copied!") and keyboard accessibility for the copy action.'
+  files:
+  - web/components/blocks/TerminalPreview.tsx
+  - web/app/(public)/page.tsx
+  steps:
+  - 'step1: Create TerminalPreview component rendering pip install kinnoo in a terminal-style
+    block'
+  - 'step2: Add copy button that writes command text to navigator.clipboard'
+  - 'step3: Add short-lived copied state feedback and reset behavior'
+  - 'step4: Ensure button has accessible name and visible focus ring'
+  dependencies:
+  - task112
+  tests:
+  - test38
+  notes:
+  - 'original_id: task291'
+
+- id: task114
+  title: Build six-card Features section with required copy
+  type: task
+  epic:
+  - E4
+  description: 'Build the Features section under the hero and terminal preview using six
+    hoverable cards. Card headers and subtext must match Sub-phase 2 planning copy
+    exactly. Use consistent card styling with subtle hover motion while preserving
+    readability and accessibility.'
+  files:
+  - web/components/blocks/FeatureGrid.tsx
+  - web/app/(public)/page.tsx
+  steps:
+  - 'step1: Create FeatureGrid component that maps six cards from a typed data structure'
+  - 'step2: Add exact header and subtext copy for all six feature cards'
+  - 'step3: Apply hover styles/transitions and border treatments consistent with theme'
+  - 'step4: Ensure card content wraps safely on narrow screens without overflow'
+  dependencies:
+  - task112
+  tests:
+  - test39
+  - test40
+  notes:
+  - 'original_id: task292'
+
+- id: task115
+  title: Add landing page automated test coverage
+  type: task
+  epic:
+  - E4
+  description: 'Add automated test coverage for the landing page hero, terminal preview,
+    and features grid. Tests should assert exact text content and existence of
+    interactive elements.'
+  files:
+  - web/__tests__/landing-page.test.tsx
+  - web/package.json
+  steps:
+  - 'step1: Add/update test setup for rendering app route components'
+  - 'step2: Assert hero title/sub-headline text and terminal preview command text'
+  - 'step3: Assert copy button exists and all six feature cards render with expected
+    text'
+  - 'step4: Run test suite and ensure deterministic pass results'
+  dependencies:
+  - task113
+  - task114
+  tests:
+  - test37
+  - test38
+  - test39
+  - test40
+  - test41
+  notes:
+  - 'original_id: task293'
+
+- id: task116
+  title: Implement login page UI card and required fields
+  type: task
+  epic:
+  - E4
+  - E8
+  description: 'Build a centered minimalist login card at /login with email and password
+    fields, submit button, and forgot-password stub link. Ensure layout and spacing work
+    across mobile and desktop breakpoints.'
+  files:
+  - web/app/(public)/login/page.tsx
+  steps:
+  - 'step1: Create centered card container with Username (E-mail) and Password fields'
+  - 'step2: Add Login submit button and Forgot Password link to /forgot-password'
+  - 'step3: Add labels, ids, and aria attributes for accessible form controls'
+  - 'step4: Confirm visual alignment with dark theme styles'
+  dependencies:
+  - task109
+  tests:
+  - test42
+  notes:
+  - 'original_id: task294'
+
+- id: task117
+  title: Add client-side validation and loading-state behavior
+  type: task
+  epic:
+  - E4
+  - E8
+  description: 'Implement client-side validation for email format and required password
+    before submit. Add loading/disabled state to the Login button during network
+    requests and display non-sensitive inline error messaging for invalid credentials or
+    request failures.'
+  files:
+  - web/app/(public)/login/page.tsx
+  - web/lib/auth-validation.ts
+  steps:
+  - 'step1: Validate required email/password and email format before request dispatch'
+  - 'step2: Render inline validation errors near corresponding form fields'
+  - 'step3: Disable submit and show loading label/spinner while request is in flight'
+  - 'step4: Restore button state after success/failure and render safe error feedback'
+  dependencies:
+  - task116
+  tests:
+  - test43
+  - test44
+  - test47
+  notes:
+  - 'original_id: task295'
+
+- id: task118
+  title: Implement secure login submission through BFF proxy
+  type: task
+  epic:
+  - E4
+  - E8
+  description: 'Wire login submission to /login through the frontend proxy path with
+    credentials included. Do not persist auth tokens in localStorage or sessionStorage.
+    Handle successful responses by navigating to /registry while preserving
+    browser-managed session cookies.'
+  files:
+  - web/app/(public)/login/page.tsx
+  - web/lib/auth-client.ts
+  - web/next.config.ts
+  steps:
+  - 'step1: Submit credentials to /login using fetch with credentials include and
+    safe defaults'
+  - 'step2: Ensure client code never writes auth tokens to localStorage or sessionStorage'
+  - 'step3: Handle success path by routing to /registry instead of /agents redirect
+    target'
+  - 'step4: Ensure proxy/rewrite configuration forwards request and response headers
+    as expected'
+  dependencies:
+  - task116
+  tests:
+  - test45
+  - test46
+  notes:
+  - 'original_id: task296'
+
+- id: task119
+  title: Add login page automated tests for validation and auth flow
+  type: task
+  epic:
+  - E4
+  - E8
+  description: 'Add automated tests for login form rendering, validation, loading state,
+    secure submission settings, and success redirect behavior.'
+  files:
+  - web/__tests__/login-page.test.tsx
+  - web/package.json
+  steps:
+  - 'step1: Test email/password field rendering and forgot-password link destination'
+  - 'step2: Test invalid input blocks submit and shows validation messages'
+  - 'step3: Test loading state toggles while mocked login request is pending'
+  - 'step4: Test fetch call includes credentials and success path navigates to /registry'
+  dependencies:
+  - task117
+  - task118
+  tests:
+  - test42
+  - test43
+  - test44
+  - test45
+  - test46
+  - test47
+  notes:
+  - 'original_id: task297'
+
+- id: task120
+  title: Implement /registry dashboard shell and secondary nav
+  type: task
+  epic:
+  - E4
+  description: 'Build the authenticated registry route shell with a secondary nav
+    containing My Agents, Search, and Logout controls. Set My Agents as the default
+    active view and keep layout consistent with the global theme and spacing tokens from
+    Sub-phase 1.'
+  files:
+  - web/app/(auth)/registry/page.tsx
+  - web/components/blocks/RegistryNav.tsx
+  steps:
+  - 'step1: Build RegistryNav component with My Agents, Search, and Logout controls'
+  - 'step2: Wire default active state to My Agents on initial page render'
+  - 'step3: Add responsive layout and clear selected-tab styling'
+  - 'step4: Ensure keyboard navigation and focus styles for nav controls'
+  dependencies:
+  - task109
+  - task119
+  tests:
+  - test48
+  - test49
+  notes:
+  - 'original_id: task298'
+
+- id: task121
+  title: Implement My Agents and Search view state with framer-motion transitions
+  type: task
+  epic:
+  - E4
+  description: 'Implement state-controlled view switching between My Agents and Search
+    and animate transitions using framer-motion. Search view must include search input
+    and a Show only my agents checkbox.'
+  files:
+  - web/app/(auth)/registry/page.tsx
+  - web/components/blocks/RegistryTabs.tsx
+  steps:
+  - 'step1: Create tab/view state for My Agents vs Search'
+  - 'step2: Add framer-motion transition wrappers for view changes'
+  - 'step3: Implement Search controls (input + Show only my agents checkbox)'
+  - 'step4: Preserve search control state while switching views where appropriate'
+  dependencies:
+  - task120
+  tests:
+  - test50
+  - test51
+  notes:
+  - 'original_id: task299'
+
+- id: task122
+  title: Integrate dashboard data fetching for my agents and search
+  type: task
+  epic:
+  - E4
+  description: 'Connect dashboard views to existing backend API routes through frontend
+    proxy paths. My Agents should load from /api/agents and Search should query
+    /api/search. Requests must remain session-cookie compatible and include resilient
+    loading/error/empty handling.'
+  files:
+  - web/lib/registry-client.ts
+  - web/app/(auth)/registry/page.tsx
+  steps:
+  - 'step1: Add typed client functions for /api/agents and /api/search'
+  - 'step2: Fetch My Agents data on initial dashboard load'
+  - 'step3: Implement Search query flow with checkbox filter parameter handling'
+  - 'step4: Render loading, empty, and error states for both views'
+  dependencies:
+  - task121
+  tests:
+  - test52
+  notes:
+  - 'original_id: task300'
+
+- id: task123
+  title: Add automated tests for dashboard shell and tab/view behavior
+  type: task
+  epic:
+  - E4
+  description: 'Add component/integration tests covering dashboard shell nav controls,
+    default tab, search controls, and transition-capable tab switching behavior.'
+  files:
+  - web/__tests__/registry-dashboard.test.tsx
+  - web/package.json
+  steps:
+  - 'step1: Test secondary nav renders My Agents, Search, Logout'
+  - 'step2: Test default active view is My Agents'
+  - 'step3: Test Search controls render and can be interacted with'
+  - 'step4: Test tab switching updates rendered view content'
+  dependencies:
+  - task121
+  - task122
+  tests:
+  - test48
+  - test49
+  - test50
+  - test51
+  - test52
+  notes:
+  - 'original_id: task301'
+
+- id: task124
+  title: Build reusable AgentCard with required metadata fields
+  type: task
+  epic:
+  - E4
+  description: 'Implement a reusable AgentCard component for My Agents and Search result
+    grids. Render required fields: Tenant, Name, Version, Author, Framework, Size,
+    Description. Make Name clickable to trigger manifest modal flow.'
+  files:
+  - web/components/blocks/AgentCard.tsx
+  - web/app/(auth)/registry/page.tsx
+  steps:
+  - 'step1: Create typed AgentCard props for required metadata fields'
+  - 'step2: Render all required fields with stable labels and layout'
+  - 'step3: Implement clickable Name affordance to open modal trigger callback'
+  - 'step4: Reuse component in both My Agents and Search result grids'
+  dependencies:
+  - task122
+  tests:
+  - test53
+  notes:
+  - 'original_id: task302'
+
+- id: task125
+  title: Implement manifest modal with detail endpoint integration
+  type: task
+  epic:
+  - E4
+  description: 'Build manifest modal/dialog that opens from agent name click, fetches
+    details from GET /api/agents/{tenant_slug}/{agent_slug}, and displays manifest
+    metadata/version history. Include explicit close control (X) and resilient close
+    behavior.'
+  files:
+  - web/components/blocks/AgentManifestModal.tsx
+  - web/lib/registry-client.ts
+  - web/app/(auth)/registry/page.tsx
+  steps:
+  - 'step1: Create modal component and open/close state wiring from selected agent
+    card'
+  - 'step2: Fetch and render agent detail payload from /api/agents/{tenant_slug}/{agent_slug}'
+  - 'step3: Add X close control and modal dismiss interactions'
+  - 'step4: Render safe fallback states for loading/error in modal body'
+  dependencies:
+  - task124
+  tests:
+  - test54
+  - test55
+  notes:
+  - 'original_id: task303'
+
+- id: task126
+  title: Add install command terminal block and copy action in search modal
+  type: task
+  epic:
+  - E4
+  description: 'For search-result modal context, render a terminal-style install command
+    block and a copy button. Command format should remain deterministic and copy action
+    should provide visible success feedback.'
+  files:
+  - web/components/blocks/AgentManifestModal.tsx
+  - web/lib/install-command.ts
+  steps:
+  - 'step1: Generate deterministic install command string from selected agent metadata'
+  - 'step2: Render terminal-like install command block at modal footer'
+  - 'step3: Add copy-to-clipboard button and copied-feedback state'
+  - 'step4: Ensure keyboard-accessible interaction and focus styles'
+  dependencies:
+  - task125
+  tests:
+  - test56
+  notes:
+  - 'original_id: task304'
+
+- id: task127
+  title: Add automated tests for AgentCard and modal copy workflow
+  type: task
+  epic:
+  - E4
+  description: 'Add component tests for AgentCard and modal behavior, including card
+    field rendering, name click open/close behavior, manifest display, and install
+    command copy action.'
+  files:
+  - web/__tests__/agent-card-modal.test.tsx
+  - web/package.json
+  steps:
+  - 'step1: Assert AgentCard renders all required metadata fields'
+  - 'step2: Assert clicking Name opens modal and X closes it'
+  - 'step3: Assert modal renders fetched manifest data'
+  - 'step4: Assert install command copy button copies and shows feedback'
+  dependencies:
+  - task125
+  - task126
+  tests:
+  - test53
+  - test54
+  - test55
+  - test56
+  - test57
+  notes:
+  - 'original_id: task305'
+
+- id: task128
+  title: Configure Next.js API rewrites with BACKEND_URL and forwarded headers
+  type: task
+  epic:
+  - E4
+  - E6
+  description: 'Implement rewrite/proxy behavior in web/next.config.ts for /api/* routes
+    using BACKEND_URL (default http://localhost:8000). Ensure cookie semantics are
+    preserved and forwarding logic supports X-Forwarded-For and X-Request-Id
+    expectations used by backend controls.'
+  files:
+  - web/next.config.ts
+  - web/.env.example (stale)
+  steps:
+  - 'step1: Define BACKEND_URL-based rewrite mapping for /api/* to backend service'
+  - 'step2: Ensure development default is http://localhost:8000 when env not set'
+  - 'step3: Verify forwarded request metadata includes X-Forwarded-For and X-Request-Id
+    semantics'
+  - 'step4: Document env contract for BACKEND_URL in web/.env.example or project docs'
+  dependencies:
+  - task104
+  tests: []
+  notes:
+  - 'original_id: task307'
+
+- id: task129
+  title: Implement CSRF pass-through for login and authenticated POST flows
+  type: task
+  epic:
+  - E4
+  - E6
+  description: 'Ensure BFF-proxied login and authenticated POST flows preserve existing
+    FastAPI CSRF handling: login nonce submission and session CSRF token forwarding via
+    form field or X-CSRF-Token.'
+  files:
+  - web/app/(public)/login/page.tsx
+  - web/lib/auth-client.ts
+  - web/app/(auth)/registry/page.tsx
+  steps:
+  - 'step1: Ensure login submission forwards complete form payload for backend CSRF
+    validation'
+  - 'step2: Read kinnoo_csrf cookie client-side for authenticated POST requests'
+  - 'step3: Include CSRF token as header or form field in proxied POST actions'
+  - 'step4: Validate behavior against backend validate_post_request expectations'
+  dependencies:
+  - task128
+  - task118
+  tests: []
+  notes:
+  - 'original_id: task308'
+
+- id: task130
+  title: Implement auth guard in app/(auth)/layout.tsx using /api/auth/me
+  type: task
+  epic:
+  - E4
+  - E6
+  description: 'Add server-side auth check in app/(auth)/layout.tsx that calls
+    /api/auth/me, forwards cookies, and redirects to /login when backend returns 401.'
+  files:
+  - web/app/(auth)/layout.tsx
+  - web/lib/auth-client.ts
+  steps:
+  - 'step1: Add server-side fetch to /api/auth/me in auth layout'
+  - 'step2: Forward request cookies to backend check call'
+  - 'step3: Redirect to /login on 401 and render children on success'
+  - 'step4: Add tests for redirect and success rendering behavior'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task310'
+
+- id: task131
+  title: Add Next.js security headers middleware for production hardening
+  type: task
+  epic:
+  - E6
+  - E7
+  description: 'Implement web/middleware.ts to set required security headers including
+    X-Frame-Options, X-Content-Type-Options, Referrer-Policy, restrictive CSP, and
+    production-only HSTS.'
+  files:
+  - web/middleware.ts (stale)
+  - web/next.config.ts
+  steps:
+  - 'step1: Set required baseline headers for all frontend responses'
+  - 'step2: Configure CSP with restrictive default-src self policy'
+  - 'step3: Add HSTS header behavior gated to production mode'
+  - 'step4: Add tests verifying header presence and production gating'
+  dependencies:
+  - task128
+  tests: []
+  notes:
+  - 'original_id: task315'
+
+- id: task132
+  title: Implement (auth) loading.tsx and error.tsx for graceful failures
+  type: task
+  epic:
+  - E6
+  - E7
+  description: 'Add loading and error boundary route files for authenticated route group
+    to provide user-friendly handling for API downtime and auth/rate-limit related
+    failures.'
+  files:
+  - web/app/(auth)/loading.tsx
+  - web/app/(auth)/error.tsx
+  - web/app/(auth)/layout.tsx
+  steps:
+  - 'step1: Create loading UI aligned with dashboard visual system'
+  - 'step2: Create error UI messaging for generic, 401, and 429 contexts'
+  - 'step3: Ensure retry/login guidance is actionable for users'
+  - 'step4: Add tests for error/loading rendering behavior'
+  dependencies:
+  - task130
+  tests: []
+  notes:
+  - 'original_id: task316'
+
+- id: task133
+  title: Add Sign Up CTA and policy-aware signup pages
+  type: task
+  epic:
+  - E4
+  - E8
+  description: 'Implement public navigation and pages for registration: add Sign Up CTA
+    in shared layout and login page, build /signup email form card, and build
+    /signup/verify password creation card with client-side validation aligned to
+    Sub-phase 5 policy requirements.'
+  files:
+  - web/components/blocks/MainLayout.tsx
+  - web/app/(public)/login/page.tsx
+  - web/app/(public)/signup/page.tsx
+  - web/app/(public)/signup/verify/page.tsx
+  - web/components/ui/form-field.tsx
+  steps:
+  - 'step1: Add Sign Up button in top-right layout and login page with route to /signup'
+  - 'step2: Build /signup card with email field and valid-email client validation'
+  - 'step3: Build /signup/verify card with Create Password + Confirm Password fields'
+  - 'step4: Enforce password match and 10-128 length validation before submit; include
+    passphrase-friendly helper text'
+  dependencies:
+  - task109
+  - task117
+  tests: []
+  notes:
+  - 'original_id: task319'
+
+- id: task134
+  title: Build forgot-password pages and policy-aware reset UX
+  type: task
+  epic:
+  - E4
+  - E8
+  description: 'Implement /forgot-password and /forgot-password/reset public pages, wire
+    the login-page link, and add frontend validation for reset form fields aligned to
+    10-128 password policy.'
+  files:
+  - web/app/(public)/login/page.tsx
+  - web/app/(public)/forgot-password/page.tsx
+  - web/app/(public)/forgot-password/reset/page.tsx
+  - web/components/ui/form-field.tsx
+  steps:
+  - 'step1: Wire Forgot your password? link from login to /forgot-password'
+  - 'step2: Build /forgot-password email form card and confirmation-message state'
+  - 'step3: Build /forgot-password/reset password form card with new/confirm fields'
+  - 'step4: Enforce client validation for password match and 10-128 length before
+    submit'
+  dependencies:
+  - task133
+  tests: []
+  notes:
+  - 'original_id: task323'
+
+- id: task135
+  title: Feature61 login/logout CLI commands and auth state persistence
+  type: task
+  epic:
+  - E2
+  - E8
+  description: 'Implement `kinnoo login` and `kinnoo logout` command surfaces with
+    interactive and non-interactive auth flows and secure local persistence of registry
+    auth state, using an email/password-first UX without requiring registry/tenant CLI
+    flags.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/auth_command.py
+  - src/kinnoo/config.py
+  - src/kinnoo/publish_command.py
+  steps:
+  - 'step1: Update login/logout command wiring for interactive prompts and --email/--password
+    automation flags'
+  - 'step2: Add token exchange call and persist auth state (token/tenant/registry)
+    in local kinnoo config using configured/default registry endpoint'
+  - 'step3: Add logout behavior to clear persisted auth state and emit deterministic
+    user diagnostics'
+  - 'step4: Derive tenant slug from authenticated identity/token claims and ensure
+    publish/registry clients preserve explicit env override paths'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task332'
+
+- id: task136
+  title: Feature63 ClawHub mirror storage with clawhub tenant ownership model
+  type: task
+  epic:
+  - E10
+  - E7
+  - E8
+  description: 'Implement registry mirror storage model for ClawHub metadata under
+    admin-controlled tenant slug `clawhub` with source attribution and sync metadata
+    fields.'
+  files:
+  - src/kinnoo/registry.py
+  - src/kinnoo/registry_backends.py
+  - src/kinnoo/config.py
+  - src/kinnoo/remote_client.py
+  steps:
+  - 'step1: Add mirror record model fields for source metadata and sync timestamps'
+  - 'step2: Implement upsert semantics storing mirrored records under tenant slug
+    clawhub'
+  - 'step3: Ensure clawhub tenant is admin-controlled/public and not dependent on
+    username/password login'
+  - 'step4: Add deterministic APIs for listing and inspecting mirrored clawhub records'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task336'
+
+- id: task137
+  title: Feature64 kinnoo import source clawhub command path
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Implement `kinnoo import --source clawhub <slug>` path that resolves
+    mirror metadata and scaffolds canonical openclaw-skill manifests in local project
+    directories.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/import_command.py
+  - src/kinnoo/registry.py
+  - src/kinnoo/analyzer.py
+  steps:
+  - 'step1: Add source clawhub argument parsing and slug resolution in import command'
+  - 'step2: Resolve metadata from mirror index with deterministic error handling and
+    live-fallback option'
+  - 'step3: Scaffold openclaw-skill manifest with `provenance` object (`source_registry`,
+    `source_version`, and `source_slug` and/or `source_url`) plus baseline requirements'
+  - 'step4: Persist local import report artifact describing inferred and unresolved
+    fields'
+  dependencies:
+  - task136
+  tests: []
+  notes:
+  - 'original_id: task338'
+
+- id: task138
+  title: Feature65 delegated OpenClaw install runtime integration
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Implement delegated install path for openclaw-skill packages by invoking
+    OpenClaw CLI after deterministic prechecks in kinnoo install flow.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/health_check.py
+  - src/kinnoo/cli.py
+  - src/kinnoo/install_trace.py
+  steps:
+  - 'step1: Detect openclaw-skill package type during install and route to delegated
+    backend'
+  - 'step2: Validate OpenClaw CLI availability and minimum version prior to delegation'
+  - 'step3: Execute delegated install command with structured diagnostics and trace
+    capture'
+  - 'step4: Keep kinnoo-side validation and trust checks active around delegated flow'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task340'
+
+- id: task139
+  title: Feature66 OpenClaw run adapter backend selection and flagging
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Implement OpenClaw run adapter v1 with backend selection logic and
+    explicit compatibility gate controls for experimental runtime behavior.'
+  files:
+  - src/kinnoo/run_command.py
+  - src/kinnoo/cli.py
+  - src/kinnoo/health_check.py
+  - src/kinnoo/terminal_colors.py
+  steps:
+  - 'step1: Add openclaw-skill run routing in run command with package-type aware
+    execution'
+  - 'step2: Implement version-aware backend selection (native skills run vs fallback
+    path)'
+  - 'step3: Add experimental compatibility flag gating and deterministic guardrail
+    messages'
+  - 'step4: Emit structured adapter diagnostics including selected backend and invocation
+    details'
+  dependencies:
+  - task138
+  tests: []
+  notes:
+  - 'original_id: task342'
+
+- id: task140
+  title: Feature67 sync clawhub command with incremental/full modes
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Implement `kinnoo sync clawhub` command with incremental and full sync
+    strategies, upsert semantics, and clawhub tenant attribution.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/sync_command.py
+  - src/kinnoo/registry.py
+  - src/kinnoo/remote_client.py
+  steps:
+  - 'step1: Add sync command parser for source selection and full/since options'
+  - 'step2: Implement incremental/full sync orchestration and clawhub-tenant upsert
+    writes'
+  - 'step3: Add deterministic counts for created updated skipped and failed records'
+  - 'step4: Preserve source attribution metadata across sync updates'
+  dependencies:
+  - task136
+  tests: []
+  notes:
+  - 'original_id: task344'
+
+- id: task141
+  title: Feature70 landing page and README messaging update
+  type: task
+  epic:
+  - E4
+  - E5
+  description: 'Update landing and README messaging for Phase 6 capabilities including
+    OpenClaw support, ClawHub mirror provenance, and trust posture.'
+  files:
+  - README.md
+  - web/app/page.tsx (stale)
+  - web/components/blocks/Hero.tsx (stale)
+  - web/components/blocks/Features.tsx (stale)
+  steps:
+  - 'step1: Refresh landing hero and feature-card copy to reflect Phase 6 scope'
+  - 'step2: Update README command matrix and OpenClaw integration documentation'
+  - 'step3: Add explicit ClawHub mirror attribution language and clawhub tenant model
+    notes'
+  - 'step4: Ensure wording remains aligned with implemented command behavior'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task350'
+
+- id: task142
+  title: Feature71 strict publish enforcement and CI rollout docs
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Extend strict policy to publish path and document staged rollout
+    guidance for CI pipelines adopting signed-package enforcement.'
+  files:
+  - src/kinnoo/publish_command.py
+  - src/kinnoo/cli.py
+  - README.md
+  - .github/workflows/kinnoo-publish.yml (removed)
+  steps:
+  - 'step1: Add `--strict` publish flag and enforce signature/trust requirements before
+    upload'
+  - 'step2: Emit deterministic guidance for unsigned artifacts and required remediation'
+  - 'step3: Add CI examples showing strict mode as required gate in automation'
+  - 'step4: Add publish strict-mode tests and docs alignment checks'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task353'
+
+- id: task143
+  title: Feature75 framework adapter architecture for langchain langgraph openai
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Implement framework-aware import adapter framework and baseline adapters
+    for langchain, langgraph, and OpenAI Agents SDK.'
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/import_command.py
+  - src/kinnoo/framework_adapters/langchain_adapter.py
+  - src/kinnoo/framework_adapters/langgraph_adapter.py
+  - src/kinnoo/framework_adapters/openai_adapter.py
+  steps:
+  - 'step1: Add `--from` parser choices for langchain langgraph openai in import command'
+  - 'step2: Implement adapter interface and baseline adapter modules for each framework'
+  - 'step3: Merge adapter outputs into analyzer report and import wizard confidence
+    fields'
+  - 'step4: Add deterministic fallback to generic analyzer when adapter coverage is
+    incomplete'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task360'
+
+- id: task144
+  title: Feature85 deprecation metadata and cli/help migration messaging
+  type: task
+  epic:
+  - E2
+  - E10
+  description: 'Mark bridge-era OpenClaw features as deprecated in manifests and remove
+    stale help text while adding migration pointers to new CLI-wrapper flows.'
+  files:
+  - FEATURES.txt
+  - src/kinnoo/cli.py
+  - README.md
+  - docs/CHANGELOG.md
+  steps:
+  - 'step1: Mark feature62-feature67 as deprecated in FEATURES.txt with references
+    to feature76-feature84 replacements'
+  - 'step2: Remove or update help text advertising deprecated bridge-only flows'
+  - 'step3: Add migration guidance notes in docs/readme surfaces'
+  - 'step4: Add tests validating help output no longer exposes deprecated usage strings'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task380'
+
+- id: task145
+  title: Create integrity.py module and embed SHA-256 manifest in .kno archives
+  type: task
+  epic:
+  - E6
+  description: 'Implement feature86 (Embedded integrity manifest
+    (META-INF/integrity.json)): AC1, AC2, AC3.'
+  files:
+  - src/kinnoo/integrity.py
+  - src/kinnoo/pack_command.py
+  steps:
+  - 'step1: Implement `kinnoo pack` produces a .kno containing META-INF/integrity.json.'
+  - 'step2: Implement META-INF/integrity.json contains SHA-256 hash and size for every
+    file in the archive (excluding META-INF/ itself).'
+  - 'step3: Implement Integrity module provides `compute_integrity_manifest(directory)
+    -> dict` and `verify_integrity_manifest(directory, manifest) -> list[str]`.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests:
+  - test58
+  - test59
+  notes:
+  - 'original_id: task382'
+
+- id: task146
+  title: Document integrity manifest format and verify pack integration
+  type: task
+  epic:
+  - E6
+  description: 'Implement feature86 (Embedded integrity manifest
+    (META-INF/integrity.json)): AC4, AC5.'
+  files:
+  - src/kinnoo/integrity.py
+  - src/kinnoo/pack_command.py
+  steps:
+  - 'step1: Implement Manifest format is documented with a JSON schema or example
+    in the module docstring.'
+  - 'step2: Implement Existing tests for pack continue to pass; new tests cover manifest
+    generation.'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task145
+  tests:
+  - test58
+  - test59
+  notes:
+  - 'original_id: task383'
+
+- id: task147
+  title: Add Ed25519 signing to .kno archives via --sign flag
+  type: task
+  epic:
+  - E6
+  description: 'Implement feature87 (Embedded signature (META-INF/signature.json)): AC1,
+    AC2, AC3.'
+  files:
+  - src/kinnoo/signing.py
+  - src/kinnoo/pack_command.py
+  steps:
+  - 'step1: Implement `kinnoo pack --sign` produces META-INF/signature.json alongside
+    META-INF/integrity.json.'
+  - 'step2: Implement Signature covers the raw bytes of META-INF/integrity.json.'
+  - 'step3: Implement signature.json contains: signature (base64), public_key_fingerprint
+    (hex), signed_at (ISO 8601).'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task146
+  tests:
+  - test60
+  - test61
+  notes:
+  - 'original_id: task384'
+
+- id: task148
+  title: Verify signature integration and unsigned archive backward compat
+  type: task
+  epic:
+  - E6
+  description: 'Implement feature87 (Embedded signature (META-INF/signature.json)): AC4,
+    AC5, AC6.'
+  files:
+  - src/kinnoo/signing.py
+  - src/kinnoo/pack_command.py
+  steps:
+  - 'step1: Implement `kinnoo pack` without `--sign` does NOT produce signature.json
+    (integrity.json is still generated).'
+  - 'step2: Implement Existing signing.py functions are reused; no new crypto dependencies.'
+  - 'step3: Implement Tests verify signed archives have valid signatures.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task147
+  tests:
+  - test60
+  - test61
+  notes:
+  - 'original_id: task385'
+
+- id: task149
+  title: Add install-time integrity and signature verification (--strict, --skip-verify)
+  type: task
+  epic:
+  - E6
+  description: 'Implement feature88 (Install-time integrity verification): AC1, AC2,
+    AC3, AC4.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/integrity.py
+  steps:
+  - 'step1: Implement `kinnoo install` verifies META-INF/integrity.json hashes against
+    actual file contents.'
+  - 'step2: Implement Installation aborts with clear error message if any file hash
+    mismatches.'
+  - 'step3: Implement `kinnoo install --strict` additionally verifies META-INF/signature.json
+    and fails if missing or invalid.'
+  - 'step4: Implement `kinnoo install --skip-verify` bypasses all verification.'
+  - 'step5: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task146
+  - task148
+  tests:
+  - test62
+  - test63
+  notes:
+  - 'original_id: task386'
+
+- id: task150
+  title: Handle missing manifests, tampered files, and backward compat in install
+  type: task
+  epic:
+  - E6
+  description: 'Implement feature88 (Install-time integrity verification): AC5, AC6,
+    AC7.'
+  files:
+  - src/kinnoo/install_command.py
+  - src/kinnoo/integrity.py
+  steps:
+  - 'step1: Implement Archives without META-INF/integrity.json install with a warning
+    (backward compatibility with pre-feature86 archives).'
+  - 'step2: Implement Verification results are logged: number of files checked, pass/fail
+    status.'
+  - 'step3: Implement Tests cover: valid archive, tampered file, missing integrity
+    manifest, unsigned + strict mode, skip-verify.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task149
+  tests:
+  - test62
+  - test63
+  notes:
+  - 'original_id: task387'
+
+- id: task151
+  title: Create kinnoo.yaml spec doc with field reference table
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature92 (kinnoo.yaml specification document): AC1, AC2, AC3.'
+  files:
+  - docs/kinnoo-yaml-spec.md
+  - src/kinnoo/validator.py
+  steps:
+  - 'step1: Implement docs/kinnoo-yaml-spec.md exists and documents every manifest
+    field.'
+  - 'step2: Implement Each field has: name, type, required/optional, default, description,
+    validation rules.'
+  - 'step3: Implement Examples provided for chatgpt, gemini, openai, claude, and generic
+    frameworks.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests:
+  - test64
+  - test65
+  notes:
+  - 'original_id: task394'
+
+- id: task152
+  title: Add framework examples and version/compat notes to spec doc
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature92 (kinnoo.yaml specification document): AC4, AC5.'
+  files:
+  - docs/kinnoo-yaml-spec.md
+  steps:
+  - 'step1: Implement Document specifies the manifest version and any backward compatibility
+    notes.'
+  - 'step2: Implement Cross-referenced from README.md and CLI help text.'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task151
+  tests:
+  - test64
+  - test65
+  notes:
+  - 'original_id: task395'
+
+- id: task153
+  title: Create CLI reference doc for client commands (init through uninstall)
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature93 (CLI command reference document): AC1, AC2, AC3.'
+  files:
+  - docs/cli-reference.md
+  - src/kinnoo/cli.py
+  steps:
+  - 'step1: Implement docs/cli-reference.md exists and documents every CLI command.'
+  - 'step2: Implement Each command entry has: usage, description, arguments, options,
+    env vars, exit codes, examples.'
+  - 'step3: Implement Covers: init, pack, install, run, publish, search, login, logout,
+    keygen, trust, inspect, uninstall.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task396'
+
+- id: task154
+  title: Create security model doc with threat model and signing architecture
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature94 (Security model document): AC1, AC2, AC3.'
+  files:
+  - docs/security-model.md
+  steps:
+  - 'step1: Implement docs/security-model.md exists and covers the complete security
+    architecture.'
+  - 'step2: Implement Threat model identifies key threats and mitigations.'
+  - 'step3: Implement Signing model explains Ed25519 key generation, signing, and
+    verification.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task146
+  - task148
+  - task150
+  tests:
+  - test66
+  - test67
+  notes:
+  - 'original_id: task398'
+
+- id: task155
+  title: Document auth flow and cross-reference from README
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature94 (Security model document): AC4, AC5.'
+  files:
+  - docs/security-model.md
+  - README.md
+  steps:
+  - 'step1: Implement Auth flow documented: registration, login, JWT issuance, token
+    refresh, logout.'
+  - 'step2: Implement Cross-referenced from README.md.'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task154
+  tests:
+  - test66
+  - test67
+  notes:
+  - 'original_id: task399'
+
+- id: task156
+  title: Create getting-started guide with end-to-end agent walkthrough
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature95 (Getting started guide and registry guide): AC1,
+    AC2, AC3.'
+  files:
+  - docs/getting-started.md
+  steps:
+  - 'step1: Implement docs/getting-started.md exists with a complete walkthrough from
+    install to running an agent.'
+  - 'step2: Implement docs/registry-guide.md exists with publish, search, and install
+    workflows.'
+  - 'step3: Implement Both guides include copy-paste terminal commands.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests:
+  - test68
+  - test69
+  notes:
+  - 'original_id: task400'
+
+- id: task157
+  title: Create registry guide with publish/install workflows and expected output
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature95 (Getting started guide and registry guide): AC4,
+    AC5.'
+  files:
+  - docs/registry-guide.md
+  steps:
+  - 'step1: Implement Both guides include expected output snippets.'
+  - 'step2: Implement Cross-referenced from README.md.'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task156
+  tests:
+  - test68
+  - test69
+  notes:
+  - 'original_id: task401'
+
+- id: task158
+  title: Rewrite README for beta with badges and quick-start
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature96 (README rewrite and supported agents document): AC1,
+    AC2, AC3.'
+  files:
+  - README.md
+  steps:
+  - 'step1: Implement README.md is rewritten for beta: concise, professional, with
+    badges.'
+  - 'step2: Implement README includes: overview, pip install, quick-start (5-command
+    workflow), links to docs.'
+  - 'step3: Implement docs/supported-agents.md lists all supported frameworks with
+    feature matrix.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task152
+  tests:
+  - test70
+  - test71
+  notes:
+  - 'original_id: task402'
+
+- id: task159
+  title: Create supported-agents.md with framework compatibility matrix
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature96 (README rewrite and supported agents document): AC4,
+    AC5.'
+  files:
+  - docs/supported-agents.md
+  steps:
+  - 'step1: Implement Framework matrix covers: init scaffold, pack, run, publish,
+    install for each framework.'
+  - 'step2: Implement README does not reference internal development details.'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task158
+  tests:
+  - test70
+  - test71
+  notes:
+  - 'original_id: task403'
+
+- id: task160
+  title: Audit repo for secrets and create CONTRIBUTING.md, CODE_OF_CONDUCT.md
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature97 (Public GitHub repository preparation): AC1, AC2,
+    AC3, AC4.'
+  files:
+  - CONTRIBUTING.md
+  - CODE_OF_CONDUCT.md
+  steps:
+  - 'step1: Implement No secrets, API keys, or passwords present in any tracked file.'
+  - 'step2: Implement CONTRIBUTING.md exists with development setup, testing, and
+    PR guidelines.'
+  - 'step3: Implement CODE_OF_CONDUCT.md exists.'
+  - 'step4: Implement .github/ISSUE_TEMPLATE/ contains bug report and feature request
+    templates.'
+  - 'step5: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task404'
+
+- id: task161
+  title: Validate pyproject.toml metadata and configure trusted publisher
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature99 (PyPI package publishing configuration): AC1, AC2,
+    AC3.'
+  files:
+  - pyproject.toml
+  steps:
+  - 'step1: Implement pyproject.toml has complete PyPI metadata (name, version, description,
+    author, license, classifiers, project-urls).'
+  - 'step2: Implement `pip install kinnoo` works from a built wheel.'
+  - 'step3: Implement .github/workflows/pypi-publish.yml publishes to PyPI on push
+    to master.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests:
+  - test72
+  - test73
+  notes:
+  - 'original_id: task408'
+
+- id: task162
+  title: Create pypi-publish.yml workflow triggered on push to master
+  type: task
+  epic:
+  - E5
+  description: 'Implement feature99 (PyPI package publishing configuration): AC4, AC5.'
+  files:
+  - .github/workflows/pypi-publish.yml
+  steps:
+  - 'step1: Implement Workflow uses trusted publisher (OIDC) — no API tokens.'
+  - 'step2: Implement Version is sourced from a single location (pyproject.toml or
+    __version__).'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task161
+  - task169
+  tests:
+  - test72
+  - test73
+  notes:
+  - 'original_id: task409'
+
+- id: task163
+  title: Keep landing unchanged and simplify Sign Up invite-only page
+  type: task
+  epic:
+  - E7
+  - E8
+  description: 'Implement feature110 (Landing page update for invite-only beta): AC1,
+    AC2, AC3.'
+  files:
+  - web/
+  steps:
+  - 'step1: Implement Landing page remains unchanged (no copy/layout delta).'
+  - 'step2: Implement Sign Up route renders the simplified invite-only message page.'
+  - 'step3: Implement Invite-only page includes only one contact action: ''Contact
+    Me'' to Twitter/X DM link.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests:
+  - test74
+  - test75
+  notes:
+  - 'original_id: task433'
+
+- id: task164
+  title: Verify no mailto flow and preserve login/registry + static export
+  type: task
+  epic:
+  - E7
+  - E8
+  description: 'Implement feature110 (Landing page update for invite-only beta): AC4,
+    AC5, AC6, AC7.'
+  files:
+  - web/
+  steps:
+  - 'step1: Implement No ''Email us'' or mailto contact links appear anywhere in web
+    UI.'
+  - 'step2: Implement Valid login routes users to registry-dev.kinnoo.ai behavior-equivalent
+    registry page.'
+  - 'step3: Implement Registry page shows authenticated user''s registry as before.'
+  - 'step4: Implement `next build` succeeds for static deployment workflow (Next.js
+    16 removed `next export`).'
+  - 'step5: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task163
+  tests:
+  - test74
+  - test75
+  notes:
+  - 'original_id: task434'
+
+- id: task165
+  title: Publish 3+ agents covering different frameworks to the registry
+  type: task
+  epic:
+  - E7
+  - E9
+  description: 'Implement feature112 (Registry seeding and validation): AC1, AC2, AC3.'
+  files:
+  - docs/registry-seeding.md (stale)
+  steps:
+  - 'step1: Implement At least 3 agents published to the registry covering different
+    frameworks.'
+  - 'step2: Implement Each published agent is searchable via `kinnoo search`.'
+  - 'step3: Implement Each published agent can be installed and run successfully.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task146
+  - task148
+  - task150
+  tests: []
+  status: not-started
+  notes:
+  - 'original_id: task437'
+
+- id: task166
+  title: Verify searchability, installability, and document seeding process
+  type: task
+  epic:
+  - E7
+  - E9
+  description: 'Implement feature112 (Registry seeding and validation): AC4, AC5.'
+  files:
+  - docs/registry-seeding.md (stale)
+  steps:
+  - 'step1: Implement At least one agent is signed.'
+  - 'step2: Implement docs/registry-seeding.md documents the seeding process.'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task165
+  tests: []
+  status: deprecated
+  notes:
+  - 'original_id: task438'
+
+- id: task167
+  title: Create launch checklist doc with Infrastructure, Security, CI/CD sections
+  type: task
+  epic:
+  - E7
+  - E9
+  description: 'Implement feature113 (Launch readiness checklist): AC1, AC2, AC3.'
+  files:
+  - docs/launch-checklist.md (stale)
+  steps:
+  - 'step1: Implement docs/launch-checklist.md exists with categorized checklist items.'
+  - 'step2: Implement Categories: Infrastructure, Security, Documentation, CI/CD,
+    Monitoring, User Onboarding.'
+  - 'step3: Implement Each item has: description, how to verify, pass/fail status
+    field.'
+  - 'step4: Write or update tests and verify locally with pytest'
+  dependencies: []
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task439'
+
+- id: task168
+  title: Add User Onboarding walkthrough and make checklist actionable for operator
+  type: task
+  epic:
+  - E7
+  - E9
+  description: 'Implement feature113 (Launch readiness checklist): AC4, AC5.'
+  files:
+  - docs/launch-checklist.md (stale)
+  steps:
+  - 'step1: Implement Includes a sample user onboarding walkthrough (create user →
+    user logs in → publishes agent).'
+  - 'step2: Implement Checklist is actionable — Jerry can follow it step by step on
+    launch day.'
+  - 'step3: Write or update tests and verify locally with pytest'
+  dependencies:
+  - task167
+  tests: []
+  status: completed
+  notes:
+  - 'original_id: task440'
+
+- id: task169
+  title: Configure PyPI trusted publisher (OIDC) for release workflow
+  type: task
+  epic:
+  - E5
+  description: 'Manual operator step for feature99. In PyPI project settings, configure
+    GitHub Actions trusted publishing for this repository and validate that a
+    release-tag workflow can mint an OIDC token and publish without API keys.'
+  files:
+  - .github/workflows/pypi-publish.yml
+  - pyproject.toml
+  - docs/pypi-release-runbook.md (stale)
+  steps:
+  - 'step1: Open PyPI project settings and add a Trusted Publisher entry for the repository/workflow.'
+  - 'step2: Confirm release tag pattern and workflow filename match the PyPI trusted
+    publisher configuration.'
+  - 'step3: Trigger a dry-run or TestPyPI release workflow to validate OIDC auth path.'
+  - 'step4: Record final settings and screenshots/notes in docs/pypi-release-runbook.md.'
+  - 'step5: Execute trusted-publisher regression check script.'
+  dependencies:
+  - task161
+  tests:
+  - test76
+  status: not-started
+  notes:
+  - 'original_id: task443'
+
+- id: task170
+  title: Comment out sync, stop, attach, logs commands and daemon help
+  type: task
+  epic:
+  - E2
+  - E9
+  description: 'Comment out (do NOT delete) the CLI subparser registration and dispatch
+    code for kinnoo sync, stop, attach, and logs commands. Add [agent] comments stating
+    these will be implemented later. Also comment out the "daemon agents:" section in
+    the main help menu with an [agent] comment.'
+  files:
+  - src/kinnoo/cli.py
+  steps:
+  - 'step1: Comment out sync subparser registration and dispatch with [agent] note.'
+  - 'step2: Comment out stop subparser registration and dispatch with [agent] note.'
+  - 'step3: Comment out attach subparser registration and dispatch with [agent] note.'
+  - 'step4: Comment out logs subparser registration and dispatch with [agent] note.'
+  - 'step5: Comment out daemon agents help section in _format_top_level_help_text()
+    with [agent] note.'
+  - 'step6: Add test that sync/stop/attach/logs are not recognized as valid commands.'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task476'
+
+- id: task171
+  title: feature118 web auth migration to Kinde-hosted redirects
+  type: task
+  epic:
+  - E4
+  - E8
+  owner: swe-agent
+  description: 'Migrate web auth UX from local forms to provider-hosted Kinde redirects
+    and callback completion while preserving protected-route behavior. Uses the Kinnoo
+    Web Dev backend client (confidential client) for server-mediated browser login.'
+  files:
+  - web/app/(public)/login/
+  - web/app/(public)/signup/
+  - web/app/api/login/route.ts
+  - web/app/api/logout/route.ts
+  - web/lib/auth-client.ts
+  - web/__tests__/
+  steps:
+  - 'step1: Replace form-based login initiation with redirect-based auth entrypoints
+    using Web Dev client ID.'
+  - 'step2: Implement callback success/failure handling and redirect to registry on
+    success.'
+  - 'step3: Migrate or hide signup/reset paths to provider-hosted equivalents per
+    cutover policy.'
+  - 'step4: Preserve auth layout redirect behavior for unauthenticated sessions.'
+  - 'step5: Add/update web tests for login/callback/logout/protected-layout flows.'
+  dependencies: []
+  tests: []
+  notes:
+  - 'original_id: task498'
+
+- id: task172
+  title: issue379 add Terms of Service and Privacy Policy pages
+  type: task
+  epic:
+  - E4
+  owner: swe-agent
+  description: 'Implement public /terms and /privacy routes in the Next.js web frontend
+    with long-form, professional legal text covering the protections and compliance
+    topics required by issue #379. Add a shared LegalPage layout component for
+    consistent typography. Surface the new pages in the global site footer and the
+    navigation menu so they are reachable from anywhere in the app, and add Vitest
+    coverage that asserts the required sections and clauses are rendered.'
+  files:
+  - web/app/(public)/terms/page.tsx
+  - web/app/(public)/privacy/page.tsx
+  - web/components/blocks/LegalPage.tsx
+  - web/components/blocks/MainLayout.tsx
+  - web/__tests__/legal-pages.test.tsx
+  steps:
+  - 'step1: Add shared LegalPage / LegalSection / LegalSubsection layout components.'
+  - 'step2: Implement /terms page with About, Eligibility, User Content + License,
+    Non-Endorsement, User Responsibility (Human-in-the-Loop), Acceptable Use, Intellectual
+    Property, Termination + archival retention, AS-IS/AS-AVAILABLE Disclaimers, Limitation
+    of Liability, Indemnification, Governing Law, and General Provisions sections.'
+  - 'step3: Implement /privacy page with Scope, Information Collected (incl. Kinde
+    Auth + Google/GitHub social sign-in), Use, GDPR Legal Bases, Sharing (incl. Kinde
+    as processor and no-sale clause), International Transfers, Retention, Security,
+    GDPR + CCPA Rights, Children Under 13, DNT/Third Parties, Changes, and Contact
+    sections.'
+  - 'step4: Add /terms and /privacy links in the navigation menu and a new global
+    site footer in MainLayout.'
+  - 'step5: Add Vitest tests asserting each page renders title, last-updated date,
+    all top-level section headings in order, the required production-ready clauses
+    from issue #379, and a cross-link between the two pages.'
+  dependencies: []
+  tests:
+  - test77
+  - test78
+  status: needs-review
+  notes:
+  - 'original_id: task528'

@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kinnoo"
+version = "0.10.0"
+description = "Kinnoo agent CLI and scaffolding tools"
+license = "MIT"
+authors = [
+    { name = "Jerry Chen", email = "jerryschen@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "PyYAML>=6.0",
+    "cryptography>=42.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/kinnoo-project/kinnoo"
+Documentation = "https://github.com/kinnoo-project/kinnoo/tree/main/docs"
+Repository = "https://github.com/kinnoo-project/kinnoo"
+Issues = "https://github.com/kinnoo-project/kinnoo/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[project.scripts]
+kinnoo = "kinnoo.cli:main"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks integration tests",
+    "regression_unit: unit regression tests",
+    "regression_integration: integration regression tests",
+    "regression_smoke: smoke regression tests",
+    "regression_uat: user acceptance regression tests",
+    "regression_sat: system acceptance regression tests",
+    "client_cli_init: tests for client CLI init command surface",
+    "client_cli_run: tests for client CLI run command surface",
+    "client_cli_test: tests for client CLI test command surface",
+    "client_cli_install: tests for client CLI install command surface",
+    "client_cli_pack: tests for client CLI pack command surface",
+    "client_cli_diff: tests for client CLI diff command surface",
+    "client_cli_fetch: tests for client CLI fetch command surface",
+    "client_cli_uninstall: tests for client CLI uninstall command surface",
+    "client_cli_keygen: tests for client CLI keygen command surface",
+    "client_cli_inspect: tests for client CLI inspect command surface",
+    "client_cli_publish: tests for client CLI publish command surface",
+    "client_cli_list: tests for client CLI list command surface",
+    "client_cli_search: tests for client CLI search command surface",
+    "client_cli_login: tests for client CLI login command surface",
+    "client_cli_logout: tests for client CLI logout command surface",
+    "client_cli_import: tests for client CLI import command surface",
+    "client_cli_check: tests for client CLI check command surface",
+    "client_cli_registry: aggregate marker for registry command surfaces (list/search/login/logout/fetch/publish)",
+    "schema_contract: schema/API contract tests",
+    "schema_unit: unit tests for in-memory schema validation",
+    "client_cli: client command-line behavior tests",
+    "e2e: end-to-end workflow tests",
+    "validator: validator module tests",
+    "analyzer: analyzer module tests",
+    "registry_client: local registry client tests",
+    "registry_remote: remote registry contract tests",
+    "web_ui: web frontend tests",
+    "docs_contract: tests that validate documentation contracts",
+    "security_checks: security and hardening related tests",
+]
+testpaths = [
+    "tests",
+]
+norecursedirs = [
+    # [agent] test deprecated: external harvested suites are out-of-scope for kinnoo CI.
+    "example-scratch",
+    "example-scratch-*",
+    "scratch",
+    "build",
+    "dist",
+    ".venv",
+    "venv",
+]

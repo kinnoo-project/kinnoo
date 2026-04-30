@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
+
+BASE_URL="${BASE_URL:-https://localhost:8000}"
+TENANT_SLUG="${TENANT_SLUG:-global}"
+CERT_FILE="${CERT_FILE:-$ROOT_DIR/.registry-logs-scratch/tls/dev-cert.pem}"
+LOG_DIR="${LOG_DIR:-$ROOT_DIR/.registry-logs-scratch}"
+ARCHIVE_ROOT="${ARCHIVE_ROOT:-$ROOT_DIR/.registry-archive-scratch}"
+ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
+
+if [[ $# -lt 1 ]]; then
+	echo "Usage: ./publish_agent_scratch <agent-dir-path>" >&2
+	exit 1
+fi
+
+AGENT_DIR_PATH="$1"
+if [[ ! -d "$AGENT_DIR_PATH" ]]; then
+	echo "Error: agent directory path does not exist: $AGENT_DIR_PATH" >&2
+	exit 1
+fi
+
+MANIFEST_PATH="$AGENT_DIR_PATH/kinnoo.yaml"
+if [[ ! -f "$MANIFEST_PATH" ]]; then
+	echo "Error: kinnoo.yaml not found in agent directory: $AGENT_DIR_PATH" >&2
+	exit 1
+fi
+
+AGENT_NAME="$(python3 - <<'PY' "$MANIFEST_PATH"
+import sys
+import yaml
+
+manifest_path = sys.argv[1]
+try:
+    with open(manifest_path, "r", encoding="utf-8") as handle:
+        manifest = yaml.safe_load(handle) or {}
+except Exception:
+    print("")
+    raise SystemExit(0)
+
+name = manifest.get("name")
+if isinstance(name, str):
+    print(name.strip())
+else:
+    print("")
+PY
+)"
+
+if [[ -z "$AGENT_NAME" ]]; then
+	echo "Error: Could not resolve manifest name from $MANIFEST_PATH" >&2
+	exit 1
+fi
+
+if [[ ! -f "$CERT_FILE" ]]; then
+	echo "Error: TLS cert file not found: $CERT_FILE" >&2
+	exit 1
+fi
+
+if [[ ! -f "$LOG_DIR/bootstrap.out" ]]; then
+	echo "Error: bootstrap output not found: $LOG_DIR/bootstrap.out" >&2
+	exit 1
+fi
+
+if ! command -v kinnoo >/dev/null 2>&1; then
+	echo "Error: kinnoo command not found in PATH." >&2
+	exit 1
+fi
+
+ADMIN_PASSWORD="$(awk -F': ' '/^temporary password:/ {print $2}' "$LOG_DIR/bootstrap.out" | tail -n 1)"
+if [[ -z "$ADMIN_PASSWORD" ]]; then
+	echo "Error: Could not read admin password from $LOG_DIR/bootstrap.out" >&2
+	exit 1
+fi
+
+curl --cacert "$CERT_FILE" -fsS "$BASE_URL/health" >/dev/null
+echo "Scratch server health check passed: $BASE_URL/health"
+
+export SSL_CERT_FILE="$CERT_FILE"
+export KINNOO_ARCHIVE_ROOT="$ARCHIVE_ROOT"
+
+echo "Packing agent directory into scratch archive: $AGENT_DIR_PATH"
+kinnoo pack "$AGENT_DIR_PATH"
+
+ARCHIVE_AGENT_DIR="$ARCHIVE_ROOT/$AGENT_NAME"
+LATEST_ARCHIVE_PATH="$(find "$ARCHIVE_AGENT_DIR" -type f -name "${AGENT_NAME}.kno" | sort | tail -n 1)"
+if [[ -z "$LATEST_ARCHIVE_PATH" ]]; then
+	echo "Error: No .kno archive found for '$AGENT_NAME' under $ARCHIVE_AGENT_DIR" >&2
+	echo "Pack appears to have failed to generate an archive for '$AGENT_NAME'." >&2
+	exit 1
+fi
+
+echo "Using packed archive: $LATEST_ARCHIVE_PATH"
+
+TOKEN_JSON="$LOG_DIR/token-$AGENT_NAME.json"
+curl --cacert "$CERT_FILE" -fsS -X POST "$BASE_URL/api/auth/token" \
+	-H "Content-Type: application/json" \
+	-d "{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\",\"tenant_slug\":\"$TENANT_SLUG\"}" \
+	> "$TOKEN_JSON"
+
+ACCESS_TOKEN="$(python3 - <<'PY' "$TOKEN_JSON"
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+	payload = json.load(handle)
+print(payload.get("access_token", ""))
+PY
+)"
+
+if [[ -z "$ACCESS_TOKEN" ]]; then
+	echo "Error: No access_token in $TOKEN_JSON" >&2
+	cat "$TOKEN_JSON" >&2
+	exit 1
+fi
+
+export KINNOO_REGISTRY_URL="$BASE_URL"
+export KINNOO_REGISTRY_TOKEN="$ACCESS_TOKEN"
+export KINNOO_TENANT_SLUG="$TENANT_SLUG"
+
+echo "Publishing $AGENT_NAME to remote scratch registry..."
+kinnoo publish "$AGENT_NAME" --remote
+
+echo "Remote registry list:"
+kinnoo list --remote

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.testmon*
+.agent-repo-cache*
+scripts/archive/
+.coverage
+tests/coverage/
+
+# VSCode / local env
+.specstory/
+.specstory/cli/
+.env
+*env/
+*.bak
+*scratch*
+.vscode/
+*.DS_Store*
+*.pem
+
+# Config and Plan files
+kinnoo-config.txt
+
+# Next.js web frontend
+web/node_modules/
+web/.next*
+web/.open-next/
+web/.wrangler/
+.wrangler/
+
+# Reports
+outputs/
