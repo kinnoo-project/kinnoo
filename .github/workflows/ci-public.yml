@@ -2,9 +2,9 @@ name: Public CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master, build ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ master, build ]
 
 jobs:
   python-tests:
@@ -22,8 +22,8 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
       - name: Run pytest (public suite)
-        run: python3 -m pytest tests -m "not integration"
-
+        run: python3 -m pytest tests
+  
   web-tests:
     runs-on: ubuntu-latest
     defaults:
