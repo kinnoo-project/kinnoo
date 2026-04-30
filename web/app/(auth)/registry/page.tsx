@@ -63,14 +63,14 @@ export default function RegistryPage() {
       return;
     }
 
-    if (!searchQuery.trim()) {
-      setSearchState({ isLoading: false, error: null, agents: [] });
-      return;
-    }
-
     let cancelled = false;
 
     const loadSearchResults = async () => {
+      if (!searchQuery.trim()) {
+        setSearchState({ isLoading: false, error: null, agents: [] });
+        return;
+      }
+
       setSearchState((current) => ({ ...current, isLoading: true, error: null }));
       try {
         const agents = await searchAgents({ query: searchQuery, showOnlyMine: showOnlyMyAgents });
