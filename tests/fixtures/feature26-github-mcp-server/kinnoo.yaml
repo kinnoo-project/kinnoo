@@ -1,0 +1,12 @@
+name: github-mcp-server
+version: 1.0.0
+entrypoint: run.py
+runtime:
+  language: python
+  version: ">=3.10"
+  type: mcp-server
+dependencies: []
+inputs:
+  type: text
+outputs:
+  type: text

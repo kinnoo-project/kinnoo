@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+import sys
+
+from agents import Runner
+from {{agent_module}} import {{agent_class}}
+
+
+def _render_result(value: object) -> str:
+    final_output = getattr(value, "final_output", None)
+    if final_output is not None:
+        return str(final_output)
+    return str(value)
+
+
+def main() -> int:
+    user_input = sys.argv[1] if len(sys.argv) > 1 else ""
+
+    agent = {{agent_class}}()
+    result = Runner.run_sync(agent, user_input)
+    print(_render_result(result))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
