@@ -61,7 +61,7 @@ For the ChatGPT agent, you will need an ```OPENAI_API_KEY``` in your environment
 Once your agent is initialized, you can run it locally by typing:
 
 ```bash
-kinnoo run ./my-chat-agent "what is 2+2?"
+kinnoo run my-chat-agent "what is 2+2?"
 ```
 
 If this is your first time running the agent, Kinnoo will first install any libraries or packages that are required for the agent to run. A successful run of the ChatGPT agent described above should output something like
@@ -98,18 +98,26 @@ Note that by default, published agents are public and can be installed by other 
 There are lots of options for adding security, privacy, identity, package verification, versioning, publishing to an on-premise (local) registry, etc... These options are all covered in the [CLI reference](cli-reference.md).
 
 
-## 7) Install from Registry
+## 7) Install and Search from Registry
 
 Once your public agent is in the remote registry, then others can install your published agent from the remote registry by typing
 
 ```bash
-kinnoo install my-chat-agent
+kinnoo install kinnootest/test-chat-agent
 ```
+
+where `kinnootest` is the tenant (user) name. If you ignore the tenant name, kinnoo will assume default to the tenant that is currently logged into your device.
 
 If instead an end-user wants to just fetch the packaged agent archive and not fully install the agent (e.g., the end-user wants to do some additional security checks on the agent before unpacking and installing it), the end-user can type
 
 ```bash
-kinnoo fetch my-chat-agent
+kinnoo fetch kinnootest/test-chat-agent
+```
+
+You can search for agents by typing
+
+```bash
+kinnoo search `<search-string>`
 ```
 
 This covers the basics of using the Kinnoo CLI. The complete CLI reference can be found [here](cli-reference.md). 
