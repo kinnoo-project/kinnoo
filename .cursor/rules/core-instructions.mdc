@@ -1,0 +1,65 @@
+---
+description: Global project standards, folder structure, and core tech stack
+globs: 
+alwaysApply: true
+---
+# Global Kinnoo Project Instructions & Behavior
+
+## Introduction
+This file guides the behavior, coding standards, and project management rules for any AI agent working within this repository.
+
+## Project Overview
+- Refer to `vision.md` for high-level project goals.
+- **Project Structure:**
+    - `web/`: Next.js frontend (TypeScript, React, Tailwind CSS).
+    - `src/`: Core kinnoo CLI logic (Python).
+    - `.github/`: CI/CD workflows and Copilot/Cursor instructions.
+    - `tests/`: Categorized test cases (unit, regression, integration, E2E). One folder per CLI command.
+    - `docs/`: User guides, CLI reference, security models.
+    - `notes/`: Collaborative developer/agent notes and design docs.
+    - `scripts/`: Automation, setup, and deployment utilities.
+    - `utils/`: Centralized helper functions for reuse.
+
+## Coding Standards
+- **Modular Design:** Prioritize scalability and modularity.
+- **Error Handling:** Implement comprehensive feedback mechanisms.
+- **Naming:** Use descriptive names for all identifiers.
+- **Security:** NEVER commit secrets. Use environment variables.
+- **Python-Specific:** 
+    - Add libraries to `requirements.txt` before running `pip install`.
+    - Always use virtual environments.
+    - Follow PEP 8 guidelines.
+
+## Agent Workflow & Governance
+- **Tech-Lead (`.github/techlead.agent.md`):** Technical direction and planning.
+- **SWE Agent (`.github/swe.agent.md`):** Implementation and test creation.
+- **Test Agent (`.github/test.agent.md`):** Managing project-wide test coverage.
+- **Git Agent (`.github/git.agent.md`):** Source control and branch management.
+- **Strict Requirement:** Every feature must have task IDs in `TASKS.txt` and test IDs in `TESTS.txt` before implementation begins.
+
+## Manifest Update Checklist
+1. Create test entry in `TESTS.txt`.
+2. Create/update task entry in `TASKS.txt` (link test IDs).
+3. Create/update feature entry in `FEATURES.txt` (link task IDs).
+4. Run `python3 scripts/validate_project_manifests.py`.
+5. Commit changes to manifests in the same PR as code.
+
+## Required kinnoo.yaml Structure
+All agent manifests must follow this schema:
+- `name`: Alphanumeric with hyphens.
+- `version`: Semver string.
+- `entrypoint`: Script path.
+- `runtime`: Type "one-shot", language "python", version (quoted string, e.g., "3.10").
+- `inputs/outputs`: Must define `type`.
+
+## Other Agents
+- Tech Lead agent: `.cursor/rules/techlead.agent.mdc`
+- SWE agent: `.cursor/rules/swe.agent.mdc`
+- Test agent: `.cursor/rules/test.agent.mdc`
+- Git agent: `.cursor/rules/git.agent.mdc`
+
+## Collaboration Guidelines
+- **Reasoning:** Always explain your thought process in the response output.
+- **Learning:** Teach the user about Machine Learning, agentic AI, and tools like LangChain/LangGraph. Help them prepare for AI Engineer interviews.
+- **Confirmation:** No confirmation needed for read-only commands. **ALWAYS** ask for approval before writing or deleting files.
+- **Documentation:** After important decisions, provide a summary and update relevant docs.
