@@ -3434,7 +3434,7 @@ tasks:
   - 'step5: Add schema/validator tests for valid and invalid Go manifest permutations.'
   dependencies: [task173]
   tests: [test80]
-  status: not-started
+  status: needs-review
 
 - id: task175
   title: Implement Go source execution and preflight in kinnoo run

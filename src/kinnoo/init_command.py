@@ -320,7 +320,12 @@ def _build_node_manifest(name: str, *, entrypoint: str, language: str) -> str:
     )
 
 
-def _build_go_manifest(name: str, *, entrypoint: str, runtime_type: str = "one-shot") -> str:
+def _build_go_manifest(
+    name: str,
+    *,
+    entrypoint: str = "main.go",
+    runtime_type: str = "one-shot",
+) -> str:
     return (
         f"name: {name}\n"
         "version: 0.1.0\n"
@@ -427,7 +432,6 @@ def init_agent(
     elif effective_language == "go":
         manifest_content = _build_go_manifest(
             name,
-            entrypoint=entrypoint_name,
             runtime_type="mcp-server" if selected_framework == "mcp-server" else "one-shot",
         )
     elif effective_language in {"javascript", "typescript"}:
