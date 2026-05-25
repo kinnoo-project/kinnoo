@@ -278,129 +278,68 @@ go run main.go "Hello Claude from Go"
 MCP_SERVER_GO_MAIN = '''package main
 
 import (
-  "bufio"
-  "encoding/json"
+  "context"
   "fmt"
+  "log"
   "os"
+
+  "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type rpcRequest struct {
-  JSONRPC string                 `json:"jsonrpc"`
-  ID      interface{}            `json:"id"`
-  Method  string                 `json:"method"`
-  Params  map[string]interface{} `json:"params"`
+type EchoArgs struct {
+  Text string `json:"text" jsonschema:"required,description=The text to echo back."`
 }
 
-func okResponse(id interface{}, result interface{}) map[string]interface{} {
-  return map[string]interface{}{
-    "jsonrpc": "2.0",
-    "id":      id,
-    "result":  result,
-  }
-}
-
-func errorResponse(id interface{}, code int, message string) map[string]interface{} {
-  return map[string]interface{}{
-    "jsonrpc": "2.0",
-    "id":      id,
-    "error": map[string]interface{}{
-      "code":    code,
-      "message": message,
-    },
-  }
-}
-
-func handleRequest(req rpcRequest) map[string]interface{} {
-  switch req.Method {
-  case "initialize":
-    return okResponse(req.ID, map[string]interface{}{
-      "protocolVersion": "2024-11-05",
-      "serverInfo": map[string]interface{}{
-        "name":    "kinnoo-mcp-server-template-go",
-        "version": "0.1.0",
-      },
-      "capabilities": map[string]interface{}{
-        "tools": map[string]interface{}{"listChanged": false},
-      },
-    })
-  case "tools/list":
-    return okResponse(req.ID, map[string]interface{}{
-      "tools": []map[string]interface{}{
-        {
-          "name":        "echo",
-          "description": "Echo back input text.",
-          "inputSchema": map[string]interface{}{
-            "type": "object",
-            "properties": map[string]interface{}{
-              "text": map[string]interface{}{"type": "string"},
-            },
-            "required": []string{"text"},
-          },
-        },
-      },
-    })
-  case "tools/call":
-    if req.Params == nil {
-      return errorResponse(req.ID, -32602, "Missing params")
-    }
-    toolName, _ := req.Params["name"].(string)
-    if toolName != "echo" {
-      return errorResponse(req.ID, -32601, "Unknown tool")
-    }
-
-    arguments, _ := req.Params["arguments"].(map[string]interface{})
-    text, _ := arguments["text"].(string)
-    return okResponse(req.ID, map[string]interface{}{
-      "content": []map[string]interface{}{
-        {
-          "type": "text",
-          "text": fmt.Sprintf("echo: %s", text),
-        },
-      },
-    })
-  default:
-    return errorResponse(req.ID, -32601, "Method not found")
-  }
-}
+type EmptyResult struct{}
 
 func main() {
-  scanner := bufio.NewScanner(os.Stdin)
-  writer := bufio.NewWriter(os.Stdout)
-  defer writer.Flush()
+  log.SetOutput(os.Stderr)
 
-  for scanner.Scan() {
-    raw := scanner.Bytes()
-    if len(raw) == 0 {
-      continue
-    }
-
-    var req rpcRequest
-    if err := json.Unmarshal(raw, &req); err != nil {
-      payload, _ := json.Marshal(errorResponse(nil, -32700, fmt.Sprintf("Parse error: %v", err)))
-      _, _ = writer.Write(payload)
-      _, _ = writer.WriteString("\\n")
-      _ = writer.Flush()
-      continue
-    }
-
-    payload, _ := json.Marshal(handleRequest(req))
-    _, _ = writer.Write(payload)
-    _, _ = writer.WriteString("\\n")
-    _ = writer.Flush()
+  impl := &mcp.Implementation{
+    Name:    "kinnoo-mcp-server-template-go",
+    Version: "0.1.0",
   }
+
+  server := mcp.NewServer(impl, nil)
+  if err := mcp.AddTool(server, &mcp.Tool{
+    Name:        "echo",
+    Description: "Echo back input text.",
+  }, echoHandler); err != nil {
+    log.Fatalf("Failed to register tool: %v", err)
+  }
+
+  log.Println("Starting kinnoo-mcp-server over stdio...")
+  if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+    log.Fatalf("Server exited with error: %v", err)
+  }
+}
+
+func echoHandler(_ context.Context, _ *mcp.CallToolRequest, args EchoArgs) (*mcp.CallToolResult, EmptyResult, error) {
+  result := &mcp.CallToolResult{
+    Content: []mcp.Content{
+      &mcp.TextContent{Text: fmt.Sprintf("echo: %s", args.Text)},
+    },
+  }
+  return result, EmptyResult{}, nil
 }
 '''
 
 MCP_SERVER_GO_README = '''# {name}
 
-This scaffold demonstrates a minimal Go MCP server over stdio.
+This scaffold demonstrates a minimal Go MCP server over stdio using the official MCP Go SDK.
+
+Kinnoo scaffolding pins the SDK dependency to `github.com/modelcontextprotocol/go-sdk v1.4.1`.
 
 ## Run Server
 ```
 go run main.go
 ```
 
-## Quick Handshake Smoke Test
+## Notes
+- If you make manual dependency changes, run `go mod tidy`.
+- If the MCP Go SDK introduces breaking changes, the Kinnoo CLI Go MCP templates may need updates.
+
+## Quick Handshake Smoke Test (from another terminal)
 ```
 printf '{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{}}}}\n' | go run main.go
 ```
@@ -409,17 +348,21 @@ printf '{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{}}}}\n' | go r
 MCP_CLIENT_GO_MAIN = '''package main
 
 import (
-  "bufio"
-  "fmt"
+  "context"
+  "log"
   "os"
   "os/exec"
   "strings"
+
+  "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func main() {
+  log.SetOutput(os.Stderr)
+
   serverCmd := strings.TrimSpace(os.Getenv("MCP_SERVER_CMD"))
   if serverCmd == "" {
-    fmt.Println("Set MCP_SERVER_CMD to an MCP stdio server executable.")
+    log.Println("Set MCP_SERVER_CMD to an MCP stdio server executable.")
     return
   }
 
@@ -429,50 +372,57 @@ func main() {
     serverArgs = strings.Fields(serverArgsRaw)
   }
 
-  cmd := exec.Command(serverCmd, serverArgs...)
-  stdin, err := cmd.StdinPipe()
+  client := mcp.NewClient(&mcp.Implementation{
+    Name:    "kinnoo-mcp-client-template-go",
+    Version: "0.1.0",
+  }, nil)
+
+  transport := &mcp.CommandTransport{Command: exec.Command(serverCmd, serverArgs...)}
+  session, err := client.Connect(context.Background(), transport, nil)
   if err != nil {
-    fmt.Printf("[mcp-client-go template] stdin pipe error: %v\\n", err)
-    return
+    log.Fatalf("[mcp-client-go template] connect failed: %v", err)
   }
-  stdout, err := cmd.StdoutPipe()
+  defer session.Close()
+
+  result, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+    Name:      "echo",
+    Arguments: map[string]any{"text": "hello from mcp-client-go"},
+  })
   if err != nil {
-    fmt.Printf("[mcp-client-go template] stdout pipe error: %v\\n", err)
-    return
+    log.Fatalf("[mcp-client-go template] tools/call failed: %v", err)
   }
 
-  if err := cmd.Start(); err != nil {
-    fmt.Printf("[mcp-client-go template] failed to start server: %v\\n", err)
-    return
+  if result.IsError {
+    log.Fatalf("[mcp-client-go template] server returned a tool error")
   }
 
-  _, _ = stdin.Write([]byte("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}\\n"))
-  _ = stdin.Close()
-
-  scanner := bufio.NewScanner(stdout)
-  if scanner.Scan() {
-    fmt.Printf("[mcp-client-go template] initialize response: %s\\n", scanner.Text())
-  } else {
-    fmt.Println("[mcp-client-go template] no response from MCP server")
+  for _, content := range result.Content {
+    if textContent, ok := content.(*mcp.TextContent); ok {
+      log.Printf("[mcp-client-go template] tool response: %s", textContent.Text)
+    }
   }
-
-  _ = cmd.Process.Kill()
 }
 '''
 
 MCP_CLIENT_GO_README = '''# {name}
 
-This scaffold demonstrates a minimal Go MCP client invocation path.
+This scaffold demonstrates a minimal Go MCP client using the official MCP Go SDK.
+
+Kinnoo scaffolding pins the SDK dependency to `github.com/modelcontextprotocol/go-sdk v1.4.1`.
 
 ## Setup
 - Export command for your MCP stdio server:
-  - `export MCP_SERVER_CMD=python`
-  - `export MCP_SERVER_ARGS='path/to/server.py'`
+  - `export MCP_SERVER_CMD=go`
+  - `export MCP_SERVER_ARGS='run ../my-go-mcp-server/main.go'`
 
 ## Run
 ```
 go run main.go
 ```
+
+## Notes
+- If you make manual dependency changes, run `go mod tidy`.
+- If the MCP Go SDK introduces breaking changes, the Kinnoo CLI Go MCP templates may need updates.
 '''
 
 PYDANTIC_AI_RUN_PY = '''import os

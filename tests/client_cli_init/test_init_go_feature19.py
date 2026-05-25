@@ -18,6 +18,7 @@ _GO_INIT_MATRIX_CASES = [
         "expected_framework": None,
         "expected_model": None,
         "main_markers": ["Hello from Go agent."],
+        "go_mod_markers": [],
         "readme_markers": ["go run main.go", "--language go"],
     },
     {
@@ -27,6 +28,7 @@ _GO_INIT_MATRIX_CASES = [
         "expected_framework": "gemini",
         "expected_model": "gemini-2.5-flash-lite",
         "main_markers": ["[gemini-go template]", "GOOGLE_API_KEY", "gemini-2.5-flash-lite"],
+        "go_mod_markers": [],
         "readme_markers": ["GOOGLE_API_KEY", "Hello Gemini from Go"],
     },
     {
@@ -36,6 +38,7 @@ _GO_INIT_MATRIX_CASES = [
         "expected_framework": "chatgpt",
         "expected_model": "gpt-5-nano",
         "main_markers": ["[chatgpt-go template]", "OPENAI_API_KEY", "gpt-5-nano"],
+        "go_mod_markers": [],
         "readme_markers": ["OPENAI_API_KEY", "Hello ChatGPT from Go"],
     },
     {
@@ -45,6 +48,7 @@ _GO_INIT_MATRIX_CASES = [
         "expected_framework": "claude-chat",
         "expected_model": "claude-sonnet-4-20250514",
         "main_markers": ["[claude-chat-go template]", "ANTHROPIC_API_KEY", "claude-sonnet-4-20250514"],
+        "go_mod_markers": [],
         "readme_markers": ["ANTHROPIC_API_KEY", "Hello Claude from Go"],
     },
     {
@@ -53,8 +57,14 @@ _GO_INIT_MATRIX_CASES = [
         "runtime_type": "mcp-server",
         "expected_framework": "mcp-server",
         "expected_model": None,
-        "main_markers": ["kinnoo-mcp-server-template-go", "tools/list", "initialize"],
-        "readme_markers": ["go run main.go", "Quick Handshake Smoke Test"],
+        "main_markers": [
+            "github.com/modelcontextprotocol/go-sdk/mcp",
+            "mcp.NewServer",
+            "mcp.AddTool",
+            "kinnoo-mcp-server-template-go",
+        ],
+        "go_mod_markers": ["github.com/modelcontextprotocol/go-sdk v1.4.1"],
+        "readme_markers": ["official MCP Go SDK", "v1.4.1", "breaking changes"],
     },
     {
         "id": "test79-ac6-mcp-client-go",
@@ -62,8 +72,14 @@ _GO_INIT_MATRIX_CASES = [
         "runtime_type": "one-shot",
         "expected_framework": "mcp-client",
         "expected_model": None,
-        "main_markers": ["[mcp-client-go template]", "MCP_SERVER_CMD", "initialize"],
-        "readme_markers": ["MCP_SERVER_CMD", "MCP_SERVER_ARGS", "go run main.go"],
+        "main_markers": [
+            "github.com/modelcontextprotocol/go-sdk/mcp",
+            "mcp.NewClient",
+            "mcp.CommandTransport",
+            "session.CallTool",
+        ],
+        "go_mod_markers": ["github.com/modelcontextprotocol/go-sdk v1.4.1"],
+        "readme_markers": ["official MCP Go SDK", "v1.4.1", "MCP_SERVER_CMD"],
     },
 ]
 
@@ -86,6 +102,16 @@ def _build_fake_go_env(tmp_path: Path) -> dict[str, str]:
         "if [ \"$1\" = \"mod\" ] && [ \"$2\" = \"init\" ]; then\n"
         "  module_name=$3\n"
         "  printf 'module %s\\n\\ngo 1.22\\n' \"$module_name\" > go.mod\n"
+        "  exit 0\n"
+        "fi\n"
+        "if [ \"$1\" = \"mod\" ] && [ \"$2\" = \"edit\" ]; then\n"
+        "  requirement=${3#-require=}\n"
+        "  requirement=${requirement/@/ }\n"
+        "  if [ ! -f go.mod ]; then\n"
+        "    echo 'go.mod not initialized' >&2\n"
+        "    exit 1\n"
+        "  fi\n"
+        "  printf '\\nrequire %s\\n' \"$requirement\" >> go.mod\n"
         "  exit 0\n"
         "fi\n"
         "echo 'unsupported fake go command' >&2\n"
@@ -135,6 +161,8 @@ def test_feature19_test79_go_init_matrix(case: dict[str, object], tmp_path: Path
 
     go_mod_text = go_mod_path.read_text(encoding="utf-8")
     assert f"module {agent_name}" in go_mod_text
+    for marker in case["go_mod_markers"]:
+        assert str(marker) in go_mod_text
 
     main_text = main_path.read_text(encoding="utf-8")
     for marker in case["main_markers"]:

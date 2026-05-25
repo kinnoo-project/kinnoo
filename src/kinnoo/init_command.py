@@ -298,6 +298,9 @@ KNOWN_FRAMEWORK_DEFAULT_MODELS = {
     "pydantic-ai": "openai:gpt-4o-mini",
 }
 
+GO_MCP_SDK_MODULE = "github.com/modelcontextprotocol/go-sdk"
+GO_MCP_SDK_VERSION = "v1.4.1"
+
 
 def _go_install_instructions() -> str:
     """Return OS-specific Go installation instructions for first-time setup."""
@@ -357,6 +360,27 @@ def _initialize_go_module(agent_dir: Path, module_name: str, go_executable: str)
         "Failed to initialize Go module with `go mod init`.\n"
         f"Directory: {agent_dir}\n"
         f"Command: {go_executable} mod init {module_name}\n"
+        f"Details: {details}"
+    )
+
+
+def _pin_go_module_dependency(agent_dir: Path, *, module: str, version: str, go_executable: str) -> None:
+    """Pin a Go module dependency using the Go toolchain."""
+    requirement = f"{module}@{version}"
+    result = subprocess.run(
+        [go_executable, "mod", "edit", f"-require={requirement}"],
+        cwd=agent_dir,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return
+
+    details = result.stderr.strip() or result.stdout.strip() or "unknown go mod edit error"
+    raise RuntimeError(
+        "Failed to pin Go dependency with `go mod edit`.\n"
+        f"Directory: {agent_dir}\n"
+        f"Command: {go_executable} mod edit -require={requirement}\n"
         f"Details: {details}"
     )
 
@@ -646,6 +670,13 @@ def init_agent(
     if effective_language == "go":
         assert go_executable is not None
         _initialize_go_module(agent_dir, name, go_executable)
+        if selected_framework in {"mcp-client", "mcp-server"}:
+            _pin_go_module_dependency(
+                agent_dir,
+                module=GO_MCP_SDK_MODULE,
+                version=GO_MCP_SDK_VERSION,
+                go_executable=go_executable,
+            )
 
 def main():
     parser = argparse.ArgumentParser(

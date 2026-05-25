@@ -67,8 +67,9 @@ def test_feature19_test83_docs_cover_go_preflight_remediation_guidance() -> None
     cli_reference = _read_doc("docs/cli-reference.md")
     getting_started = _read_doc("docs/getting-started.md")
     yaml_spec = _read_doc("docs/kinnoo-yaml-spec.md")
+    supported_agents = _read_doc("docs/supported-agents.md")
     readme = _read_doc("README.md")
-    combined_docs = "\n".join([cli_reference, getting_started, yaml_spec, readme])
+    combined_docs = "\n".join([cli_reference, getting_started, yaml_spec, supported_agents, readme])
 
     assert "install Go or configure `runtime.path`" in combined_docs
     assert "GOOS" in combined_docs
@@ -79,3 +80,6 @@ def test_feature19_test83_docs_cover_go_preflight_remediation_guidance() -> None
     assert "wrong architecture/OS" in combined_docs
     assert "unsupported format" in combined_docs
     assert "non-executable" in combined_docs
+    assert "github.com/modelcontextprotocol/go-sdk" in combined_docs
+    assert "v1.4.1" in combined_docs
+    assert "breaking changes" in combined_docs
