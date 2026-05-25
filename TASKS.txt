@@ -3500,4 +3500,4 @@ tasks:
   - 'step4: Add docs contract/regression checks ensuring new command examples and manifest snippets remain accurate.'
   dependencies: [task176]
   tests: [test83]
-  status: not-started
+  status: needs-review

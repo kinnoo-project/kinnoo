@@ -18,13 +18,15 @@ This reference documents the current Kinnoo command-line client interfaces.
 
 ### init
 
-- Usage: `kinnoo init [framework] [--language {python,javascript,typescript}] [--minimal] [agent_name]`
+- Usage: `kinnoo init [framework] [--language {python,javascript,typescript,go}] [--minimal] [agent_name]`
 - Description: Scaffold a new agent directory.
 - Arguments:
   - `framework` (optional): framework template.
   - `agent_name` (optional): destination folder name.
 - Options:
   - `--language`: choose scaffold language when framework supports multiple runtimes.
+    - Go-compatible framework combinations:
+      - `gemini`, `chatgpt`, `claude-chat`, `mcp-client`, `mcp-server`, `no-framework`
   - `--minimal`: generate minimal scaffold only (skip extra `tools/`, `prompts/`, `evals/`, `tests/`, `data/` extras).
 - Practical notes:
   - If both `framework` and `agent_name` are omitted in an interactive terminal, Kinnoo opens an interactive wizard.
@@ -49,6 +51,13 @@ If you want only minimal files for a fast prototype:
 
 ```bash
 kinnoo init chatgpt --minimal my-prototype
+```
+
+If you want a Go scaffold with framework templates:
+
+```bash
+kinnoo init chatgpt --language go my-go-chat-agent
+kinnoo init mcp-server --language go my-go-mcp-server
 ```
 
 Follow-up command you usually run next:
@@ -114,6 +123,26 @@ If you want policy enforcement plus hard execution limits:
 ```bash
 kinnoo run ./my-agent "summarize this" --enforce-policy --max-seconds 30 --max-memory-mb 512
 ```
+
+Go source vs binary run behavior:
+
+- Source mode: if selected entrypoint ends with `.go` (for example `main.go`), `kinnoo run` uses Go source execution semantics and preflight checks Go toolchain/runtime constraints.
+- Binary mode: if selected entrypoint does not end with `.go`, `kinnoo run` treats it as a precompiled executable and preflight runs binary compatibility checks.
+
+Go preflight status and remediation model:
+
+- Per-check statuses:
+  - `- [PASS] ...` means the check passed.
+  - `- [WARN] ...` means non-blocking warning (run may still proceed).
+  - `- [FAIL] ...` means blocking failure.
+- Final summary:
+  - pass: `Ready to run` and `Preflight result: PASS`
+  - fail: `Not ready to run`, `Remediation summary:`, and `Preflight result: FAIL`
+- Common Go remediations documented by preflight output:
+  - missing toolchain (source mode): install Go or configure `runtime.path`
+  - wrong host compatibility: rebuild with host `GOOS` and `GOARCH`
+  - unsupported executable format: rebuild to Mach-O/ELF/PE
+  - non-executable artifact: `chmod +x <entrypoint>`
 
 ### test
 

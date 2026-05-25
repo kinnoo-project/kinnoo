@@ -246,9 +246,12 @@ def main():
             "Examples:\n"
             "  kinnoo init chatgpt my-agent\n"
             "  kinnoo init gemini --language go my-go-gemini-agent\n"
+            "  kinnoo init chatgpt --language go my-go-chatgpt-agent\n"
+            "  kinnoo init claude-chat --language go my-go-claude-agent\n"
+            "  kinnoo init mcp-server --language go my-go-mcp-server\n"
             "  kinnoo init no-framework --language python my-bare-agent\n"
             "  kinnoo init openclaw --language typescript my-openclaw-agent\n"
-            "  kinnoo init mcp-client my-mcp-client"
+            "  kinnoo init mcp-client --language go my-go-mcp-client"
         ),
     )
     init_parser.add_argument(
@@ -256,23 +259,26 @@ def main():
         nargs="?",
         help=(
             "Framework template. Currently supported:\n"
-            "  gemini         - Google Gemini API agent\n"
-            "  chatgpt        - OpenAI ChatGPT API agent\n"
-            "  claude-chat    - Anthropic Claude API agent\n"
-            "  pydantic-ai    - PydanticAI structured agent with tools\n"
-            "  langgraph      - LangGraph state machine agent\n"
-            "  openai-agents  - OpenAI Agents SDK with handoffs\n"
-            "  mcp-client     - Model Context Protocol client\n"
-            "  mcp-server     - Model Context Protocol server\n"
-            "  openclaw       - OpenClaw Node.js daemon agent\n"
-            "  no-framework   - Barebones agent template - language should be specified (default: python)"
+            "  gemini         - Google Gemini API agent (python/javascript/typescript/go)\n"
+            "  chatgpt        - OpenAI ChatGPT API agent (python/javascript/typescript/go)\n"
+            "  claude-chat    - Anthropic Claude API agent (python/javascript/typescript/go)\n"
+            "  pydantic-ai    - PydanticAI structured agent with tools (python)\n"
+            "  langgraph      - LangGraph state machine agent (python/javascript/typescript)\n"
+            "  openai-agents  - OpenAI Agents SDK with handoffs (python)\n"
+            "  mcp-client     - Model Context Protocol client (python/javascript/typescript/go)\n"
+            "  mcp-server     - Model Context Protocol server (python/javascript/typescript/go)\n"
+            "  openclaw       - OpenClaw Node.js daemon agent (javascript/typescript)\n"
+            "  no-framework   - Barebones agent template (python/javascript/typescript/go)"
         ),
     )
     init_parser.add_argument("agent_name", nargs="?", help="Name of the agent to create")
     init_parser.add_argument(
         "--language",
         metavar="LANGUAGE",
-        help="(Optional) Scaffold language (if supported for the specified framework): python, javascript, typescript, go",
+        help=(
+            "(Optional) Scaffold language: python, javascript, typescript, go. "
+            "Go is supported for gemini, chatgpt, claude-chat, mcp-client, mcp-server, and no-framework."
+        ),
     )
     init_parser.add_argument(
         "--minimal",
