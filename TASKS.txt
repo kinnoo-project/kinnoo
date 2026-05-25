@@ -3456,7 +3456,7 @@ tasks:
   - 'step5: Add run/preflight integration tests for basic Go source agents.'
   dependencies: [task174]
   tests: [test81]
-  status: not-started
+  status: needs-review
 
 - id: task176
   title: Add compiled Go binary execution and architecture-aware preflight checks
