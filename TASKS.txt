@@ -3478,7 +3478,7 @@ tasks:
   - 'step5: Add tests for compatible binary success path and mismatch failure paths (wrong arch, unsupported format, non-executable artifact).' 
   dependencies: [task175]
   tests: [test82]
-  status: not-started
+  status: needs-review
 
 - id: task177
   title: Finalize UX/docs/help text for Go agent support and preflight diagnostics
