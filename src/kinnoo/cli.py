@@ -245,6 +245,7 @@ def main():
         epilog=(
             "Examples:\n"
             "  kinnoo init chatgpt my-agent\n"
+            "  kinnoo init gemini --language go my-go-gemini-agent\n"
             "  kinnoo init no-framework --language python my-bare-agent\n"
             "  kinnoo init openclaw --language typescript my-openclaw-agent\n"
             "  kinnoo init mcp-client my-mcp-client"
@@ -271,7 +272,7 @@ def main():
     init_parser.add_argument(
         "--language",
         metavar="LANGUAGE",
-        help="(Optional) Scaffold language (if supported for the specified framework): python, javascript, typescript",
+        help="(Optional) Scaffold language (if supported for the specified framework): python, javascript, typescript, go",
     )
     init_parser.add_argument(
         "--minimal",
@@ -1007,9 +1008,9 @@ def main():
             )
             sys.exit(1)
 
-        if resolved_language is not None and resolved_language not in {"python", "javascript", "typescript"}:
+        if resolved_language is not None and resolved_language not in {"python", "javascript", "typescript", "go"}:
             print(
-                "Error: --language must be one of: python, javascript, typescript.",
+                "Error: --language must be one of: python, javascript, typescript, go.",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -1021,13 +1022,13 @@ def main():
                 resolved_framework, resolved_language, agent_name = interactive_init_wizard(Path.cwd())
             else:
                 print(
-                    "Usage: kinnoo init [framework] [--language {python,javascript,typescript}] <agent-name>",
+                    "Usage: kinnoo init [framework] [--language {python,javascript,typescript,go}] <agent-name>",
                     file=sys.stderr,
                 )
                 sys.exit(1)
 
         if not agent_name:
-            print("Usage: kinnoo init [framework] [--language {python,javascript,typescript}] <agent-name>", file=sys.stderr)
+            print("Usage: kinnoo init [framework] [--language {python,javascript,typescript,go}] <agent-name>", file=sys.stderr)
             sys.exit(1)
         if not re.match(NAME_PATTERN, agent_name):
             print(f"Error: Invalid agent name '{agent_name}'. Must match pattern: {NAME_PATTERN}", file=sys.stderr)

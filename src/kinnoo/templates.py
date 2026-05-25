@@ -116,6 +116,370 @@ python main.py "Hello Claude!"
 ```
 '''
 
+GO_RUN_TEMPLATE = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+func main() {
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Printf("Hello from Go agent. Input: %s\\n", inputText)
+}
+'''
+
+GO_MOD_TEMPLATE = '''module {module_name}
+
+go 1.22
+'''
+
+GO_README_TEMPLATE = '''# {name}
+
+This is a Kinnoo agent scaffolded with `kinnoo init --language go`.
+
+## Prerequisites
+- Go 1.22+ (matches `runtime.version` in `kinnoo.yaml`)
+
+## Run Example
+```
+go run main.go "hello from go"
+```
+'''
+
+GEMINI_GO_MAIN = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+const geminiGoModel = "gemini-2.5-flash-lite"
+
+func runGemini(inputText string) string {
+  // TODO: Replace with real Gemini API call wiring.
+  return fmt.Sprintf("[gemini-go template] model=%s input=%s", geminiGoModel, inputText)
+}
+
+func main() {
+  apiKey := os.Getenv("GOOGLE_API_KEY")
+  if apiKey == "" {
+    fmt.Println("Set GOOGLE_API_KEY before running this template.")
+    return
+  }
+
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Println(runGemini(inputText))
+}
+'''
+
+GEMINI_GO_README = '''# {name}
+
+This scaffold targets a Gemini-style request/response flow in Go.
+
+## Setup
+- Set your API key: `export GOOGLE_API_KEY=your-key-here`
+
+## Run Example
+```
+go run main.go "Hello Gemini from Go"
+```
+'''
+
+CHATGPT_GO_MAIN = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+const chatgptGoModel = "gpt-5-nano"
+
+func runChatGPT(inputText string) string {
+  // TODO: Replace with real OpenAI Chat Completions or Responses API call wiring.
+  return fmt.Sprintf("[chatgpt-go template] model=%s input=%s", chatgptGoModel, inputText)
+}
+
+func main() {
+  apiKey := os.Getenv("OPENAI_API_KEY")
+  if apiKey == "" {
+    fmt.Println("Set OPENAI_API_KEY before running this template.")
+    return
+  }
+
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Println(runChatGPT(inputText))
+}
+'''
+
+CHATGPT_GO_README = '''# {name}
+
+This scaffold targets a ChatGPT-compatible request/response flow in Go.
+
+## Setup
+- Set your API key: `export OPENAI_API_KEY=your-key-here`
+
+## Run Example
+```
+go run main.go "Hello ChatGPT from Go"
+```
+'''
+
+CLAUDE_GO_MAIN = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+const claudeGoModel = "claude-sonnet-4-20250514"
+
+func runClaude(inputText string) string {
+  // TODO: Replace with real Anthropic Messages API call wiring.
+  return fmt.Sprintf("[claude-chat-go template] model=%s input=%s", claudeGoModel, inputText)
+}
+
+func main() {
+  apiKey := os.Getenv("ANTHROPIC_API_KEY")
+  if apiKey == "" {
+    fmt.Println("Set ANTHROPIC_API_KEY before running this template.")
+    return
+  }
+
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Println(runClaude(inputText))
+}
+'''
+
+CLAUDE_GO_README = '''# {name}
+
+This scaffold targets a Claude-compatible request/response flow in Go.
+
+## Setup
+- Set your API key: `export ANTHROPIC_API_KEY=your-key-here`
+
+## Run Example
+```
+go run main.go "Hello Claude from Go"
+```
+'''
+
+MCP_SERVER_GO_MAIN = '''package main
+
+import (
+  "bufio"
+  "encoding/json"
+  "fmt"
+  "os"
+)
+
+type rpcRequest struct {
+  JSONRPC string                 `json:"jsonrpc"`
+  ID      interface{}            `json:"id"`
+  Method  string                 `json:"method"`
+  Params  map[string]interface{} `json:"params"`
+}
+
+func okResponse(id interface{}, result interface{}) map[string]interface{} {
+  return map[string]interface{}{
+    "jsonrpc": "2.0",
+    "id":      id,
+    "result":  result,
+  }
+}
+
+func errorResponse(id interface{}, code int, message string) map[string]interface{} {
+  return map[string]interface{}{
+    "jsonrpc": "2.0",
+    "id":      id,
+    "error": map[string]interface{}{
+      "code":    code,
+      "message": message,
+    },
+  }
+}
+
+func handleRequest(req rpcRequest) map[string]interface{} {
+  switch req.Method {
+  case "initialize":
+    return okResponse(req.ID, map[string]interface{}{
+      "protocolVersion": "2024-11-05",
+      "serverInfo": map[string]interface{}{
+        "name":    "kinnoo-mcp-server-template-go",
+        "version": "0.1.0",
+      },
+      "capabilities": map[string]interface{}{
+        "tools": map[string]interface{}{"listChanged": false},
+      },
+    })
+  case "tools/list":
+    return okResponse(req.ID, map[string]interface{}{
+      "tools": []map[string]interface{}{
+        {
+          "name":        "echo",
+          "description": "Echo back input text.",
+          "inputSchema": map[string]interface{}{
+            "type": "object",
+            "properties": map[string]interface{}{
+              "text": map[string]interface{}{"type": "string"},
+            },
+            "required": []string{"text"},
+          },
+        },
+      },
+    })
+  case "tools/call":
+    if req.Params == nil {
+      return errorResponse(req.ID, -32602, "Missing params")
+    }
+    toolName, _ := req.Params["name"].(string)
+    if toolName != "echo" {
+      return errorResponse(req.ID, -32601, "Unknown tool")
+    }
+
+    arguments, _ := req.Params["arguments"].(map[string]interface{})
+    text, _ := arguments["text"].(string)
+    return okResponse(req.ID, map[string]interface{}{
+      "content": []map[string]interface{}{
+        {
+          "type": "text",
+          "text": fmt.Sprintf("echo: %s", text),
+        },
+      },
+    })
+  default:
+    return errorResponse(req.ID, -32601, "Method not found")
+  }
+}
+
+func main() {
+  scanner := bufio.NewScanner(os.Stdin)
+  writer := bufio.NewWriter(os.Stdout)
+  defer writer.Flush()
+
+  for scanner.Scan() {
+    raw := scanner.Bytes()
+    if len(raw) == 0 {
+      continue
+    }
+
+    var req rpcRequest
+    if err := json.Unmarshal(raw, &req); err != nil {
+      payload, _ := json.Marshal(errorResponse(nil, -32700, fmt.Sprintf("Parse error: %v", err)))
+      _, _ = writer.Write(payload)
+      _, _ = writer.WriteString("\\n")
+      _ = writer.Flush()
+      continue
+    }
+
+    payload, _ := json.Marshal(handleRequest(req))
+    _, _ = writer.Write(payload)
+    _, _ = writer.WriteString("\\n")
+    _ = writer.Flush()
+  }
+}
+'''
+
+MCP_SERVER_GO_README = '''# {name}
+
+This scaffold demonstrates a minimal Go MCP server over stdio.
+
+## Run Server
+```
+go run main.go
+```
+
+## Quick Handshake Smoke Test
+```
+printf '{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{}}}}\n' | go run main.go
+```
+'''
+
+MCP_CLIENT_GO_MAIN = '''package main
+
+import (
+  "bufio"
+  "fmt"
+  "os"
+  "os/exec"
+  "strings"
+)
+
+func main() {
+  serverCmd := strings.TrimSpace(os.Getenv("MCP_SERVER_CMD"))
+  if serverCmd == "" {
+    fmt.Println("Set MCP_SERVER_CMD to an MCP stdio server executable.")
+    return
+  }
+
+  serverArgsRaw := strings.TrimSpace(os.Getenv("MCP_SERVER_ARGS"))
+  serverArgs := []string{}
+  if serverArgsRaw != "" {
+    serverArgs = strings.Fields(serverArgsRaw)
+  }
+
+  cmd := exec.Command(serverCmd, serverArgs...)
+  stdin, err := cmd.StdinPipe()
+  if err != nil {
+    fmt.Printf("[mcp-client-go template] stdin pipe error: %v\\n", err)
+    return
+  }
+  stdout, err := cmd.StdoutPipe()
+  if err != nil {
+    fmt.Printf("[mcp-client-go template] stdout pipe error: %v\\n", err)
+    return
+  }
+
+  if err := cmd.Start(); err != nil {
+    fmt.Printf("[mcp-client-go template] failed to start server: %v\\n", err)
+    return
+  }
+
+  _, _ = stdin.Write([]byte("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}\\n"))
+  _ = stdin.Close()
+
+  scanner := bufio.NewScanner(stdout)
+  if scanner.Scan() {
+    fmt.Printf("[mcp-client-go template] initialize response: %s\\n", scanner.Text())
+  } else {
+    fmt.Println("[mcp-client-go template] no response from MCP server")
+  }
+
+  _ = cmd.Process.Kill()
+}
+'''
+
+MCP_CLIENT_GO_README = '''# {name}
+
+This scaffold demonstrates a minimal Go MCP client invocation path.
+
+## Setup
+- Export command for your MCP stdio server:
+  - `export MCP_SERVER_CMD=python`
+  - `export MCP_SERVER_ARGS='path/to/server.py'`
+
+## Run
+```
+go run main.go
+```
+'''
+
 PYDANTIC_AI_RUN_PY = '''import os
 import sys
 import asyncio

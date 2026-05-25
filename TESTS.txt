@@ -1574,7 +1574,7 @@ tests:
   - feature: feature19
     ac: AC6
   automated: true
-  automation_path: tests/client_cli_init/test_go_init_matrix.py
+  automation_path: tests/client_cli_init/test_init_go_feature19.py
 
 - id: test80
   title: feature19 validator accepts Go runtime and main.go defaults

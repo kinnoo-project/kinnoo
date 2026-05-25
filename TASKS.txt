@@ -3412,7 +3412,7 @@ tasks:
   - 'step6: Add/extend CLI init tests for all supported Go framework combinations.'
   dependencies: [task5, task6, task7]
   tests: [test79]
-  status: not-started
+  status: needs-review
 
 - id: task174
   title: Extend manifest schema and validator for Go runtime conventions
