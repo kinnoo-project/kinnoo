@@ -80,6 +80,8 @@ Kinnoo supports Go scaffolding with these framework combinations:
 - `kinnoo init mcp-server --language go <agent-name>`
 - `kinnoo init no-framework --language go <agent-name>`
 
+Go scaffolding uses the local Go toolchain to run `go mod init <agent-name>` during `kinnoo init`.
+
 `kinnoo run` and `kinnoo run --preflight` support two Go execution modes:
 
 - Go source mode: entrypoint ends with `.go` (typically `main.go`), and Kinnoo checks Go toolchain/runtime constraints.

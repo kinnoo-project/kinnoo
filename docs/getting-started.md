@@ -67,6 +67,8 @@ Kinnoo supports Go scaffolds with these framework combinations:
 - `kinnoo init mcp-server --language go my-go-mcp-server`
 - `kinnoo init no-framework --language go my-go-agent`
 
+Under the hood, Go scaffolding runs `go mod init <agent-name>` during init, so Go must be installed locally.
+
 ## 5) Run Locally
 
 Once your agent is initialized, you can run it locally by typing:
@@ -163,6 +165,9 @@ We hope that Kinnoo makes the agent developer and runtime experience simpler, mo
 - **Manifest validation errors**: run `kinnoo inspect ./my-chat-agent` and fix required `kinnoo.yaml` fields.
 - **Provider auth errors**: set the framework-specific API key expected by your agent template.
 - **Go source preflight fails with missing toolchain**: install Go or configure `runtime.path` to a valid Go executable.
+	- macOS: `brew install go`
+	- Linux: use your distro package manager (for example `apt install golang-go`) or install from `https://go.dev/dl/`
+	- Windows: `winget install GoLang.Go`
 - **Go binary preflight fails on OS/architecture mismatch**: rebuild binary for host `GOOS`/`GOARCH`.
 - **Go binary preflight fails on unsupported format**: rebuild to a supported executable format (Mach-O/ELF/PE).
 - **Go binary preflight fails on non-executable file**: set execute permission (`chmod +x <entrypoint>`).

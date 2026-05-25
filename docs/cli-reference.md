@@ -60,6 +60,8 @@ kinnoo init chatgpt --language go my-go-chat-agent
 kinnoo init mcp-server --language go my-go-mcp-server
 ```
 
+Go scaffolding invokes `go mod init <agent-name>` under the hood. If Go is not installed, init exits with OS-specific installation instructions.
+
 Follow-up command you usually run next:
 
 ```bash

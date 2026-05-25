@@ -3,8 +3,11 @@
 Agent scaffolding logic for kinnoo init.
 """
 import argparse
-import sys
 import os
+import platform
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 from kinnoo.templates import (
@@ -12,7 +15,7 @@ from kinnoo.templates import (
     GEMINI_RUN_PY, GEMINI_REQUIREMENTS, GEMINI_README,
     CHATGPT_RUN_PY, CHATGPT_REQUIREMENTS, CHATGPT_README,
     CLAUDE_RUN_PY, CLAUDE_REQUIREMENTS, CLAUDE_README,
-    GO_RUN_TEMPLATE, GO_MOD_TEMPLATE, GO_README_TEMPLATE,
+    GO_RUN_TEMPLATE, GO_README_TEMPLATE,
     GEMINI_GO_MAIN, GEMINI_GO_README,
     CHATGPT_GO_MAIN, CHATGPT_GO_README,
     CLAUDE_GO_MAIN, CLAUDE_GO_README,
@@ -295,6 +298,68 @@ KNOWN_FRAMEWORK_DEFAULT_MODELS = {
     "pydantic-ai": "openai:gpt-4o-mini",
 }
 
+
+def _go_install_instructions() -> str:
+    """Return OS-specific Go installation instructions for first-time setup."""
+    system = platform.system().lower()
+    if system == "darwin":
+        return (
+            "Install Go on macOS:\n"
+            "  1) brew install go\n"
+            "  2) or download an installer from https://go.dev/dl/\n"
+            "  3) verify with: go version"
+        )
+    if system == "linux":
+        return (
+            "Install Go on Linux:\n"
+            "  1) Use your package manager (for example: apt install golang-go)\n"
+            "  2) or install from https://go.dev/dl/\n"
+            "  3) verify with: go version"
+        )
+    if system == "windows":
+        return (
+            "Install Go on Windows:\n"
+            "  1) winget install GoLang.Go\n"
+            "  2) or install from https://go.dev/dl/\n"
+            "  3) open a new terminal and run: go version"
+        )
+    return (
+        "Install Go from https://go.dev/dl/ and ensure `go` is available in PATH, "
+        "then verify with: go version"
+    )
+
+
+def _require_go_toolchain_for_init() -> str:
+    """Return the go executable path or raise an actionable setup error."""
+    go_executable = shutil.which("go")
+    if go_executable is not None:
+        return go_executable
+    raise RuntimeError(
+        "Go toolchain is required to scaffold Go agents because Kinnoo runs `go mod init` "
+        "during `kinnoo init --language go`.\n"
+        f"{_go_install_instructions()}"
+    )
+
+
+def _initialize_go_module(agent_dir: Path, module_name: str, go_executable: str) -> None:
+    """Initialize go.mod using the local Go toolchain."""
+    result = subprocess.run(
+        [go_executable, "mod", "init", module_name],
+        cwd=agent_dir,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return
+
+    details = result.stderr.strip() or result.stdout.strip() or "unknown go mod init error"
+    raise RuntimeError(
+        "Failed to initialize Go module with `go mod init`.\n"
+        f"Directory: {agent_dir}\n"
+        f"Command: {go_executable} mod init {module_name}\n"
+        f"Details: {details}"
+    )
+
 def _normalize_language(language: Optional[str]) -> str | None:
     if language is None:
         return None
@@ -415,6 +480,10 @@ def init_agent(
             )
 
     effective_language = normalized_language or ("javascript" if selected_framework == "openclaw" else "python")
+    go_executable: str | None = None
+    if effective_language == "go":
+        go_executable = _require_go_toolchain_for_init()
+
     entrypoint_name = {
         "python": "main.py",
         "javascript": "index.js",
@@ -506,7 +575,6 @@ def init_agent(
     elif selected_framework in go_framework_templates:
         run_template, readme_template = go_framework_templates[selected_framework]
         (agent_dir / "main.go").write_text(run_template)
-        (agent_dir / "go.mod").write_text(GO_MOD_TEMPLATE.format(module_name=name))
         readme_text = _standardize_readme(
             readme_template.format(name=name),
             entrypoint="main.go",
@@ -545,7 +613,6 @@ def init_agent(
         (agent_dir / "README.md").write_text(readme_text)
     elif effective_language == "go":
         (agent_dir / "main.go").write_text(GO_RUN_TEMPLATE)
-        (agent_dir / "go.mod").write_text(GO_MOD_TEMPLATE.format(module_name=name))
         readme_text = _standardize_readme(
             GO_README_TEMPLATE.format(name=name),
             entrypoint="main.go",
@@ -575,6 +642,10 @@ def init_agent(
         for folder_name in ("tools", "prompts", "evals", "tests", "data"):
             (agent_dir / folder_name).mkdir()
         (agent_dir / ".gitignore").write_text(gitignore_template)
+
+    if effective_language == "go":
+        assert go_executable is not None
+        _initialize_go_module(agent_dir, name, go_executable)
 
 def main():
     parser = argparse.ArgumentParser(

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import platform
 from pathlib import Path
 
 import pytest
@@ -75,6 +77,29 @@ _NON_GO_ENTRYPOINT_FILES = [
 ]
 
 
+def _build_fake_go_env(tmp_path: Path) -> dict[str, str]:
+    fake_bin = tmp_path / "fake-go-bin"
+    fake_bin.mkdir(exist_ok=True)
+    fake_go = fake_bin / "go"
+    fake_go.write_text(
+        "#!/bin/sh\n"
+        "if [ \"$1\" = \"mod\" ] && [ \"$2\" = \"init\" ]; then\n"
+        "  module_name=$3\n"
+        "  printf 'module %s\\n\\ngo 1.22\\n' \"$module_name\" > go.mod\n"
+        "  exit 0\n"
+        "fi\n"
+        "echo 'unsupported fake go command' >&2\n"
+        "exit 1\n",
+        encoding="utf-8",
+    )
+    fake_go.chmod(0o755)
+
+    env = os.environ.copy()
+    existing_path = env.get("PATH", "")
+    env["PATH"] = f"{fake_bin}{os.pathsep}{existing_path}" if existing_path else str(fake_bin)
+    return env
+
+
 @pytest.mark.regression_integration
 @pytest.mark.client_cli_init
 @pytest.mark.client_cli
@@ -90,7 +115,7 @@ def test_feature19_test79_go_init_matrix(case: dict[str, object], tmp_path: Path
         args.append(str(framework))
     args.extend(["--language", "go", agent_name])
 
-    result = run_kinnoo_cli(args, cwd=tmp_path)
+    result = run_kinnoo_cli(args, cwd=tmp_path, env=_build_fake_go_env(tmp_path))
     assert result.returncode == 0, result.stderr
 
     agent_dir = tmp_path / agent_name
@@ -139,3 +164,32 @@ def test_feature19_test79_go_init_matrix(case: dict[str, object], tmp_path: Path
     is_valid, errors = validate(str(manifest_path))
     assert is_valid is True, errors
     assert errors == []
+
+
+@pytest.mark.regression_integration
+@pytest.mark.client_cli_init
+@pytest.mark.client_cli
+@pytest.mark.integration
+def test_go_init_requires_go_toolchain_with_os_specific_install_hint(tmp_path: Path) -> None:
+    agent_name = "feature19-go-missing-toolchain"
+    env = os.environ.copy()
+    env["PATH"] = ""
+
+    result = run_kinnoo_cli(["init", "--language", "go", agent_name], cwd=tmp_path, env=env)
+    assert result.returncode != 0
+
+    output = f"{result.stdout}\n{result.stderr}"
+    assert "Go toolchain is required to scaffold Go agents" in output
+    assert "kinnoo init --language go" in output
+
+    host_os = platform.system().lower()
+    if host_os == "darwin":
+        assert "brew install go" in output
+    elif host_os == "linux":
+        assert "apt install golang-go" in output
+    elif host_os == "windows":
+        assert "winget install GoLang.Go" in output
+    else:
+        assert "https://go.dev/dl/" in output
+
+    assert not (tmp_path / agent_name).exists()

@@ -133,11 +133,6 @@ func main() {
 }
 '''
 
-GO_MOD_TEMPLATE = '''module {module_name}
-
-go 1.22
-'''
-
 GO_README_TEMPLATE = '''# {name}
 
 This is a Kinnoo agent scaffolded with `kinnoo init --language go`.

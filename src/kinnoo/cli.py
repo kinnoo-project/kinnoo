@@ -1053,6 +1053,12 @@ def main():
         except FileExistsError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        except RuntimeError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
 
 
     elif args.command == "run":
