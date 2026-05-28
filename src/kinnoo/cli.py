@@ -979,7 +979,18 @@ def main():
         run_pass_through_args = sys.argv[separator_index + 1 :]
         args = parser.parse_args(sys.argv[1:separator_index])
     else:
-        args = parser.parse_args()
+        args, unknown_args = parser.parse_known_args()
+        if unknown_args:
+            if (
+                len(sys.argv) > 1
+                and sys.argv[1] == "init"
+                and getattr(args, "agent_name", None) is None
+                and len(unknown_args) == 1
+                and not unknown_args[0].startswith("-")
+            ):
+                args.agent_name = unknown_args[0]
+            else:
+                parser.error(f"unrecognized arguments: {' '.join(unknown_args)}")
 
     if args.command == "init":
         supported_frameworks = {

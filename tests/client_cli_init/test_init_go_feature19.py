@@ -106,7 +106,7 @@ def _build_fake_go_env(tmp_path: Path) -> dict[str, str]:
         "fi\n"
         "if [ \"$1\" = \"mod\" ] && [ \"$2\" = \"edit\" ]; then\n"
         "  requirement=${3#-require=}\n"
-        "  requirement=${requirement/@/ }\n"
+        "  requirement=$(printf '%s' \"$requirement\" | tr '@' ' ')\n"
         "  if [ ! -f go.mod ]; then\n"
         "    echo 'go.mod not initialized' >&2\n"
         "    exit 1\n"
