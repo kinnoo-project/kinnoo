@@ -515,7 +515,7 @@ def _collect_go_entrypoint_contract_errors(
     if not runtime_language_found or runtime_language_value != "go":
         return []
 
-    disallowed_script_suffixes = {".py", ".js", ".mjs", ".cjs", ".ts"}
+    disallowed_script_suffixes = {".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
     errors: list[str] = []
     contract_mode = entrypoint_selection.get("contract_mode", "entrypoint")
     declared_entrypoints = entrypoint_selection.get("declared_entrypoints", [])
