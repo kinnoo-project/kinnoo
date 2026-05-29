@@ -3,27 +3,63 @@
 Agent scaffolding logic for kinnoo init.
 """
 import argparse
-import sys
 import os
+import platform
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 from kinnoo.templates import (
-    KINNOO_YAML_TEMPLATE, MCP_SERVER_KINNOO_YAML_TEMPLATE, OPENCLAW_KINNOO_YAML_TEMPLATE, RUN_PY_TEMPLATE, REQUIREMENTS_TXT_TEMPLATE, README_MD_TEMPLATE,
-    GEMINI_RUN_PY, GEMINI_REQUIREMENTS, GEMINI_README,
-    CHATGPT_RUN_PY, CHATGPT_REQUIREMENTS, CHATGPT_README,
-    CLAUDE_RUN_PY, CLAUDE_REQUIREMENTS, CLAUDE_README,
-    PYDANTIC_AI_RUN_PY, PYDANTIC_AI_REQUIREMENTS, PYDANTIC_AI_README,
-    LANGGRAPH_RUN_PY, LANGGRAPH_REQUIREMENTS, LANGGRAPH_README,
-    OPENAI_AGENTS_RUN_PY, OPENAI_AGENTS_REQUIREMENTS, OPENAI_AGENTS_README,
-    MCP_CLIENT_RUN_PY, MCP_CLIENT_REQUIREMENTS, MCP_CLIENT_README,
-    MCP_SERVER_RUN_PY, MCP_SERVER_REQUIREMENTS, MCP_SERVER_README,
-    OPENCLAW_PACKAGE_JSON_TEMPLATE,
-    OPENCLAW_JSON_TEMPLATE,
-    OPENCLAW_INDEX_MJS_TEMPLATE,
-    OPENCLAW_DEFAULT_SKILL_TEMPLATE,
+    CHATGPT_GO_MAIN,
+    CHATGPT_GO_README,
+    CHATGPT_README,
+    CHATGPT_REQUIREMENTS,
+    CHATGPT_RUN_PY,
+    CLAUDE_GO_MAIN,
+    CLAUDE_GO_README,
+    CLAUDE_README,
+    CLAUDE_REQUIREMENTS,
+    CLAUDE_RUN_PY,
+    GEMINI_GO_MAIN,
+    GEMINI_GO_README,
+    GEMINI_README,
+    GEMINI_REQUIREMENTS,
+    GEMINI_RUN_PY,
+    GO_README_TEMPLATE,
+    GO_RUN_TEMPLATE,
+    KINNOO_YAML_TEMPLATE,
+    LANGGRAPH_README,
+    LANGGRAPH_REQUIREMENTS,
+    LANGGRAPH_RUN_PY,
+    MCP_CLIENT_GO_MAIN,
+    MCP_CLIENT_GO_README,
+    MCP_CLIENT_README,
+    MCP_CLIENT_REQUIREMENTS,
+    MCP_CLIENT_RUN_PY,
+    MCP_SERVER_GO_MAIN,
+    MCP_SERVER_GO_README,
+    MCP_SERVER_KINNOO_YAML_TEMPLATE,
+    MCP_SERVER_README,
+    MCP_SERVER_REQUIREMENTS,
+    MCP_SERVER_RUN_PY,
+    OPENAI_AGENTS_README,
+    OPENAI_AGENTS_REQUIREMENTS,
+    OPENAI_AGENTS_RUN_PY,
     OPENCLAW_AGENTS_MD_TEMPLATE,
-    OPENCLAW_SOUL_MD_TEMPLATE,
+    OPENCLAW_DEFAULT_SKILL_TEMPLATE,
+    OPENCLAW_INDEX_MJS_TEMPLATE,
+    OPENCLAW_JSON_TEMPLATE,
+    OPENCLAW_KINNOO_YAML_TEMPLATE,
+    OPENCLAW_PACKAGE_JSON_TEMPLATE,
     OPENCLAW_README_TEMPLATE,
+    OPENCLAW_SOUL_MD_TEMPLATE,
+    PYDANTIC_AI_README,
+    PYDANTIC_AI_REQUIREMENTS,
+    PYDANTIC_AI_RUN_PY,
+    README_MD_TEMPLATE,
+    REQUIREMENTS_TXT_TEMPLATE,
+    RUN_PY_TEMPLATE,
 )
 
 try:
@@ -50,6 +86,7 @@ SUPPORTED_LANGUAGES = [
     "javascript",
     "ts",
     "typescript",
+    "go",
 ]
 
 _LANGUAGE_ALIASES = {
@@ -58,19 +95,20 @@ _LANGUAGE_ALIASES = {
     "javascript": "javascript",
     "ts": "typescript",
     "typescript": "typescript",
+    "go": "go",
 }
 
 _FRAMEWORK_LANGUAGE_COMPATIBILITY = {
-    "gemini": {"python", "javascript", "typescript"},
-    "chatgpt": {"python", "javascript", "typescript"},
-    "claude-chat": {"python", "javascript", "typescript"},
+    "gemini": {"python", "javascript", "typescript", "go"},
+    "chatgpt": {"python", "javascript", "typescript", "go"},
+    "claude-chat": {"python", "javascript", "typescript", "go"},
     "pydantic-ai": {"python"},
     "langgraph": {"python", "javascript", "typescript"},
     "openai-agents": {"python"},
-    "mcp-client": {"python", "javascript", "typescript"},
-    "mcp-server": {"python", "javascript", "typescript"},
+    "mcp-client": {"python", "javascript", "typescript", "go"},
+    "mcp-server": {"python", "javascript", "typescript", "go"},
     "openclaw": {"javascript", "typescript"},
-    "no-framework": {"python", "javascript", "typescript"},
+    "no-framework": {"python", "javascript", "typescript", "go"},
 }
 
 _JS_RUN_TEMPLATE = """const inputText = process.argv[2] || '';
@@ -173,6 +211,22 @@ coverage/
 .env.development.local
 """
 
+_GITIGNORE_GO = """# --- Kinnoo & Agent Ops ---
+.kinnoo/
+.env
+*.pem
+
+# --- Go Build Outputs ---
+bin/
+dist/
+*.test
+*.out
+*.prof
+
+# --- Environment ---
+.DS_Store
+"""
+
 _GITIGNORE_OPENCLAW = """--- OpenClaw Core Privacy ---
 memory/              # 🛡️ CRITICAL: Ignores all daily YYYY-MM-DD.md logs
 .dreams/             # Experimental background consolidation logs
@@ -271,6 +325,92 @@ KNOWN_FRAMEWORK_DEFAULT_MODELS = {
     "pydantic-ai": "openai:gpt-4o-mini",
 }
 
+GO_MCP_SDK_MODULE = "github.com/modelcontextprotocol/go-sdk"
+GO_MCP_SDK_VERSION = "v1.4.1"
+
+
+def _go_install_instructions() -> str:
+    """Return OS-specific Go installation instructions for first-time setup."""
+    system = platform.system().lower()
+    if system == "darwin":
+        return (
+            "Install Go on macOS:\n"
+            "  1) brew install go\n"
+            "  2) or download an installer from https://go.dev/dl/\n"
+            "  3) verify with: go version"
+        )
+    if system == "linux":
+        return (
+            "Install Go on Linux:\n"
+            "  1) Use your package manager (for example: apt install golang-go)\n"
+            "  2) or install from https://go.dev/dl/\n"
+            "  3) verify with: go version"
+        )
+    if system == "windows":
+        return (
+            "Install Go on Windows:\n"
+            "  1) winget install GoLang.Go\n"
+            "  2) or install from https://go.dev/dl/\n"
+            "  3) open a new terminal and run: go version"
+        )
+    return (
+        "Install Go from https://go.dev/dl/ and ensure `go` is available in PATH, "
+        "then verify with: go version"
+    )
+
+
+def _require_go_toolchain_for_init() -> str:
+    """Return the go executable path or raise an actionable setup error."""
+    go_executable = shutil.which("go")
+    if go_executable is not None:
+        return go_executable
+    raise RuntimeError(
+        "Go toolchain is required to scaffold Go agents because Kinnoo runs `go mod init` "
+        "during `kinnoo init --language go`.\n"
+        f"{_go_install_instructions()}"
+    )
+
+
+def _initialize_go_module(agent_dir: Path, module_name: str, go_executable: str) -> None:
+    """Initialize go.mod using the local Go toolchain."""
+    result = subprocess.run(
+        [go_executable, "mod", "init", module_name],
+        cwd=agent_dir,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return
+
+    details = result.stderr.strip() or result.stdout.strip() or "unknown go mod init error"
+    raise RuntimeError(
+        "Failed to initialize Go module with `go mod init`.\n"
+        f"Directory: {agent_dir}\n"
+        f"Command: {go_executable} mod init {module_name}\n"
+        f"Details: {details}"
+    )
+
+
+def _pin_go_module_dependency(agent_dir: Path, *, module: str, version: str, go_executable: str) -> None:
+    """Pin a Go module dependency using the Go toolchain."""
+    requirement = f"{module}@{version}"
+    result = subprocess.run(
+        [go_executable, "mod", "edit", f"-require={requirement}"],
+        cwd=agent_dir,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return
+
+    details = result.stderr.strip() or result.stdout.strip() or "unknown go mod edit error"
+    raise RuntimeError(
+        "Failed to pin Go dependency with `go mod edit`.\n"
+        f"Directory: {agent_dir}\n"
+        f"Command: {go_executable} mod edit -require={requirement}\n"
+        f"Details: {details}"
+    )
+
 def _normalize_language(language: Optional[str]) -> str | None:
     if language is None:
         return None
@@ -288,6 +428,30 @@ def _build_node_manifest(name: str, *, entrypoint: str, language: str) -> str:
         f"  language: {language}\n"
         "  version: \">=20\"\n"
         "  type: one-shot\n"
+        "dependencies: []\n"
+        "inputs:\n"
+        "  type: text\n"
+        "outputs:\n"
+        "  type: text\n"
+    )
+
+
+def _build_go_manifest(
+    name: str,
+    *,
+    entrypoint: str = "main.go",
+    runtime_type: str = "one-shot",
+) -> str:
+    return (
+        f"name: {name}\n"
+        "version: 0.1.0\n"
+        "description: \"TODO: Add a short agent description\"\n"
+        "author: \"TODO: Add author name\"\n"
+        f"entrypoint: {entrypoint}\n"
+        "runtime:\n"
+        "  language: go\n"
+        "  version: \">=1.22\"\n"
+        f"  type: {runtime_type}\n"
         "dependencies: []\n"
         "inputs:\n"
         "  type: text\n"
@@ -367,10 +531,15 @@ def init_agent(
             )
 
     effective_language = normalized_language or ("javascript" if selected_framework == "openclaw" else "python")
+    go_executable: str | None = None
+    if effective_language == "go":
+        go_executable = _require_go_toolchain_for_init()
+
     entrypoint_name = {
         "python": "main.py",
         "javascript": "index.js",
         "typescript": "index.ts",
+        "go": "main.go",
     }[effective_language]
 
     agent_dir.mkdir()
@@ -378,8 +547,13 @@ def init_agent(
     # OpenClaw uses a Node.js daemon manifest contract; MCP server uses a dedicated Python mcp-server manifest.
     if selected_framework == "openclaw":
         manifest_content = OPENCLAW_KINNOO_YAML_TEMPLATE.format(name=name)
-    elif selected_framework == "mcp-server":
+    elif selected_framework == "mcp-server" and effective_language == "python":
         manifest_content = MCP_SERVER_KINNOO_YAML_TEMPLATE.format(name=name)
+    elif effective_language == "go":
+        manifest_content = _build_go_manifest(
+            name,
+            runtime_type="mcp-server" if selected_framework == "mcp-server" else "one-shot",
+        )
     elif effective_language in {"javascript", "typescript"}:
         manifest_content = _build_node_manifest(
             name,
@@ -389,7 +563,10 @@ def init_agent(
     else:
         manifest_content = KINNOO_YAML_TEMPLATE.format(name=name)
 
-    if selected_framework is not None and selected_framework not in {"openclaw", "mcp-server"}:
+    if selected_framework is not None and not (
+        selected_framework == "openclaw"
+        or (selected_framework == "mcp-server" and effective_language == "python")
+    ):
         manifest_content += f"framework: {selected_framework}\n"
         default_model = KNOWN_FRAMEWORK_DEFAULT_MODELS.get(selected_framework)
         if default_model is not None:
@@ -404,6 +581,13 @@ def init_agent(
         "openai-agents": (OPENAI_AGENTS_RUN_PY, OPENAI_AGENTS_REQUIREMENTS, OPENAI_AGENTS_README),
         "mcp-client": (MCP_CLIENT_RUN_PY, MCP_CLIENT_REQUIREMENTS, MCP_CLIENT_README),
         "mcp-server": (MCP_SERVER_RUN_PY, MCP_SERVER_REQUIREMENTS, MCP_SERVER_README),
+    }
+    go_framework_templates = {
+        "gemini": (GEMINI_GO_MAIN, GEMINI_GO_README),
+        "chatgpt": (CHATGPT_GO_MAIN, CHATGPT_GO_README),
+        "claude-chat": (CLAUDE_GO_MAIN, CLAUDE_GO_README),
+        "mcp-client": (MCP_CLIENT_GO_MAIN, MCP_CLIENT_GO_README),
+        "mcp-server": (MCP_SERVER_GO_MAIN, MCP_SERVER_GO_README),
     }
 
     # Write files
@@ -429,13 +613,22 @@ def init_agent(
             (agent_dir / "memory").mkdir()
         return
 
-    if selected_framework in framework_templates:
+    if selected_framework in framework_templates and effective_language != "go":
         run_template, requirements_template, readme_template = framework_templates[selected_framework]
         (agent_dir / "main.py").write_text(run_template)
         (agent_dir / "requirements.txt").write_text(requirements_template)
         readme_text = _standardize_readme(
             readme_template.format(name=name),
             entrypoint="main.py",
+            include_folder_table=not minimal,
+        )
+        (agent_dir / "README.md").write_text(readme_text)
+    elif selected_framework in go_framework_templates:
+        run_template, readme_template = go_framework_templates[selected_framework]
+        (agent_dir / "main.go").write_text(run_template)
+        readme_text = _standardize_readme(
+            readme_template.format(name=name),
+            entrypoint="main.go",
             include_folder_table=not minimal,
         )
         (agent_dir / "README.md").write_text(readme_text)
@@ -469,6 +662,14 @@ def init_agent(
             include_folder_table=not minimal,
         )
         (agent_dir / "README.md").write_text(readme_text)
+    elif effective_language == "go":
+        (agent_dir / "main.go").write_text(GO_RUN_TEMPLATE)
+        readme_text = _standardize_readme(
+            GO_README_TEMPLATE.format(name=name),
+            entrypoint="main.go",
+            include_folder_table=not minimal,
+        )
+        (agent_dir / "README.md").write_text(readme_text)
     else:
         (agent_dir / "main.py").write_text(RUN_PY_TEMPLATE)
         (agent_dir / "requirements.txt").write_text(REQUIREMENTS_TXT_TEMPLATE)
@@ -484,6 +685,8 @@ def init_agent(
             gitignore_template = _GITIGNORE_PYTHON
         elif effective_language == "javascript":
             gitignore_template = _GITIGNORE_JAVASCRIPT
+        elif effective_language == "go":
+            gitignore_template = _GITIGNORE_GO
         else:
             gitignore_template = _GITIGNORE_TYPESCRIPT
 
@@ -491,13 +694,24 @@ def init_agent(
             (agent_dir / folder_name).mkdir()
         (agent_dir / ".gitignore").write_text(gitignore_template)
 
+    if effective_language == "go":
+        assert go_executable is not None
+        _initialize_go_module(agent_dir, name, go_executable)
+        if selected_framework in {"mcp-client", "mcp-server"}:
+            _pin_go_module_dependency(
+                agent_dir,
+                module=GO_MCP_SDK_MODULE,
+                version=GO_MCP_SDK_VERSION,
+                go_executable=go_executable,
+            )
+
 def main():
     parser = argparse.ArgumentParser(
         description="Initialize a new Kinnoo agent directory with manifest and templates."
     )
     parser.add_argument("agent_name", nargs="?", help="Name of the agent directory to create.")
     parser.add_argument("--framework", type=str, default=None, help="Optional framework for agent template.")
-    parser.add_argument("--language", type=str, default=None, help="Optional language (python/js/ts) for agent template.")
+    parser.add_argument("--language", type=str, default=None, help="Optional language (python/js/ts/go) for agent template.")
     args = parser.parse_args()
 
     # Print usage if agent_name is missing

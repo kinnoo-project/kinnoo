@@ -539,3 +539,69 @@ features:
   owner: swe-agent
   dependencies: []
   status: completed
+
+- id: feature19
+  title: Go language runtime support for kinnoo init, manifest, and run
+  description: |
+    Add first-class Go language support across the Kinnoo CLI workflow for both source-based
+    and precompiled-binary agents. This includes scaffolding support in `kinnoo init`, manifest
+    support in `kinnoo.yaml`, runtime execution in `kinnoo run`, and language-aware validation in
+    `kinnoo run --preflight`.
+
+    Scope for `kinnoo init`:
+    - `--language go` generates a runnable Go agent skeleton with default entrypoint `main.go`.
+    - `--language go --framework gemini | chatgpt | claude-chat` generates one-shot chat templates
+      in Go that map to the corresponding provider SDK patterns.
+    - `--language go --framework mcp-server` generates a minimal Go MCP server template.
+    - `--language go --framework mcp-client` generates a minimal Go MCP client template.
+
+    Scope for `kinnoo run` and preflight:
+    - `kinnoo run` executes basic Go source agents using `main.go` as the default entrypoint.
+    - `kinnoo run --preflight` validates Go toolchain/runtime expectations for source agents.
+    - `kinnoo run` also executes precompiled Go binaries when declared in manifest entrypoint.
+    - `kinnoo run --preflight` performs binary compatibility checks (OS and architecture match,
+      executable format sanity, executable permissions where applicable) and fails fast with
+      actionable diagnostics when the binary cannot run on the current device.
+
+    Safety and compatibility guidance:
+    - Architecture checks should parse binary metadata (Mach-O/ELF/PE) instead of relying only on
+      filename conventions.
+    - Preflight should distinguish hard-fail conditions (OS/arch mismatch, missing execute bit)
+      from warnings (for example, likely missing runtime prerequisites) with clear remediation text.
+    - Error messages must state expected vs detected platform values (GOOS/GOARCH style).
+  tasks: [task173, task174, task175, task176, task177]
+  acceptance_criteria:
+  - id: AC1
+    description: '`kinnoo init --language go <agent-name>` creates a Go project scaffold with `main.go` as default entrypoint and a valid `kinnoo.yaml` runtime.language set to `go`.'
+  - id: AC2
+    description: '`kinnoo init --language go --framework gemini` creates a one-shot Go chat template wired for Gemini-style request/response flow with compile-ready placeholders.'
+  - id: AC3
+    description: '`kinnoo init --language go --framework chatgpt` creates a one-shot Go chat template wired for ChatGPT-compatible provider SDK usage with compile-ready placeholders.'
+  - id: AC4
+    description: '`kinnoo init --language go --framework claude-chat` creates a one-shot Go chat template wired for Claude-compatible provider SDK usage with compile-ready placeholders.'
+  - id: AC5
+    description: '`kinnoo init --language go --framework mcp-server` creates a compile-ready Go MCP server template with a minimal request handler and startup path.'
+  - id: AC6
+    description: '`kinnoo init --language go --framework mcp-client` creates a compile-ready Go MCP client template with a minimal invocation/request path.'
+  - id: AC7
+    description: '`kinnoo.yaml` validation supports `runtime.language: go` and defaults entrypoint to `main.go` when omitted by generator defaults.'
+  - id: AC8
+    description: '`kinnoo run` executes source Go agents using `go run <entrypoint>` semantics and propagates stdout, stderr, and exit code consistently with existing runtimes.'
+  - id: AC9
+    description: '`kinnoo run --preflight` for Go source agents validates Go toolchain availability, module readiness (`go.mod` where required), and entrypoint presence before execution.'
+  - id: AC10
+    description: '`kinnoo run` executes Go agents packaged as precompiled binaries when manifest entrypoint points to an executable artifact.'
+  - id: AC11
+    description: '`kinnoo run --preflight` for binary Go agents checks executable format and platform compatibility against host OS/architecture, and fails with actionable diagnostics on mismatch.'
+  - id: AC12
+    description: Preflight output clearly identifies pass/warn/fail conditions and includes remediation hints for common Go runtime issues (missing Go toolchain, wrong architecture, non-executable binary, unsupported format).
+  owner: techlead-agent
+  dependencies:
+  - feature1
+  - feature2
+  status: not-started
+  notes:
+  - 'Focuses on one-shot and MCP templates only for Go in this phase.'
+  - 'Binary compatibility checks should inspect actual executable headers when available.'
+  - 'Preflight diagnostics must report host vs target platform values for fast troubleshooting.'
+  - 'Task/test linkage established in TASKS.txt and TESTS.txt for implementation readiness.'

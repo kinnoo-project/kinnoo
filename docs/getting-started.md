@@ -56,6 +56,19 @@ This creates a new directory `./my-chat-agent` and initializes a scaffold file a
 
 For the ChatGPT agent, you will need an ```OPENAI_API_KEY``` in your environment. If you don't have one, navigate to ```https://platform.openai.com```, create an account, then create an API key.
 
+### Optional: initialize a Go agent
+
+Kinnoo supports Go scaffolds with these framework combinations:
+
+- `kinnoo init gemini --language go my-go-gemini-agent`
+- `kinnoo init chatgpt --language go my-go-chatgpt-agent`
+- `kinnoo init claude-chat --language go my-go-claude-agent`
+- `kinnoo init mcp-client --language go my-go-mcp-client`
+- `kinnoo init mcp-server --language go my-go-mcp-server`
+- `kinnoo init no-framework --language go my-go-agent`
+
+Under the hood, Go scaffolding runs `go mod init <agent-name>` during init, so Go must be installed locally.
+
 ## 5) Run Locally
 
 Once your agent is initialized, you can run it locally by typing:
@@ -75,6 +88,16 @@ If you only want a quick run pre-flight readiness check (for example, if you wan
 ```bash
 kinnoo run --preflight my-chat-agent
 ```
+
+For Go agents, preflight reports explicit per-check statuses (`[PASS]`, `[WARN]`, `[FAIL]`) plus a final decision:
+
+- pass: `Ready to run` and `Preflight result: PASS`
+- fail: `Not ready to run`, `Remediation summary:`, and `Preflight result: FAIL`
+
+Go run mode behavior:
+
+- source mode: entrypoint ends with `.go` (for example `main.go`), and preflight verifies Go toolchain/runtime requirements.
+- binary mode: entrypoint points to a precompiled executable (for example `bin/agent` or `dist/agent.exe`), and preflight validates binary compatibility and execute readiness.
 
 ## 6) Package and Publish Your Agent
 
@@ -141,6 +164,13 @@ We hope that Kinnoo makes the agent developer and runtime experience simpler, mo
 
 - **Manifest validation errors**: run `kinnoo inspect ./my-chat-agent` and fix required `kinnoo.yaml` fields.
 - **Provider auth errors**: set the framework-specific API key expected by your agent template.
+- **Go source preflight fails with missing toolchain**: install Go or configure `runtime.path` to a valid Go executable.
+	- macOS: `brew install go`
+	- Linux: use your distro package manager (for example `apt install golang-go`) or install from `https://go.dev/dl/`
+	- Windows: `winget install GoLang.Go`
+- **Go binary preflight fails on OS/architecture mismatch**: rebuild binary for host `GOOS`/`GOARCH`.
+- **Go binary preflight fails on unsupported format**: rebuild to a supported executable format (Mach-O/ELF/PE).
+- **Go binary preflight fails on non-executable file**: set execute permission (`chmod +x <entrypoint>`).
 
 ### Packaging
 

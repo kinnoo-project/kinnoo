@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.10.1] - 2026-05-25
+### Added
+- Added Feature19 Go runtime support across init scaffolding, schema/validator acceptance, source run/preflight, and precompiled binary compatibility preflight.
+- Added Go-focused regression coverage for feature19 acceptance criteria (`test79`-`test83`) spanning init matrix generation, manifest/schema validation, source execution, binary execution, and docs/help contract checks.
+
+### Changed
+- Updated `kinnoo init --language go` to use the Go toolchain for module initialization (`go mod init`) and to provide OS-specific installation guidance when Go is unavailable.
+- Refactored Go `mcp-server` and `mcp-client` templates to use the official MCP Go SDK (`github.com/modelcontextprotocol/go-sdk`) patterns.
+- Updated Go MCP init flow to pin `github.com/modelcontextprotocol/go-sdk@v1.4.1` for generated MCP Go scaffolds.
+- Expanded docs/contracts to document MCP Go SDK dependency and warn that upstream breaking changes may require Kinnoo template updates.
+- Bumped project version from `0.10.0` to `0.10.1`.
+
 ## [v0.10.0] - 2026-04-28
 ### Added
 - Added tenant usage quota setup and enforcement for registry usage controls.

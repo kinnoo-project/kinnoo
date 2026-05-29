@@ -40,3 +40,5 @@ Use this page to pick the right scaffold quickly and understand where behavior d
 - `openclaw` run/log behavior is partial and can depend on external OpenClaw runtime tooling.
 - Registry workflows (`publish`, `install`, `list`, `search`) work with local or remote backends.
 - For trust-sensitive flows, use signing plus strict flags (for example `pack --sign`, `publish --strict`, `install --strict`).
+- Go templates for `mcp-client` and `mcp-server` depend on the official MCP Go SDK (`github.com/modelcontextprotocol/go-sdk`) and are currently pinned to `v1.4.1` by `kinnoo init`.
+- If the MCP Go SDK introduces breaking changes, corresponding updates to Kinnoo CLI Go MCP templates may be required.

@@ -494,6 +494,47 @@ def collect_entrypoint_path_errors(
     return errors
 
 
+def _collect_go_entrypoint_contract_errors(
+    data: dict[str, Any],
+    *,
+    entrypoint_selection: dict[str, Any] | None,
+) -> list[str]:
+    """Validate Go-specific entrypoint declarations.
+
+    Go manifests support two entrypoint modes:
+    - source mode (a `.go` file, commonly `main.go`)
+    - binary mode (an executable path)
+
+    This helper rejects clearly malformed declarations that point to script
+    types owned by other runtimes.
+    """
+    if entrypoint_selection is None:
+        return []
+
+    runtime_language_found, runtime_language_value = _get_nested(data, "runtime.language")
+    if not runtime_language_found or runtime_language_value != "go":
+        return []
+
+    disallowed_script_suffixes = {".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
+    errors: list[str] = []
+    contract_mode = entrypoint_selection.get("contract_mode", "entrypoint")
+    declared_entrypoints = entrypoint_selection.get("declared_entrypoints", [])
+
+    for index, entrypoint_value in enumerate(declared_entrypoints):
+        suffix = PurePosixPath(entrypoint_value).suffix.lower()
+        if suffix in disallowed_script_suffixes:
+            if contract_mode == "entrypoints":
+                field_name = f"entrypoints[{index}]"
+            else:
+                field_name = "entrypoint"
+            errors.append(
+                f"Field '{field_name}' declares '{entrypoint_value}', which is not a Go source or executable path. "
+                "Use a `.go` source file (for example `main.go`) or an executable artifact path."
+            )
+
+    return errors
+
+
 def _is_safe_relative_manifest_path(path_value: str) -> bool:
     """Return True when a manifest path is relative and traversal-safe."""
     candidate = PurePosixPath(path_value)
@@ -713,6 +754,13 @@ def _collect_validation_errors(
                 f"Field 'runtime.language' has unsupported value: '{runtime_language_value}'. "
                 f"Supported values: {supported}."
             )
+
+    errors.extend(
+        _collect_go_entrypoint_contract_errors(
+            data,
+            entrypoint_selection=entrypoint_selection,
+        )
+    )
 
     runtime_package_manager_found, runtime_package_manager_value = _get_nested(
         data, "runtime.package_manager"

@@ -116,6 +116,315 @@ python main.py "Hello Claude!"
 ```
 '''
 
+GO_RUN_TEMPLATE = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+func main() {
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Printf("Hello from Go agent. Input: %s\\n", inputText)
+}
+'''
+
+GO_README_TEMPLATE = '''# {name}
+
+This is a Kinnoo agent scaffolded with `kinnoo init --language go`.
+
+## Prerequisites
+- Go 1.22+ (matches `runtime.version` in `kinnoo.yaml`)
+
+## Run Example
+```
+go run main.go "hello from go"
+```
+'''
+
+GEMINI_GO_MAIN = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+const geminiGoModel = "gemini-2.5-flash-lite"
+
+func runGemini(inputText string) string {
+  // TODO: Replace with real Gemini API call wiring.
+  return fmt.Sprintf("[gemini-go template] model=%s input=%s", geminiGoModel, inputText)
+}
+
+func main() {
+  apiKey := os.Getenv("GOOGLE_API_KEY")
+  if apiKey == "" {
+    fmt.Println("Set GOOGLE_API_KEY before running this template.")
+    return
+  }
+
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Println(runGemini(inputText))
+}
+'''
+
+GEMINI_GO_README = '''# {name}
+
+This scaffold targets a Gemini-style request/response flow in Go.
+
+## Setup
+- Set your API key: `export GOOGLE_API_KEY=your-key-here`
+
+## Run Example
+```
+go run main.go "Hello Gemini from Go"
+```
+'''
+
+CHATGPT_GO_MAIN = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+const chatgptGoModel = "gpt-5-nano"
+
+func runChatGPT(inputText string) string {
+  // TODO: Replace with real OpenAI Chat Completions or Responses API call wiring.
+  return fmt.Sprintf("[chatgpt-go template] model=%s input=%s", chatgptGoModel, inputText)
+}
+
+func main() {
+  apiKey := os.Getenv("OPENAI_API_KEY")
+  if apiKey == "" {
+    fmt.Println("Set OPENAI_API_KEY before running this template.")
+    return
+  }
+
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Println(runChatGPT(inputText))
+}
+'''
+
+CHATGPT_GO_README = '''# {name}
+
+This scaffold targets a ChatGPT-compatible request/response flow in Go.
+
+## Setup
+- Set your API key: `export OPENAI_API_KEY=your-key-here`
+
+## Run Example
+```
+go run main.go "Hello ChatGPT from Go"
+```
+'''
+
+CLAUDE_GO_MAIN = '''package main
+
+import (
+  "fmt"
+  "os"
+)
+
+const claudeGoModel = "claude-sonnet-4-20250514"
+
+func runClaude(inputText string) string {
+  // TODO: Replace with real Anthropic Messages API call wiring.
+  return fmt.Sprintf("[claude-chat-go template] model=%s input=%s", claudeGoModel, inputText)
+}
+
+func main() {
+  apiKey := os.Getenv("ANTHROPIC_API_KEY")
+  if apiKey == "" {
+    fmt.Println("Set ANTHROPIC_API_KEY before running this template.")
+    return
+  }
+
+  inputText := ""
+  if len(os.Args) > 1 {
+    inputText = os.Args[1]
+  }
+
+  fmt.Println(runClaude(inputText))
+}
+'''
+
+CLAUDE_GO_README = '''# {name}
+
+This scaffold targets a Claude-compatible request/response flow in Go.
+
+## Setup
+- Set your API key: `export ANTHROPIC_API_KEY=your-key-here`
+
+## Run Example
+```
+go run main.go "Hello Claude from Go"
+```
+'''
+
+MCP_SERVER_GO_MAIN = '''package main
+
+import (
+  "context"
+  "fmt"
+  "log"
+  "os"
+
+  "github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+type EchoArgs struct {
+  Text string `json:"text" jsonschema:"required,description=The text to echo back."`
+}
+
+type EmptyResult struct{}
+
+func main() {
+  log.SetOutput(os.Stderr)
+
+  impl := &mcp.Implementation{
+    Name:    "kinnoo-mcp-server-template-go",
+    Version: "0.1.0",
+  }
+
+  server := mcp.NewServer(impl, nil)
+  if err := mcp.AddTool(server, &mcp.Tool{
+    Name:        "echo",
+    Description: "Echo back input text.",
+  }, echoHandler); err != nil {
+    log.Fatalf("Failed to register tool: %v", err)
+  }
+
+  log.Println("Starting kinnoo-mcp-server over stdio...")
+  if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+    log.Fatalf("Server exited with error: %v", err)
+  }
+}
+
+func echoHandler(_ context.Context, _ *mcp.CallToolRequest, args EchoArgs) (*mcp.CallToolResult, EmptyResult, error) {
+  result := &mcp.CallToolResult{
+    Content: []mcp.Content{
+      &mcp.TextContent{Text: fmt.Sprintf("echo: %s", args.Text)},
+    },
+  }
+  return result, EmptyResult{}, nil
+}
+'''
+
+MCP_SERVER_GO_README = '''# {name}
+
+This scaffold demonstrates a minimal Go MCP server over stdio using the official MCP Go SDK.
+
+Kinnoo scaffolding pins the SDK dependency to `github.com/modelcontextprotocol/go-sdk v1.4.1`.
+
+## Run Server
+```
+go run main.go
+```
+
+## Notes
+- If you make manual dependency changes, run `go mod tidy`.
+- If the MCP Go SDK introduces breaking changes, the Kinnoo CLI Go MCP templates may need updates.
+
+## Quick Handshake Smoke Test (from another terminal)
+```
+printf '{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{}}}}\n' | go run main.go
+```
+'''
+
+MCP_CLIENT_GO_MAIN = '''package main
+
+import (
+  "context"
+  "log"
+  "os"
+  "os/exec"
+  "strings"
+
+  "github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+func main() {
+  log.SetOutput(os.Stderr)
+
+  serverCmd := strings.TrimSpace(os.Getenv("MCP_SERVER_CMD"))
+  if serverCmd == "" {
+    log.Println("Set MCP_SERVER_CMD to an MCP stdio server executable.")
+    return
+  }
+
+  serverArgsRaw := strings.TrimSpace(os.Getenv("MCP_SERVER_ARGS"))
+  serverArgs := []string{}
+  if serverArgsRaw != "" {
+    serverArgs = strings.Fields(serverArgsRaw)
+  }
+
+  client := mcp.NewClient(&mcp.Implementation{
+    Name:    "kinnoo-mcp-client-template-go",
+    Version: "0.1.0",
+  }, nil)
+
+  transport := &mcp.CommandTransport{Command: exec.Command(serverCmd, serverArgs...)}
+  session, err := client.Connect(context.Background(), transport, nil)
+  if err != nil {
+    log.Fatalf("[mcp-client-go template] connect failed: %v", err)
+  }
+  defer session.Close()
+
+  result, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+    Name:      "echo",
+    Arguments: map[string]any{"text": "hello from mcp-client-go"},
+  })
+  if err != nil {
+    log.Fatalf("[mcp-client-go template] tools/call failed: %v", err)
+  }
+
+  if result.IsError {
+    log.Fatalf("[mcp-client-go template] server returned a tool error")
+  }
+
+  for _, content := range result.Content {
+    if textContent, ok := content.(*mcp.TextContent); ok {
+      log.Printf("[mcp-client-go template] tool response: %s", textContent.Text)
+    }
+  }
+}
+'''
+
+MCP_CLIENT_GO_README = '''# {name}
+
+This scaffold demonstrates a minimal Go MCP client using the official MCP Go SDK.
+
+Kinnoo scaffolding pins the SDK dependency to `github.com/modelcontextprotocol/go-sdk v1.4.1`.
+
+## Setup
+- Export command for your MCP stdio server:
+  - `export MCP_SERVER_CMD=go`
+  - `export MCP_SERVER_ARGS='run ../my-go-mcp-server/main.go'`
+
+## Run
+```
+go run main.go
+```
+
+## Notes
+- If you make manual dependency changes, run `go mod tidy`.
+- If the MCP Go SDK introduces breaking changes, the Kinnoo CLI Go MCP templates may need updates.
+'''
+
 PYDANTIC_AI_RUN_PY = '''import os
 import sys
 import asyncio

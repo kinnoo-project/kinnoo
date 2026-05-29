@@ -3390,3 +3390,114 @@ tasks:
   status: completed
   notes:
   - 'original_id: task528'
+
+- id: task173
+  title: Add Go scaffolding support to kinnoo init (language + framework templates)
+  type: task
+  epic: [E2, E10]
+  owner: swe-agent
+  description: Implement feature19 AC1-AC6 by extending init scaffolding to support Go language templates for generic one-shot agents, provider chat agents (gemini/chatgpt/claude-chat), and MCP server/client variants.
+  files:
+  - src/kinnoo/cli.py
+  - src/kinnoo/init_command.py
+  - src/kinnoo/templates.py
+  - src/kinnoo/template_catalog.py
+  - tests/client_cli_init/
+  steps:
+  - 'step1: Extend `kinnoo init` language parsing to accept `--language go` and route to Go template generation.'
+  - 'step2: Add Go default template with `main.go` entrypoint and minimal one-shot IO contract.'
+  - 'step3: Add Go framework templates for `gemini`, `chatgpt`, and `claude-chat` with compile-ready placeholders and provider-specific wiring points.'
+  - 'step4: Add Go templates for `mcp-server` and `mcp-client` with minimal operational skeletons.'
+  - 'step5: Ensure generated `kinnoo.yaml` is valid and coherent for every Go template variant.'
+  - 'step6: Add/extend CLI init tests for all supported Go framework combinations.'
+  dependencies: [task5, task6, task7]
+  tests: [test79]
+  status: needs-review
+
+- id: task174
+  title: Extend manifest schema and validator for Go runtime conventions
+  type: task
+  epic: [E1, E2]
+  owner: swe-agent
+  description: Implement feature19 AC7 by adding Go as a supported runtime language in schema/validator logic, and enforcing generator defaults that use `main.go` as the canonical Go source entrypoint.
+  files:
+  - src/kinnoo/schema.py
+  - src/kinnoo/validator.py
+  - src/kinnoo/templates.py
+  - docs/kinnoo-yaml-spec.md
+  - tests/schema_unit/
+  steps:
+  - 'step1: Add `go` to supported runtime language validation paths.'
+  - 'step2: Ensure generated Go manifests default to `entrypoint: main.go` unless explicitly overridden.'
+  - 'step3: Validate Go manifest shape for both source-entrypoint and binary-entrypoint modes.'
+  - 'step4: Update kinnoo.yaml spec docs with Go language examples and entrypoint guidance.'
+  - 'step5: Add schema/validator tests for valid and invalid Go manifest permutations.'
+  dependencies: [task173]
+  tests: [test80]
+  status: needs-review
+
+- id: task175
+  title: Implement Go source execution and preflight in kinnoo run
+  type: task
+  epic: [E2]
+  owner: swe-agent
+  description: Implement feature19 AC8-AC9 by adding Go source execution support (`go run`) and language-aware preflight checks for toolchain, module readiness, and entrypoint integrity.
+  files:
+  - src/kinnoo/run_command.py
+  - src/kinnoo/cli.py
+  - src/kinnoo/preflight.py
+  - tests/client_cli_run/
+  - tests/client_cli_check/
+  steps:
+  - 'step1: Extend runtime dispatch to execute Go source agents using `go run` and the declared entrypoint.'
+  - 'step2: Preserve stdout/stderr streaming and exit-code propagation parity with existing runtimes.'
+  - 'step3: Add preflight checks for Go source mode: Go toolchain presence, entrypoint existence, and module readiness signals (for example go.mod usage expectations).' 
+  - 'step4: Emit actionable preflight diagnostics that clearly separate fail vs warn outcomes.'
+  - 'step5: Add run/preflight integration tests for basic Go source agents.'
+  dependencies: [task174]
+  tests: [test81]
+  status: needs-review
+
+- id: task176
+  title: Add compiled Go binary execution and architecture-aware preflight checks
+  type: task
+  epic: [E2, E6]
+  owner: swe-agent
+  description: Implement feature19 AC10-AC11 by supporting execution of precompiled Go binaries and adding robust preflight checks for executable format, host compatibility, and execution readiness.
+  files:
+  - src/kinnoo/run_command.py
+  - src/kinnoo/preflight.py
+  - src/kinnoo/binary_inspection.py
+  - tests/client_cli_run/
+  - tests/security_checks/
+  steps:
+  - 'step1: Extend run path to execute binary entrypoints directly when runtime.language is go and entrypoint resolves to an executable artifact.'
+  - 'step2: Implement binary preflight header inspection (Mach-O/ELF/PE where feasible) and compare target platform to host OS/arch.'
+  - 'step3: Check executable permissions and missing-file conditions before launch; fail fast for hard incompatibilities.'
+  - 'step4: Provide actionable diagnostics including detected platform, host platform, and remediation suggestions.'
+  - 'step5: Add tests for compatible binary success path and mismatch failure paths (wrong arch, unsupported format, non-executable artifact).' 
+  dependencies: [task175]
+  tests: [test82]
+  status: needs-review
+
+- id: task177
+  title: Finalize UX/docs/help text for Go agent support and preflight diagnostics
+  type: task
+  epic: [E2, E5]
+  owner: swe-agent
+  description: Implement feature19 AC12 and finalize user-facing documentation and command help so Go support is discoverable, understandable, and operationally safe.
+  files:
+  - docs/cli-reference.md
+  - docs/getting-started.md
+  - docs/kinnoo-yaml-spec.md
+  - README.md
+  - src/kinnoo/cli.py
+  - tests/docs_contract/
+  steps:
+  - 'step1: Update CLI help text and docs to include Go language and framework combinations for init.'
+  - 'step2: Document source vs binary run behavior for Go, including preflight semantics and expected diagnostics.'
+  - 'step3: Add troubleshooting guidance for common Go failures (toolchain missing, wrong architecture, file permissions).' 
+  - 'step4: Add docs contract/regression checks ensuring new command examples and manifest snippets remain accurate.'
+  dependencies: [task176]
+  tests: [test83]
+  status: needs-review
