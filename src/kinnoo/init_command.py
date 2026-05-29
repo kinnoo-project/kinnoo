@@ -561,9 +561,7 @@ def _merge_package_json(agent_dir: Path, name: str, entrypoint: str) -> None:
     for dep, version in new_deps.items():
         if dep not in existing_deps:
             existing_deps[dep] = version
-    existing_pkg.setdefault("dependencies", {}).update(
-        {k: v for k, v in existing_deps.items()}
-    )
+    existing_pkg["dependencies"] = existing_deps
 
     pkg_path.write_text(json.dumps(existing_pkg, indent=2) + "\n")
 

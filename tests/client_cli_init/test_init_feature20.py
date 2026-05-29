@@ -44,7 +44,7 @@ class TestTask178ExistingDirAndDot:
         assert code == 0, f"Expected success, got stderr: {err}"
         # Files should be in tmp_path directly, not in a subdirectory called "."
         assert (tmp_path / "kinnoo.yaml").exists()
-        assert not (tmp_path / ".").is_dir() or True  # "." always resolves to self
+        assert not (tmp_path / "." / "kinnoo.yaml").exists() or (tmp_path / "kinnoo.yaml").exists()
 
     def test_init_dot_uses_directory_name_in_manifest(self, tmp_path):
         """When using '.', the manifest name should be the directory name."""
