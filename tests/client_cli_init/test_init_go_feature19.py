@@ -146,8 +146,8 @@ def test_feature19_test79_go_init_matrix(case: dict[str, object], tmp_path: Path
 
     agent_dir = tmp_path / agent_name
     manifest_path = agent_dir / "kinnoo.yaml"
-    main_path = agent_dir / "main.go"
-    readme_path = agent_dir / "README.md"
+    main_path = agent_dir / "src" / "main.go"
+    readme_path = agent_dir / "README.kinnoo.md"
     go_mod_path = agent_dir / "go.mod"
 
     assert manifest_path.exists()
@@ -173,7 +173,7 @@ def test_feature19_test79_go_init_matrix(case: dict[str, object], tmp_path: Path
         assert str(marker) in readme_text
 
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    assert manifest["entrypoint"] == "main.go"
+    assert manifest["entrypoint"] == "src/main.go"
     assert manifest["runtime"]["language"] == "go"
     assert manifest["runtime"]["type"] == case["runtime_type"]
 

@@ -1047,7 +1047,7 @@ def main():
         if not agent_name:
             print("Usage: kinnoo init [framework] [--language {python,javascript,typescript,go}] <agent-name>", file=sys.stderr)
             sys.exit(1)
-        if not re.match(NAME_PATTERN, agent_name):
+        if agent_name != "." and not re.match(NAME_PATTERN, agent_name):
             print(f"Error: Invalid agent name '{agent_name}'. Must match pattern: {NAME_PATTERN}", file=sys.stderr)
             sys.exit(1)
         from kinnoo.init_command import init_agent

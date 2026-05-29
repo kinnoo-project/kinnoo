@@ -3,8 +3,10 @@
 Agent scaffolding logic for kinnoo init.
 """
 import argparse
+import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -498,6 +500,74 @@ def interactive_init_wizard(target_dir: Path) -> tuple[str, str, str]:
     return selected_framework, selected_language, agent_name
 
 
+def _extract_package_name(line: str) -> str:
+    """Extract package name from a requirements.txt line (strip version specifiers)."""
+    line = line.strip()
+    if not line or line.startswith("#") or line.startswith("-"):
+        return ""
+    # Split on version specifiers
+    for sep in (">=", "<=", "==", "!=", "~=", ">", "<", "["):
+        if sep in line:
+            return line.split(sep)[0].strip().lower()
+    return line.lower()
+
+
+def _merge_requirements(agent_dir: Path, new_requirements: str) -> None:
+    """Write requirements.txt, merging with existing if present (task183)."""
+    req_path = agent_dir / "requirements.txt"
+    if not req_path.exists():
+        req_path.write_text(new_requirements)
+        return
+
+    existing_content = req_path.read_text()
+    existing_packages = set()
+    for line in existing_content.splitlines():
+        pkg = _extract_package_name(line)
+        if pkg:
+            existing_packages.add(pkg)
+
+    new_lines = []
+    for line in new_requirements.splitlines():
+        pkg = _extract_package_name(line)
+        if pkg and pkg not in existing_packages:
+            new_lines.append(line)
+
+    if new_lines:
+        # Ensure existing content ends with newline before appending
+        if existing_content and not existing_content.endswith("\n"):
+            existing_content += "\n"
+        req_path.write_text(existing_content + "\n".join(new_lines) + "\n")
+
+
+def _merge_package_json(agent_dir: Path, name: str, entrypoint: str) -> None:
+    """Write package.json, merging with existing if present (task183)."""
+    pkg_path = agent_dir / "package.json"
+    new_pkg = json.loads(_NODE_PACKAGE_JSON_TEMPLATE.format(name=name, entrypoint=entrypoint))
+
+    if not pkg_path.exists():
+        pkg_path.write_text(json.dumps(new_pkg, indent=2) + "\n")
+        return
+
+    try:
+        existing_pkg = json.loads(pkg_path.read_text())
+    except (json.JSONDecodeError, ValueError):
+        # Malformed JSON — overwrite
+        pkg_path.write_text(json.dumps(new_pkg, indent=2) + "\n")
+        return
+
+    # Merge dependencies: existing entries take precedence
+    new_deps = new_pkg.get("dependencies", {})
+    existing_deps = existing_pkg.get("dependencies", {})
+    for dep, version in new_deps.items():
+        if dep not in existing_deps:
+            existing_deps[dep] = version
+    existing_pkg.setdefault("dependencies", {}).update(
+        {k: v for k, v in existing_deps.items()}
+    )
+
+    pkg_path.write_text(json.dumps(existing_pkg, indent=2) + "\n")
+
+
 def init_agent(
     name: str,
     target_dir: Path,
@@ -508,9 +578,12 @@ def init_agent(
     is_no_framework = framework == "no-framework"
     selected_framework = None if is_no_framework else framework
 
-    agent_dir = target_dir / name
-    if agent_dir.exists():
-        raise FileExistsError(f"Directory {agent_dir} already exists.")
+    # task178: Support "." to init in current directory, and allow existing dirs
+    if name == ".":
+        agent_dir = target_dir
+        name = target_dir.name
+    else:
+        agent_dir = target_dir / name
 
     normalized_language = _normalize_language(language)
     if language is not None and normalized_language is None:
@@ -542,26 +615,38 @@ def init_agent(
         "go": "main.go",
     }[effective_language]
 
-    agent_dir.mkdir()
+    # task181: Entrypoint path includes src/ prefix
+    entrypoint_path = f"src/{entrypoint_name}"
+
+    # task178: Don't raise if directory already exists; create if needed
+    agent_dir.mkdir(exist_ok=True)
+
+    # task181: Create src/ subdirectory for entrypoint files
+    (agent_dir / "src").mkdir(exist_ok=True)
 
     # OpenClaw uses a Node.js daemon manifest contract; MCP server uses a dedicated Python mcp-server manifest.
     if selected_framework == "openclaw":
         manifest_content = OPENCLAW_KINNOO_YAML_TEMPLATE.format(name=name)
+        # Update entrypoint to src/ path
+        manifest_content = manifest_content.replace("entrypoint: index.mjs", f"entrypoint: src/index.mjs")
     elif selected_framework == "mcp-server" and effective_language == "python":
         manifest_content = MCP_SERVER_KINNOO_YAML_TEMPLATE.format(name=name)
+        manifest_content = manifest_content.replace("entrypoint: main.py", f"entrypoint: {entrypoint_path}")
     elif effective_language == "go":
         manifest_content = _build_go_manifest(
             name,
+            entrypoint=entrypoint_path,
             runtime_type="mcp-server" if selected_framework == "mcp-server" else "one-shot",
         )
     elif effective_language in {"javascript", "typescript"}:
         manifest_content = _build_node_manifest(
             name,
-            entrypoint=entrypoint_name,
+            entrypoint=entrypoint_path,
             language=effective_language,
         )
     else:
         manifest_content = KINNOO_YAML_TEMPLATE.format(name=name)
+        manifest_content = manifest_content.replace("entrypoint: main.py", f"entrypoint: {entrypoint_path}")
 
     if selected_framework is not None and not (
         selected_framework == "openclaw"
@@ -599,100 +684,86 @@ def init_agent(
         (agent_dir / "USER.md").write_text(_OPENCLAW_USER_TEMPLATE)
         readme_text = _standardize_readme(
             OPENCLAW_README_TEMPLATE.format(name=name),
-            entrypoint="index.mjs",
+            entrypoint=entrypoint_path,
             include_folder_table=not minimal,
         )
-        (agent_dir / "README.md").write_text(readme_text)
+        (agent_dir / "README.kinnoo.md").write_text(readme_text)
 
         if not minimal:
-            (agent_dir / ".gitignore").write_text(_GITIGNORE_OPENCLAW)
             (agent_dir / "BOOTSTRAP.md").write_text(_OPENCLAW_BOOTSTRAP_TEMPLATE)
             (agent_dir / "HEARTBEAT.md").write_text(_OPENCLAW_HEARTBEAT_TEMPLATE)
             (agent_dir / "MEMORY.md").write_text(_OPENCLAW_MEMORY_TEMPLATE)
-            (agent_dir / "skills").mkdir()
-            (agent_dir / "memory").mkdir()
+            (agent_dir / "skills").mkdir(exist_ok=True)
+            (agent_dir / "memory").mkdir(exist_ok=True)
         return
 
     if selected_framework in framework_templates and effective_language != "go":
         run_template, requirements_template, readme_template = framework_templates[selected_framework]
-        (agent_dir / "main.py").write_text(run_template)
-        (agent_dir / "requirements.txt").write_text(requirements_template)
+        (agent_dir / "src" / entrypoint_name).write_text(run_template)
+        _merge_requirements(agent_dir, requirements_template)
         readme_text = _standardize_readme(
             readme_template.format(name=name),
-            entrypoint="main.py",
+            entrypoint=entrypoint_path,
             include_folder_table=not minimal,
         )
-        (agent_dir / "README.md").write_text(readme_text)
+        (agent_dir / "README.kinnoo.md").write_text(readme_text)
     elif selected_framework in go_framework_templates:
         run_template, readme_template = go_framework_templates[selected_framework]
-        (agent_dir / "main.go").write_text(run_template)
+        (agent_dir / "src" / entrypoint_name).write_text(run_template)
         readme_text = _standardize_readme(
             readme_template.format(name=name),
-            entrypoint="main.go",
+            entrypoint=entrypoint_path,
             include_folder_table=not minimal,
         )
-        (agent_dir / "README.md").write_text(readme_text)
+        (agent_dir / "README.kinnoo.md").write_text(readme_text)
     elif effective_language == "javascript":
-        (agent_dir / "index.js").write_text(_JS_RUN_TEMPLATE)
-        (agent_dir / "package.json").write_text(
-            _NODE_PACKAGE_JSON_TEMPLATE.format(name=name, entrypoint="index.js")
-        )
+        (agent_dir / "src" / "index.js").write_text(_JS_RUN_TEMPLATE)
+        _merge_package_json(agent_dir, name, entrypoint_path)
         readme_text = _standardize_readme(
             _NODE_README_TEMPLATE.format(
                 name=name,
                 language_flag="js",
-                entrypoint="index.js",
+                entrypoint=entrypoint_path,
             ),
-            entrypoint="index.js",
+            entrypoint=entrypoint_path,
             include_folder_table=not minimal,
         )
-        (agent_dir / "README.md").write_text(readme_text)
+        (agent_dir / "README.kinnoo.md").write_text(readme_text)
     elif effective_language == "typescript":
-        (agent_dir / "index.ts").write_text(_TS_RUN_TEMPLATE)
-        (agent_dir / "package.json").write_text(
-            _NODE_PACKAGE_JSON_TEMPLATE.format(name=name, entrypoint="index.ts")
-        )
+        (agent_dir / "src" / "index.ts").write_text(_TS_RUN_TEMPLATE)
+        _merge_package_json(agent_dir, name, entrypoint_path)
         readme_text = _standardize_readme(
             _NODE_README_TEMPLATE.format(
                 name=name,
                 language_flag="ts",
-                entrypoint="index.ts",
+                entrypoint=entrypoint_path,
             ),
-            entrypoint="index.ts",
+            entrypoint=entrypoint_path,
             include_folder_table=not minimal,
         )
-        (agent_dir / "README.md").write_text(readme_text)
+        (agent_dir / "README.kinnoo.md").write_text(readme_text)
     elif effective_language == "go":
-        (agent_dir / "main.go").write_text(GO_RUN_TEMPLATE)
+        (agent_dir / "src" / "main.go").write_text(GO_RUN_TEMPLATE)
         readme_text = _standardize_readme(
             GO_README_TEMPLATE.format(name=name),
-            entrypoint="main.go",
+            entrypoint=entrypoint_path,
             include_folder_table=not minimal,
         )
-        (agent_dir / "README.md").write_text(readme_text)
+        (agent_dir / "README.kinnoo.md").write_text(readme_text)
     else:
-        (agent_dir / "main.py").write_text(RUN_PY_TEMPLATE)
-        (agent_dir / "requirements.txt").write_text(REQUIREMENTS_TXT_TEMPLATE)
+        (agent_dir / "src" / "main.py").write_text(RUN_PY_TEMPLATE)
+        _merge_requirements(agent_dir, REQUIREMENTS_TXT_TEMPLATE)
         readme_text = _standardize_readme(
             README_MD_TEMPLATE.format(name=name),
-            entrypoint="main.py",
+            entrypoint=entrypoint_path,
             include_folder_table=not minimal,
         )
-        (agent_dir / "README.md").write_text(readme_text)
+        (agent_dir / "README.kinnoo.md").write_text(readme_text)
 
     if not minimal:
-        if effective_language == "python":
-            gitignore_template = _GITIGNORE_PYTHON
-        elif effective_language == "javascript":
-            gitignore_template = _GITIGNORE_JAVASCRIPT
-        elif effective_language == "go":
-            gitignore_template = _GITIGNORE_GO
-        else:
-            gitignore_template = _GITIGNORE_TYPESCRIPT
-
+        # task182: Use exist_ok=True to not override existing directories
         for folder_name in ("tools", "prompts", "evals", "tests", "data"):
-            (agent_dir / folder_name).mkdir()
-        (agent_dir / ".gitignore").write_text(gitignore_template)
+            (agent_dir / folder_name).mkdir(exist_ok=True)
 
     if effective_language == "go":
         assert go_executable is not None

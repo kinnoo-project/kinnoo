@@ -605,3 +605,42 @@ features:
   - 'Binary compatibility checks should inspect actual executable headers when available.'
   - 'Preflight diagnostics must report host vs target platform values for fast troubleshooting.'
   - 'Task/test linkage established in TASKS.txt and TESTS.txt for implementation readiness.'
+
+- id: feature20
+  title: Refactor kinnoo init for git-repo compatibility
+  description: |
+    Refactor kinnoo init to be more compatible with initializing an agent inside an
+    existing git repository. The typical developer flow should be: (1) init or clone a
+    git repo, (2) run kinnoo init on that repo to scaffold the agent codebase.
+
+    Key behavioral changes:
+    - kinnoo init should NOT create .gitignore (repo already has one).
+    - README.md is renamed to README.kinnoo.md to avoid conflicts with repo README.
+    - Entrypoint files (main.py, index.ts, index.js, main.go) reside in a src/ directory.
+    - Existing directories (data/, evals/, tests/, tools/, prompts/) are left as-is.
+    - Existing dependency files (requirements.txt, package.json, go.mod) are not overwritten;
+      kinnoo dependencies are intelligently appended/merged instead.
+    - kinnoo init should succeed when agent-dir already exists (common for git repos).
+    - kinnoo init . should work for the current directory.
+  tasks: [task178, task179, task180, task181, task182, task183]
+  acceptance_criteria:
+  - id: AC1
+    description: '`kinnoo init <framework> <existing-dir>` succeeds when the target directory already exists, and `kinnoo init <framework> .` works for the current directory.'
+  - id: AC2
+    description: '`kinnoo init` does NOT create a .gitignore file in the agent directory.'
+  - id: AC3
+    description: '`kinnoo init` creates README.kinnoo.md instead of README.md.'
+  - id: AC4
+    description: '`kinnoo init` places the entrypoint file (main.py, index.js, index.ts, main.go) inside a src/ subdirectory within the agent directory.'
+  - id: AC5
+    description: '`kinnoo init` does not overwrite or modify existing directories (data/, evals/, tests/, tools/, prompts/) if they already exist.'
+  - id: AC6
+    description: '`kinnoo init` intelligently appends kinnoo dependencies to an existing requirements.txt/package.json/go.mod rather than overwriting.'
+  owner: techlead-agent
+  dependencies:
+  - feature19
+  status: needs-review
+  notes:
+  - 'This refactor enables the standard git-first workflow where developers create a repo first then scaffold kinnoo inside it.'
+  - 'OpenClaw framework may need special handling since it has its own directory structure.'
+  - 'The kinnoo.yaml manifest entrypoint field should reflect the new src/ path (e.g., src/main.py).'
