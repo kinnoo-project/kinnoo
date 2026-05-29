@@ -55,7 +55,7 @@
 #       - step3: Add unit/UI test verifying the button triggers the capture action
 #     dependencies: []
 #     tests: [test0]
-#     status: not-started
+#     status: needs-review
 #
 #   - id: task10
 #     title: Select CoreML model for waste classification
@@ -3500,4 +3500,96 @@ tasks:
   - 'step4: Add docs contract/regression checks ensuring new command examples and manifest snippets remain accurate.'
   dependencies: [task176]
   tests: [test83]
+  status: needs-review
+
+- id: task178
+  title: Allow kinnoo init on existing directories and support "." target
+  type: task
+  epic: [E2]
+  owner: swe-agent
+  description: Remove the FileExistsError when agent_dir already exists, and allow "." as agent_name to init in current directory.
+  files:
+  - src/kinnoo/init_command.py
+  - src/kinnoo/cli.py
+  steps:
+  - 'step1: Modify init_agent() to skip agent_dir.mkdir() if directory already exists instead of raising FileExistsError.'
+  - 'step2: Handle agent_name "." to resolve to the current working directory name and init in-place.'
+  - 'step3: Update CLI arg handling to accept "." as a valid agent name.'
+  dependencies: []
+  tests: [test84]
+  status: needs-review
+
+- id: task179
+  title: Skip .gitignore creation in kinnoo init
+  type: task
+  epic: [E2]
+  owner: swe-agent
+  description: Remove .gitignore file creation from the init scaffolding flow for all languages and frameworks.
+  files:
+  - src/kinnoo/init_command.py
+  steps:
+  - 'step1: Remove the .gitignore write_text calls from init_agent() for all language branches.'
+  - 'step2: Remove .gitignore from openclaw scaffolding as well.'
+  dependencies: [task178]
+  tests: [test85]
+  status: needs-review
+
+- id: task180
+  title: Rename scaffolded README.md to README.kinnoo.md
+  type: task
+  epic: [E2]
+  owner: swe-agent
+  description: Change all README.md file creation in init to use README.kinnoo.md instead.
+  files:
+  - src/kinnoo/init_command.py
+  steps:
+  - 'step1: Replace all (agent_dir / "README.md").write_text() with (agent_dir / "README.kinnoo.md").write_text().'
+  dependencies: [task179]
+  tests: [test86]
+  status: needs-review
+
+- id: task181
+  title: Move entrypoint file into src/ subdirectory
+  type: task
+  epic: [E2]
+  owner: swe-agent
+  description: Create a src/ directory inside agent_dir and place the entrypoint file (main.py, index.js, index.ts, main.go) there. Update manifest entrypoint field to reflect src/ prefix.
+  files:
+  - src/kinnoo/init_command.py
+  steps:
+  - 'step1: Create src/ subdirectory inside agent_dir if it does not exist.'
+  - 'step2: Write entrypoint files to agent_dir/src/ instead of agent_dir/.'
+  - 'step3: Update kinnoo.yaml entrypoint field to include src/ prefix (e.g., src/main.py).'
+  dependencies: [task180]
+  tests: [test87]
+  status: needs-review
+
+- id: task182
+  title: Skip creation of directories that already exist
+  type: task
+  epic: [E2]
+  owner: swe-agent
+  description: When scaffolding directories (tools/, prompts/, evals/, tests/, data/), skip creation if the directory already exists.
+  files:
+  - src/kinnoo/init_command.py
+  steps:
+  - 'step1: Add exist_ok=True or conditional checks before creating scaffold directories.'
+  dependencies: [task181]
+  tests: [test88]
+  status: needs-review
+
+- id: task183
+  title: Intelligently merge dependencies into existing package files
+  type: task
+  epic: [E2]
+  owner: swe-agent
+  description: When requirements.txt or package.json already exists, append kinnoo dependencies instead of overwriting. For Go, use go mod edit.
+  files:
+  - src/kinnoo/init_command.py
+  steps:
+  - 'step1: Before writing requirements.txt, check if it exists. If so, read existing content and append only missing kinnoo deps.'
+  - 'step2: Before writing package.json, check if it exists. If so, merge kinnoo dependencies into existing JSON.'
+  - 'step3: For Go modules, the existing go mod init + edit flow already handles this correctly.'
+  dependencies: [task182]
+  tests: [test89]
   status: needs-review

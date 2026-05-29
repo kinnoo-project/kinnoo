@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.10.2] - 2026-05-29
+### Changed
+- Refactored `kinnoo init` for git-repo compatibility (feature20):
+  - `kinnoo init` no longer creates `.gitignore` (repos already have one).
+  - README output renamed from `README.md` to `README.kinnoo.md` to avoid conflicts.
+  - Entrypoint files (main.py, index.js, index.ts, main.go) now placed in `src/` subdirectory.
+  - `kinnoo init` succeeds when target directory already exists (common for git repos).
+  - `kinnoo init <framework> .` initializes in the current directory.
+  - Existing directories (data/, evals/, tests/, tools/, prompts/) are preserved.
+  - Existing dependency files (requirements.txt, package.json) are merged rather than overwritten.
+- Updated manifest `entrypoint` field to include `src/` prefix (e.g., `src/main.py`).
+- Bumped project version from `0.10.1` to `0.10.2`.
+
 ## [v0.10.1] - 2026-05-25
 ### Added
 - Added Feature19 Go runtime support across init scaffolding, schema/validator acceptance, source run/preflight, and precompiled binary compatibility preflight.
