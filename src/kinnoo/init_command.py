@@ -556,11 +556,16 @@ def _merge_package_json(agent_dir: Path, name: str, entrypoint: str) -> None:
         return
 
     # Merge dependencies: existing entries take precedence
-    new_deps = new_pkg.get("dependencies", {})
-    existing_deps = existing_pkg.get("dependencies", {})
+    new_deps = new_pkg.get("dependencies") or {}
+    if not isinstance(new_deps, dict):
+        new_deps = {}
+
+    existing_deps = existing_pkg.get("dependencies") or {}
+    if not isinstance(existing_deps, dict):
+        existing_deps = {}
+
     for dep, version in new_deps.items():
-        if dep not in existing_deps:
-            existing_deps[dep] = version
+        existing_deps.setdefault(dep, version)
     existing_pkg["dependencies"] = existing_deps
 
     pkg_path.write_text(json.dumps(existing_pkg, indent=2) + "\n")
