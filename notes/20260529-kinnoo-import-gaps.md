@@ -22,6 +22,27 @@ Author: GitHub Copilot agent (per @jerryschen31's request)
 
 ---
 
+## Response Summary
+
+Current functionality summary:
+
+- kinnoo import is Python-first, with partial Node/TS detection (entrypoint + deps from package.json) and no Go detection at all — even though the schema, init, pack, install, and run all support Go.
+- It reliably writes kinnoo.yaml, and conditionally writes requirements.txt for Python (via analyzer-inferred deps → uv export → empty fallback).
+- It never writes package.json for Node/TS (which pack then hard-rejects) and never writes go.mod.
+- Framework adapters: only langchain, langgraph, openai (Python), plus a separate openclaw workspace path. Vision-promised CrewAI / smolagents / PydanticAI have no adapter.
+- Validation of your assumption: Your model — primary artifact = correct kinnoo.yaml + correct dependency manifest per language — is correct and matches exactly what pack/install/run enforce downstream (citations to pack_command.py:716/783, run_command.py:426, install_command.py:818 are in the note).
+
+Gap breakdown — 20 distinct, independently implementable+testable features in 4 tiers:
+
+- Tier 1 (close the dependency-manifest contract): A) Node/TS package.json synthesis, B) Go detector + go.mod, C) Node lockfiles, D) go.sum
+- Tier 2 (language fidelity): E) TS-specific runtime, F) Python [project.scripts], G) monorepo handling
+- Tier 3 (framework breadth): H) PydanticAI, I) CrewAI, J) smolagents, K/L) AutoGen/LlamaIndex (optional), M) Node-side adapters
+- Tier 4 (UX/robustness): N) --yes/--dry-run, O) richer GitHub URL support, P) schema-driven manifest emission, Q) dependency-confidence reporting, R) .env parsing, S) Compose detection, T) (language × framework) regression matrix
+
+On feasibility: Universal "import any agent repo" is not realistic — too much heterogeneity in monorepos, custom build systems, notebook-based agents, web-only agents, etc. But "for the agent shapes kinnoo intends to support (CLI-runnable, in Python/TS/Go, with the top ~5 frameworks per language), produce a working manifest with at most a couple confirmations" is realistic. I recommend committing to and documenting an explicit support matrix, and falling back to best-effort + explicit TODO guidance outside it. Concrete ordered roadmap is at the bottom of the note.
+
+---
+
 ## 1. Current functionality of `kinnoo import`
 
 ### 1.1 CLI surface (`src/kinnoo/cli.py:909-945`)
