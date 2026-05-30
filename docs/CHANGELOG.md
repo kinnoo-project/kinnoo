@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.10.2] - 2026-05-29
+### Changed
+- Refactored `kinnoo init` for git-repo compatibility (feature20):
+  - `kinnoo init` no longer creates `.gitignore` (repos already have one).
+  - README output renamed from `README.md` to `README.kinnoo.md` to avoid conflicts.
+  - Entrypoint files (main.py, index.js, index.ts, main.go) now placed in `src/` subdirectory.
+  - `kinnoo init` succeeds when target directory already exists (common for git repos).
+  - `kinnoo init <framework> .` initializes in the current directory.
+  - Existing directories (data/, evals/, tests/, tools/, prompts/) are preserved.
+  - Existing dependency files (requirements.txt, package.json) are merged rather than overwritten.
+- Updated manifest `entrypoint` field to include `src/` prefix (e.g., `src/main.py`).
+- Bumped project version from `0.10.1` to `0.10.2`.
+
+## [v0.10.1] - 2026-05-25
+### Added
+- Added Feature19 Go runtime support across init scaffolding, schema/validator acceptance, source run/preflight, and precompiled binary compatibility preflight.
+- Added Go-focused regression coverage for feature19 acceptance criteria (`test79`-`test83`) spanning init matrix generation, manifest/schema validation, source execution, binary execution, and docs/help contract checks.
+
+### Changed
+- Updated `kinnoo init --language go` to use the Go toolchain for module initialization (`go mod init`) and to provide OS-specific installation guidance when Go is unavailable.
+- Refactored Go `mcp-server` and `mcp-client` templates to use the official MCP Go SDK (`github.com/modelcontextprotocol/go-sdk`) patterns.
+- Updated Go MCP init flow to pin `github.com/modelcontextprotocol/go-sdk@v1.4.1` for generated MCP Go scaffolds.
+- Expanded docs/contracts to document MCP Go SDK dependency and warn that upstream breaking changes may require Kinnoo template updates.
+- Bumped project version from `0.10.0` to `0.10.1`.
+
 ## [v0.10.0] - 2026-04-28
 ### Added
 - Added tenant usage quota setup and enforcement for registry usage controls.

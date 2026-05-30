@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 import yaml
 
+from .binary_inspection import inspect_binary_artifact, resolve_host_go_platform
 from .health_check import (
     DaemonLifecycleResult,
     HealthCheckResult,
@@ -121,6 +122,10 @@ def _emit_preflight_line(passed: bool, message: str) -> None:
     status = "PASS" if passed else "FAIL"
     color = "green" if passed else "red"
     print(style_text(f"- [{status}] {message}", color=color, stream=sys.stdout))
+
+
+def _emit_preflight_warn_line(message: str) -> None:
+    print(style_text(f"- [WARN] {message}", color="yellow", stream=sys.stdout))
 
 
 def _load_declared_services(manifest: dict | None) -> list[dict[str, object]]:
@@ -254,6 +259,228 @@ def _check_runtime_version_constraint(runtime_constraint: str) -> tuple[bool, st
     )
 
 
+def _extract_go_version_label(go_version_output: str) -> tuple[tuple[int, ...] | None, str | None]:
+    version_match = re.search(r"\bgo(?P<version>\d+(?:\.\d+)*)\b", go_version_output)
+    if version_match is None:
+        return None, None
+
+    version_label = version_match.group("version")
+    parsed_version = _parse_runtime_version(version_label)
+    if parsed_version is None:
+        return None, None
+
+    return parsed_version, version_label
+
+
+def _resolve_go_runtime_executable(
+    runtime_path_raw: str | None = None,
+    *,
+    runtime_path: Path | None = None,
+) -> tuple[str | None, str]:
+    if runtime_path is not None:
+        return str(runtime_path), "runtime.path"
+
+    if runtime_path_raw is not None:
+        resolved_runtime_path, resolution_mode = _resolve_runtime_path_executable(runtime_path_raw)
+        if resolution_mode in {"file", "path"} and resolved_runtime_path is not None:
+            return str(resolved_runtime_path), "runtime.path"
+
+    discovered_go = shutil.which("go")
+    if discovered_go:
+        return discovered_go, "path"
+
+    return None, "missing"
+
+
+def _go_constraint_satisfied(constraint: str, current_version: tuple[int, ...]) -> bool:
+    normalized_constraint = constraint.strip()
+    if not normalized_constraint:
+        return False
+
+    for candidate in (">=", "<=", "==", ">", "<"):
+        if normalized_constraint.startswith(candidate):
+            return _runtime_constraint_satisfied(normalized_constraint, current_version)
+
+    required_version = _parse_runtime_version(normalized_constraint)
+    if required_version is None:
+        return False
+
+    current_slice = current_version[: len(required_version)]
+    if len(current_slice) < len(required_version):
+        current_slice = current_slice + (0,) * (len(required_version) - len(current_slice))
+    return current_slice == required_version
+
+
+def _check_go_runtime_constraint(
+    runtime_constraint: str,
+    runtime_path_raw: str | None = None,
+) -> tuple[bool, str]:
+    go_executable, _ = _resolve_go_runtime_executable(runtime_path_raw)
+    if go_executable is None:
+        return (
+            False,
+            "runtime version check failed: Go toolchain not found on PATH. Install Go or configure runtime.path.",
+        )
+
+    try:
+        go_version_result = subprocess.run(
+            [go_executable, "version"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError as error:
+        return (
+            False,
+            (
+                "runtime version check failed: could not execute Go toolchain "
+                f"at '{go_executable}': {error}"
+            ),
+        )
+
+    combined_output = " ".join(
+        part.strip()
+        for part in (go_version_result.stdout, go_version_result.stderr)
+        if isinstance(part, str) and part.strip()
+    )
+    if go_version_result.returncode != 0:
+        reason = combined_output or "go version command failed"
+        return (
+            False,
+            (
+                "runtime version check failed: unable to inspect Go toolchain "
+                f"at '{go_executable}': {reason}"
+            ),
+        )
+
+    current_version, current_label = _extract_go_version_label(combined_output)
+    if current_version is None or current_label is None:
+        return (
+            True,
+            (
+                "runtime version check passed: Go toolchain is available "
+                f"at '{go_executable}'"
+            ),
+        )
+
+    normalized_constraint = runtime_constraint.strip()
+    if not normalized_constraint:
+        return (
+            True,
+            (
+                "runtime version check passed: "
+                f"current Go {current_label} is available at '{go_executable}'"
+            ),
+        )
+
+    constraints = [segment.strip() for segment in normalized_constraint.split(",") if segment.strip()]
+    if not constraints:
+        return (
+            True,
+            (
+                "runtime version check passed: "
+                f"current Go {current_label} is available at '{go_executable}'"
+            ),
+        )
+
+    invalid_constraints: list[str] = []
+    for constraint in constraints:
+        if not _go_constraint_satisfied(constraint, current_version):
+            invalid_constraints.append(constraint)
+
+    if invalid_constraints:
+        constraint_label = ", ".join(constraints)
+        return (
+            False,
+            (
+                "runtime version check failed: "
+                f"current Go {current_label} does not satisfy runtime.version '{constraint_label}'"
+            ),
+        )
+
+    return (
+        True,
+        (
+            "runtime version check passed: "
+            f"current Go {current_label} satisfies runtime.version '{normalized_constraint}'"
+        ),
+    )
+
+
+def _normalize_manifest_dependencies(manifest: dict) -> list[str]:
+    raw_dependencies = manifest.get("dependencies")
+    if not isinstance(raw_dependencies, list):
+        return []
+
+    normalized_dependencies: list[str] = []
+    for raw_dependency in raw_dependencies:
+        if not isinstance(raw_dependency, str):
+            continue
+        candidate = raw_dependency.strip()
+        if not candidate:
+            continue
+        normalized_dependencies.append(candidate)
+    return normalized_dependencies
+
+
+def _check_go_module_readiness(
+    manifest: dict,
+    agent_dir: Path,
+    *,
+    entrypoint_arg: str | None = None,
+) -> tuple[bool, str, str | None]:
+    selection, selection_errors = resolve_entrypoint_selection(
+        manifest,
+        requested_entrypoint=entrypoint_arg,
+    )
+    if selection is None:
+        return False, f"dependency readiness check failed: {selection_errors[0]}", None
+
+    selected_entrypoint = selection["selected_entrypoint"]
+    if Path(selected_entrypoint).suffix.lower() != ".go":
+        return (
+            True,
+            (
+                "dependency readiness check passed: "
+                "Go source module check skipped for non-.go entrypoint"
+            ),
+            None,
+        )
+
+    go_mod_path = agent_dir / "go.mod"
+    if go_mod_path.exists() and go_mod_path.is_file():
+        return (
+            True,
+            f"dependency readiness check passed: go.mod found at {go_mod_path}",
+            None,
+        )
+
+    declared_dependencies = _normalize_manifest_dependencies(manifest)
+    if declared_dependencies:
+        dependencies_label = ", ".join(declared_dependencies)
+        return (
+            False,
+            (
+                "dependency readiness check failed: "
+                f"go.mod not found at {go_mod_path} while dependencies are declared [{dependencies_label}]"
+            ),
+            None,
+        )
+
+    warning_message = (
+        f"module readiness warning: go.mod not found at {go_mod_path}; "
+        "assuming single-file source mode. Run 'go mod init <module>' before adding external imports."
+    )
+    return (
+        True,
+        (
+            "dependency readiness check passed: "
+            "no manifest dependencies declared; go.mod is optional for single-file source mode"
+        ),
+        warning_message,
+    )
+
+
 def _resolve_runtime_path_executable(runtime_path_value: str | None) -> tuple[Path | None, str]:
     """Resolve runtime.path as either an executable file path or PATH command."""
     if runtime_path_value is None:
@@ -272,6 +499,84 @@ def _resolve_runtime_path_executable(runtime_path_value: str | None) -> tuple[Pa
         return Path(resolved_runtime), "path"
 
     return None, "unresolved"
+
+
+def _format_target_arches_label(target_arches: tuple[str, ...]) -> str:
+    if not target_arches:
+        return "unknown"
+    if len(target_arches) == 1:
+        return target_arches[0]
+    return ", ".join(target_arches)
+
+
+def _check_go_binary_execution_readiness(entrypoint_path: Path) -> tuple[bool, str, list[str]]:
+    warnings: list[str] = []
+
+    if not entrypoint_path.exists():
+        return False, f"binary compatibility check failed: entrypoint file not found: {entrypoint_path}", warnings
+    if not entrypoint_path.is_file():
+        return False, f"binary compatibility check failed: entrypoint path is not a file: {entrypoint_path}", warnings
+    if not os.access(entrypoint_path, os.R_OK):
+        return False, f"binary compatibility check failed: entrypoint file is not readable: {entrypoint_path}", warnings
+
+    if os.name != "nt" and not os.access(entrypoint_path, os.X_OK):
+        return (
+            False,
+            (
+                "binary compatibility check failed: "
+                f"entrypoint is not executable: {entrypoint_path}. "
+                f"Run 'chmod +x {entrypoint_path}'."
+            ),
+            warnings,
+        )
+
+    inspection, inspection_error = inspect_binary_artifact(entrypoint_path)
+    if inspection is None:
+        reason = inspection_error or "could not inspect executable header"
+        return False, f"binary compatibility check failed: {reason}", warnings
+
+    host_os, host_arch = resolve_host_go_platform()
+    target_arches_label = _format_target_arches_label(inspection.target_arches)
+    host_label = f"{host_os}/{host_arch}"
+    target_label = f"{inspection.target_os}/{target_arches_label}"
+
+    if inspection.target_os != host_os:
+        return (
+            False,
+            (
+                "binary compatibility check failed: "
+                f"detected {inspection.format_name} target {target_label} is incompatible with host {host_label}. "
+                f"Rebuild with GOOS={host_os} GOARCH={host_arch}."
+            ),
+            warnings,
+        )
+
+    if inspection.target_arches and host_arch not in inspection.target_arches:
+        detected_arches = ", ".join(inspection.target_arches)
+        return (
+            False,
+            (
+                "binary compatibility check failed: "
+                f"detected target architecture [{detected_arches}] is incompatible with host {host_label}. "
+                f"Rebuild with GOOS={host_os} GOARCH={host_arch}."
+            ),
+            warnings,
+        )
+
+    if not inspection.target_arches:
+        warnings.append(
+            "binary compatibility warning: executable architecture could not be determined from header; "
+            "verify GOARCH manually if execution fails"
+        )
+
+    return (
+        True,
+        (
+            "binary compatibility check passed: "
+            f"detected {inspection.format_name} target {target_label}; host {host_label}"
+        ),
+        warnings,
+    )
 
 
 def _check_preflight_env_vars(manifest: dict, agent_dir: Path) -> tuple[bool, str]:
@@ -717,10 +1022,41 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
     entrypoint_message = "entrypoint check failed: manifest validation prerequisite not met"
     dependencies_ok = False
     dependencies_message = "dependency readiness check failed: manifest validation prerequisite not met"
+    go_binary_mode = False
+    binary_compatibility_ok = True
+    binary_compatibility_message = "binary compatibility check skipped: non-binary mode"
+    preflight_warnings: list[str] = []
     if manifest_valid and manifest is not None:
+        selected_go_entrypoint: str | None = None
+        go_source_mode = False
+        if runtime_language == "go":
+            selection, selection_errors = resolve_entrypoint_selection(
+                manifest,
+                requested_entrypoint=entrypoint_arg,
+            )
+            if selection is not None:
+                selected_go_entrypoint = selection["selected_entrypoint"]
+                go_source_mode = Path(selected_go_entrypoint).suffix.lower() == ".go"
+                go_binary_mode = not go_source_mode
+            elif selection_errors:
+                go_source_mode = False
+                go_binary_mode = False
+
         runtime_version_constraint = str(runtime_section.get("version", ""))
         if is_nodejs_compatible_runtime(runtime_language):
             runtime_constraint_ok, runtime_message = check_node_runtime_constraint(runtime_version_constraint)
+        elif runtime_language == "go":
+            if go_source_mode:
+                runtime_constraint_ok, runtime_message = _check_go_runtime_constraint(
+                    runtime_version_constraint,
+                    runtime_path_raw=runtime_path_raw,
+                )
+            else:
+                runtime_constraint_ok = True
+                runtime_message = (
+                    "runtime version check passed: "
+                    "Go toolchain check skipped for precompiled binary entrypoint"
+                )
         else:
             runtime_constraint_ok, runtime_message = _check_runtime_version_constraint(runtime_version_constraint)
 
@@ -757,6 +1093,42 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
 
             if dependencies_message == "dependency readiness check failed: manifest validation prerequisite not met":
                 dependencies_ok, dependencies_message = check_node_package_manager_availability(package_manager)
+        elif runtime_language == "go":
+            if go_source_mode:
+                dependencies_ok, dependencies_message, module_warning = _check_go_module_readiness(
+                    manifest,
+                    agent_dir,
+                    entrypoint_arg=entrypoint_arg,
+                )
+                if module_warning:
+                    preflight_warnings.append(module_warning)
+            else:
+                dependencies_ok = True
+                dependencies_message = (
+                    "dependency readiness check passed: "
+                    "precompiled binary entrypoint does not require go.mod"
+                )
+
+                if selected_go_entrypoint is None:
+                    binary_compatibility_ok = False
+                    binary_compatibility_message = (
+                        "binary compatibility check failed: "
+                        "entrypoint resolution prerequisite not met"
+                    )
+                elif entrypoint_ok:
+                    binary_entrypoint_path = agent_dir / selected_go_entrypoint
+                    (
+                        binary_compatibility_ok,
+                        binary_compatibility_message,
+                        binary_warnings,
+                    ) = _check_go_binary_execution_readiness(binary_entrypoint_path)
+                    preflight_warnings.extend(binary_warnings)
+                else:
+                    binary_compatibility_ok = False
+                    binary_compatibility_message = (
+                        "binary compatibility check failed: "
+                        "entrypoint validation prerequisite not met"
+                    )
         else:
             dependencies_ok, dependencies_message = _check_preflight_dependencies(manifest, agent_dir, runtime_path_raw)
 
@@ -764,6 +1136,10 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
     _emit_preflight_line(env_vars_ok, env_vars_message)
     _emit_preflight_line(entrypoint_ok, entrypoint_message)
     _emit_preflight_line(dependencies_ok, dependencies_message)
+    if go_binary_mode:
+        _emit_preflight_line(binary_compatibility_ok, binary_compatibility_message)
+    for warning_message in preflight_warnings:
+        _emit_preflight_warn_line(warning_message)
 
     io_contract_ok = False
     io_contract_message = "manifest I/O contract unavailable: manifest validation prerequisite not met"
@@ -829,6 +1205,8 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
         if not runtime_constraint_ok:
             if is_nodejs_compatible_runtime(runtime_language):
                 print("  - Action: install or upgrade Node.js so runtime.version in kinnoo.yaml is satisfied")
+            elif runtime_language == "go":
+                print("  - Action: install or upgrade Go so runtime.version in kinnoo.yaml is satisfied")
             else:
                 print("  - Action: use a Python interpreter that satisfies runtime.version in kinnoo.yaml")
         if not env_vars_ok:
@@ -838,8 +1216,15 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
         if not dependencies_ok:
             if is_nodejs_compatible_runtime(runtime_language):
                 print("  - Action: install the configured Node package manager and ensure it is on PATH")
+            elif runtime_language == "go":
+                print("  - Action: add go.mod with `go mod init <module>` and keep dependencies in sync")
             else:
                 print("  - Action: create agent .venv and install requirements (for example: kinnoo run <agent-dir> '<input>')")
+        if go_binary_mode and not binary_compatibility_ok:
+            print(
+                "  - Action: rebuild binary for host GOOS/GOARCH, ensure Mach-O/ELF/PE format, "
+                "and set execute permission (chmod +x)"
+            )
         if service_results and not service_checks_ok:
             print("  - Action: make unhealthy services reachable or update services[].health_check settings")
         if daemon_lifecycle_result is not None and not daemon_lifecycle_result.healthy:
@@ -856,6 +1241,7 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
         and env_vars_ok
         and entrypoint_ok
         and dependencies_ok
+        and binary_compatibility_ok
         and service_checks_ok
         and daemon_state_ok
     ):
@@ -868,6 +1254,8 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
     if not runtime_constraint_ok:
         if is_nodejs_compatible_runtime(runtime_language):
             print("- runtime version: install or upgrade Node.js to satisfy runtime.version")
+        elif runtime_language == "go":
+            print("- runtime version: install or upgrade Go to satisfy runtime.version")
         else:
             print("- runtime version: use a compatible Python interpreter per runtime.version")
     if not env_vars_ok:
@@ -877,8 +1265,12 @@ def run_preflight(agent_dir_arg: str, entrypoint_arg: str | None = None) -> int:
     if not dependencies_ok:
         if is_nodejs_compatible_runtime(runtime_language):
             print("- dependencies: install the configured Node package manager and ensure it is on PATH")
+        elif runtime_language == "go":
+            print("- dependencies: initialize go.mod and ensure module metadata is present for declared dependencies")
         else:
             print("- dependencies: create .venv and install requirements")
+    if go_binary_mode and not binary_compatibility_ok:
+        print("- binary compatibility: rebuild for host GOOS/GOARCH, verify executable format, and set execute permissions")
     if service_results and not service_checks_ok:
         print("- services: fix failing service checks or adjust services[].health_check configuration")
     if daemon_lifecycle_result is not None and not daemon_lifecycle_result.healthy:
@@ -1396,11 +1788,13 @@ def run_agent(
                     return finalize(1)
     elif runtime_language == "python":
         python_exe = Path(sys.executable)
+    elif runtime_language == "go":
+        pass
     elif not is_nodejs_compatible_runtime(runtime_language):
         _print_safe_error(
             (
                 f"Error: Unsupported runtime.language '{runtime_language}'. "
-                "Supported values are: python, nodejs, javascript, typescript"
+                "Supported values are: python, nodejs, javascript, typescript, go"
             )
         )
         return finalize(1)
@@ -1685,6 +2079,32 @@ def run_agent(
             _print_safe_error(f"Error: Invalid runtime.run_command value: {error}")
             return finalize(1)
         process_args = [token.replace("{entrypoint}", str(entrypoint_path)) for token in process_args]
+    elif runtime_language == "go":
+        if entrypoint_path.suffix.lower() == ".go":
+            go_runtime, _ = _resolve_go_runtime_executable(
+                runtime_path_value,
+                runtime_path=runtime_path,
+            )
+            if go_runtime is None:
+                _print_safe_error(
+                    (
+                        "Error: Go toolchain executable was not found on PATH. "
+                        "Install Go or configure runtime.path to a Go binary."
+                    )
+                )
+                return finalize(1)
+
+            process_args = [go_runtime, "run", str(entrypoint_path)]
+        else:
+            binary_ok, binary_message, binary_warnings = _check_go_binary_execution_readiness(entrypoint_path)
+            if not binary_ok:
+                _print_safe_error(f"Error: {binary_message}")
+                return finalize(1)
+
+            for warning_message in binary_warnings:
+                print(f"[kinnoo] warning: {warning_message}", flush=True)
+
+            process_args = [str(entrypoint_path)]
     elif is_nodejs_compatible_runtime(runtime_language):
         entrypoint_suffix = entrypoint_path.suffix.lower()
         if entrypoint_suffix in {".ts", ".tsx"}:

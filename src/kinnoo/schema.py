@@ -97,7 +97,7 @@ FIELD_TYPES: dict[str, type] = {
 SUPPORTED_RUNTIME_TYPES: list[str] = ["one-shot", "mcp-server", "daemon"]
 
 # Supported runtime languages in this version of kinnoo.
-SUPPORTED_RUNTIME_LANGUAGES: list[str] = ["python", "nodejs", "javascript", "typescript"]
+SUPPORTED_RUNTIME_LANGUAGES: list[str] = ["python", "nodejs", "javascript", "typescript", "go"]
 
 # Supported top-level manifest `type` values.
 SUPPORTED_MANIFEST_TYPES: list[str] = ["agent", "openclaw-skill"]

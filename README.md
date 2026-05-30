@@ -69,6 +69,42 @@ Kinnoo currently supports initializing and running agents for these frameworks:
 
 See [Supported Agents](docs/supported-agents.md) for more details.
 
+## Go Runtime Modes
+
+Kinnoo supports Go scaffolding with these framework combinations:
+
+- `kinnoo init gemini --language go <agent-name>`
+- `kinnoo init chatgpt --language go <agent-name>`
+- `kinnoo init claude-chat --language go <agent-name>`
+- `kinnoo init mcp-client --language go <agent-name>`
+- `kinnoo init mcp-server --language go <agent-name>`
+- `kinnoo init no-framework --language go <agent-name>`
+
+Go scaffolding uses the local Go toolchain to run `go mod init <agent-name>` during `kinnoo init`.
+
+`kinnoo run` and `kinnoo run --preflight` support two Go execution modes:
+
+- Go source mode: entrypoint ends with `.go` (typically `main.go`), and Kinnoo checks Go toolchain/runtime constraints.
+- Go binary mode: entrypoint points to a precompiled executable (for example `bin/agent` or `dist/agent.exe`), and Kinnoo skips Go toolchain checks but runs binary compatibility checks.
+
+Preflight output uses explicit status labels:
+
+- `- [PASS] ...` for passing checks.
+- `- [WARN] ...` for non-blocking issues (for example, optional Go module warnings).
+- `- [FAIL] ...` for blocking checks.
+
+Final preflight summary:
+
+- success: `Ready to run` and `Preflight result: PASS`
+- failure: `Not ready to run`, `Remediation summary:`, and `Preflight result: FAIL`
+
+Common Go preflight remediation guidance:
+
+- missing Go toolchain for source mode: install Go or configure `runtime.path`.
+- wrong architecture/OS: rebuild with host `GOOS` and `GOARCH`.
+- unsupported binary format: rebuild to a supported executable format (Mach-O/ELF/PE).
+- non-executable binary: run `chmod +x <entrypoint>`.
+
 ## Contributing
 
 Contributions are welcome. See `CONTRIBUTING.md` for development and contribution workflow.

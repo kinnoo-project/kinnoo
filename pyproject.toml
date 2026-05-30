@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kinnoo"
-version = "0.10.0"
+version = "0.10.2"
 description = "Kinnoo agent CLI and scaffolding tools"
 license = "MIT"
 authors = [

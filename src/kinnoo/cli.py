@@ -245,9 +245,13 @@ def main():
         epilog=(
             "Examples:\n"
             "  kinnoo init chatgpt my-agent\n"
+            "  kinnoo init gemini --language go my-go-gemini-agent\n"
+            "  kinnoo init chatgpt --language go my-go-chatgpt-agent\n"
+            "  kinnoo init claude-chat --language go my-go-claude-agent\n"
+            "  kinnoo init mcp-server --language go my-go-mcp-server\n"
             "  kinnoo init no-framework --language python my-bare-agent\n"
             "  kinnoo init openclaw --language typescript my-openclaw-agent\n"
-            "  kinnoo init mcp-client my-mcp-client"
+            "  kinnoo init mcp-client --language go my-go-mcp-client"
         ),
     )
     init_parser.add_argument(
@@ -255,23 +259,26 @@ def main():
         nargs="?",
         help=(
             "Framework template. Currently supported:\n"
-            "  gemini         - Google Gemini API agent\n"
-            "  chatgpt        - OpenAI ChatGPT API agent\n"
-            "  claude-chat    - Anthropic Claude API agent\n"
-            "  pydantic-ai    - PydanticAI structured agent with tools\n"
-            "  langgraph      - LangGraph state machine agent\n"
-            "  openai-agents  - OpenAI Agents SDK with handoffs\n"
-            "  mcp-client     - Model Context Protocol client\n"
-            "  mcp-server     - Model Context Protocol server\n"
-            "  openclaw       - OpenClaw Node.js daemon agent\n"
-            "  no-framework   - Barebones agent template - language should be specified (default: python)"
+            "  gemini         - Google Gemini API agent (python/javascript/typescript/go)\n"
+            "  chatgpt        - OpenAI ChatGPT API agent (python/javascript/typescript/go)\n"
+            "  claude-chat    - Anthropic Claude API agent (python/javascript/typescript/go)\n"
+            "  pydantic-ai    - PydanticAI structured agent with tools (python)\n"
+            "  langgraph      - LangGraph state machine agent (python/javascript/typescript)\n"
+            "  openai-agents  - OpenAI Agents SDK with handoffs (python)\n"
+            "  mcp-client     - Model Context Protocol client (python/javascript/typescript/go)\n"
+            "  mcp-server     - Model Context Protocol server (python/javascript/typescript/go)\n"
+            "  openclaw       - OpenClaw Node.js daemon agent (javascript/typescript)\n"
+            "  no-framework   - Barebones agent template (python/javascript/typescript/go)"
         ),
     )
     init_parser.add_argument("agent_name", nargs="?", help="Name of the agent to create")
     init_parser.add_argument(
         "--language",
         metavar="LANGUAGE",
-        help="(Optional) Scaffold language (if supported for the specified framework): python, javascript, typescript",
+        help=(
+            "(Optional) Scaffold language: python, javascript, typescript, go. "
+            "Go is supported for gemini, chatgpt, claude-chat, mcp-client, mcp-server, and no-framework."
+        ),
     )
     init_parser.add_argument(
         "--minimal",
@@ -972,7 +979,18 @@ def main():
         run_pass_through_args = sys.argv[separator_index + 1 :]
         args = parser.parse_args(sys.argv[1:separator_index])
     else:
-        args = parser.parse_args()
+        args, unknown_args = parser.parse_known_args()
+        if unknown_args:
+            if (
+                len(sys.argv) > 1
+                and sys.argv[1] == "init"
+                and getattr(args, "agent_name", None) is None
+                and len(unknown_args) == 1
+                and not unknown_args[0].startswith("-")
+            ):
+                args.agent_name = unknown_args[0]
+            else:
+                parser.error(f"unrecognized arguments: {' '.join(unknown_args)}")
 
     if args.command == "init":
         supported_frameworks = {
@@ -1007,9 +1025,9 @@ def main():
             )
             sys.exit(1)
 
-        if resolved_language is not None and resolved_language not in {"python", "javascript", "typescript"}:
+        if resolved_language is not None and resolved_language not in {"python", "javascript", "typescript", "go"}:
             print(
-                "Error: --language must be one of: python, javascript, typescript.",
+                "Error: --language must be one of: python, javascript, typescript, go.",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -1021,15 +1039,15 @@ def main():
                 resolved_framework, resolved_language, agent_name = interactive_init_wizard(Path.cwd())
             else:
                 print(
-                    "Usage: kinnoo init [framework] [--language {python,javascript,typescript}] <agent-name>",
+                    "Usage: kinnoo init [framework] [--language {python,javascript,typescript,go}] <agent-name>",
                     file=sys.stderr,
                 )
                 sys.exit(1)
 
         if not agent_name:
-            print("Usage: kinnoo init [framework] [--language {python,javascript,typescript}] <agent-name>", file=sys.stderr)
+            print("Usage: kinnoo init [framework] [--language {python,javascript,typescript,go}] <agent-name>", file=sys.stderr)
             sys.exit(1)
-        if not re.match(NAME_PATTERN, agent_name):
+        if agent_name != "." and not re.match(NAME_PATTERN, agent_name):
             print(f"Error: Invalid agent name '{agent_name}'. Must match pattern: {NAME_PATTERN}", file=sys.stderr)
             sys.exit(1)
         from kinnoo.init_command import init_agent
@@ -1044,6 +1062,12 @@ def main():
             )
             print(f"Initialized agent: {agent_name}")
         except FileExistsError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        except RuntimeError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
 

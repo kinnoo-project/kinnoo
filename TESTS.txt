@@ -1548,3 +1548,98 @@ tests:
   - 'automation_path_subfolder: web/__tests__'
   automated: true
   automation_path: web/__tests__/legal-pages.test.tsx
+
+- id: test79
+  title: feature19 init scaffolding supports Go language and framework matrix
+  type: integration
+  preconditions: Kinnoo CLI available; temporary workspace writable; Go toolchain optional for scaffold generation tests
+  steps:
+  - 'step1: Run `kinnoo init go-basic --language go` and verify files include `main.go` and `kinnoo.yaml` with `runtime.language: go`.'
+  - 'step2: Run init for `--framework gemini`, `--framework chatgpt`, and `--framework claude-chat` using `--language go`; verify template-specific files/comments/placeholders are generated.'
+  - 'step3: Run init for `--framework mcp-server` and `--framework mcp-client` using `--language go`; verify MCP server/client templates are generated.'
+  - 'step4: Validate each generated manifest with validator and ensure no schema errors.'
+  expected: All supported Go init combinations scaffold successfully with valid manifests and expected template structure
+  pass_criteria: feature19 AC1-AC6 satisfied by automated init matrix checks
+  covers:
+  - feature: feature19
+    ac: AC1
+  - feature: feature19
+    ac: AC2
+  - feature: feature19
+    ac: AC3
+  - feature: feature19
+    ac: AC4
+  - feature: feature19
+    ac: AC5
+  - feature: feature19
+    ac: AC6
+  automated: true
+  automation_path: tests/client_cli_init/test_init_go_feature19.py
+
+- id: test80
+  title: feature19 validator accepts Go runtime and main.go defaults
+  type: unit
+  preconditions: Validator module available; schema fixtures for Go manifests available
+  steps:
+  - 'step1: Validate a generated Go manifest using `runtime.language: go` and `entrypoint: main.go`.'
+  - 'step2: Validate Go manifest variants for source entrypoint and binary entrypoint.'
+  - 'step3: Validate negative cases (unsupported language value, malformed entrypoint declarations) produce actionable errors.'
+  expected: Go manifests are accepted when valid and rejected with clear errors when invalid
+  pass_criteria: feature19 AC7 satisfied with positive and negative validator assertions
+  covers:
+  - feature: feature19
+    ac: AC7
+  automated: true
+  automation_path: tests/schema_unit/test_go_manifest_schema.py
+
+- id: test81
+  title: feature19 run and preflight for Go source agents
+  type: integration
+  preconditions: Host has Go toolchain available in PATH for positive path; test fixtures include minimal Go source agent
+  steps:
+  - 'step1: Execute `kinnoo run` for a Go source fixture using default `main.go` and assert stdout/stderr/exit code behavior.'
+  - 'step2: Execute `kinnoo run --preflight` for the same fixture and assert checks include toolchain presence, entrypoint presence, and module readiness.'
+  - 'step3: Execute failure scenarios (missing main.go, missing go toolchain simulation) and assert preflight produces actionable diagnostics.'
+  expected: Go source run and preflight flows behave consistently with runtime contract
+  pass_criteria: feature19 AC8-AC9 satisfied
+  covers:
+  - feature: feature19
+    ac: AC8
+  - feature: feature19
+    ac: AC9
+  automated: true
+  automation_path: tests/client_cli_run/test_go_source_run_and_preflight.py
+
+- id: test82
+  title: feature19 run and preflight for compiled Go binaries
+  type: integration
+  preconditions: Binary fixtures available for compatible and incompatible architectures; host platform detection available in test harness
+  steps:
+  - 'step1: Execute `kinnoo run` against a compatible precompiled Go binary and assert successful process execution.'
+  - 'step2: Execute `kinnoo run --preflight` for compatible and incompatible binaries; assert architecture/OS checks are reported and mismatches fail early.'
+  - 'step3: Execute non-executable or unsupported-format fixtures and assert deterministic hard-fail diagnostics.'
+  expected: Binary execution works when compatible and is blocked with clear diagnostics when incompatible
+  pass_criteria: feature19 AC10-AC11 satisfied
+  covers:
+  - feature: feature19
+    ac: AC10
+  - feature: feature19
+    ac: AC11
+  automated: true
+  automation_path: tests/client_cli_run/test_go_binary_run_and_preflight.py
+
+- id: test83
+  title: feature19 documentation and CLI help expose Go support and remediation guidance
+  type: unit
+  preconditions: Updated docs and CLI help output available in repository
+  steps:
+  - 'step1: Verify CLI help includes `--language go` and supported Go framework options for init.'
+  - 'step2: Verify docs describe Go source and Go binary run behavior plus preflight expectations.'
+  - 'step3: Verify troubleshooting guidance includes missing toolchain, wrong architecture, unsupported format, and non-executable binary remediation.'
+  expected: User-facing docs and help clearly document Go capabilities and preflight diagnostics
+  pass_criteria: feature19 AC12 satisfied
+  covers:
+  - feature: feature19
+    ac: AC12
+  automated: true
+  automation_path: tests/docs_contract/test_go_support_docs_contract.py
